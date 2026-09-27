@@ -95,6 +95,35 @@ export function SelectField({ label, value, options, onChange, placeholder = "Ch
   );
 }
 
+const MINUTE_CHOICES = [5, 10, 15, 20, 30, 45, 60, 90];
+
+/** How long a block runs: one tap for the usual lengths, or type any number. */
+export function MinutesField({ value, onChange, hint }: { value: number | null; onChange: (m: number | null) => void; hint?: string }) {
+  const t = useTheme();
+  const custom = value !== null && !MINUTE_CHOICES.includes(value);
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <FieldLabel label="How long (minutes)" hint={hint} />
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {MINUTE_CHOICES.map((m) => {
+          const on = value === m;
+          return (
+            <Pressable key={m} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={`${m} minutes`}
+              onPress={() => onChange(on ? null : m)}
+              style={{ minWidth: 52, minHeight: 44, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 10,
+                borderColor: on ? t.accent : t.line, backgroundColor: on ? t.accent : t.surface }}>
+              <Text style={{ color: on ? t.accentText : t.text, fontSize: 16, fontWeight: on ? "700" : "500" }}>{m}</Text>
+            </Pressable>
+          );
+        })}
+        <TextInput value={custom ? String(value) : ""} placeholder="Other" placeholderTextColor={t.muted} accessibilityLabel="Other number of minutes"
+          keyboardType="number-pad" maxLength={3} onChangeText={(v) => { const n = parseInt(v.replace(/\D/g, ""), 10); onChange(isNaN(n) ? null : n); }}
+          style={{ width: 76, minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: custom ? t.accent : t.line, backgroundColor: t.surface, color: t.text, fontSize: 16, textAlign: "center" }} />
+      </View>
+    </View>
+  );
+}
+
 export function SwitchField({ label, value, onChange, hint }: { label: string; value: boolean; onChange: (v: boolean) => void; hint?: string }) {
   const t = useTheme();
   return (

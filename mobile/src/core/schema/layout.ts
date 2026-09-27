@@ -18,7 +18,9 @@ export const CO = { id: 0, first: 1, last: 2, full: 3, role: 4, mon: 5, tue: 6, 
 export const LIB = { id: 0, blockType: 1, tier: 2, name: 3, description: 4, setsReps: 5,
   equipment: 6, notes: 7 } as const;
 export const LOG = { date: 0, group: 1, libraryItem: 2, blockType: 3, description: 4, setsReps: 5,
-  coach: 6, notes: 7 } as const;
+  coach: 6, notes: 7, /* 8 = hidden "Day Rk" formula */ minutes: 9, order: 10 } as const;
+// Headers of the two columns the app adds to Log a Workout (J, K) — written on first use.
+export const LOG_TIME_HEADERS = ["Minutes", "Order"] as const;
 export const PROG = { date: 0, athlete: 1, metric: 2, value: 3, notes: 4, loggedBy: 5 } as const;
 
 // Each range starts at the tab's header row so validation and parsing share one fetch.
@@ -28,7 +30,7 @@ export const RANGES = {
   athletes: `'${TAB.athletes}'!A5:N`,
   coaches: `'${TAB.coaches}'!A5:N`,
   library: `'${TAB.library}'!A5:H`,
-  log: `'${TAB.log}'!A4:H`,
+  log: `'${TAB.log}'!A4:K`,
   progress: `'${TAB.progress}'!A4:F`,
 } as const;
 
@@ -40,6 +42,11 @@ export const SETTINGS = {
   tierRows: [5, 6, 7], // B5:B7
   seasonStartRow: 16, // B16
   numWeeksRow: 17, // B17
+  practiceStartRow: 18, // B18 "5:30 PM"
+  practiceEndRow: 19, // B19 "8:00 PM"
+  warmupMinutesRow: 20, // B20
+  tierBlockMinutesRow: 21, // B21
+  cooldownMinutesRow: 22, // B22
   blockTypeFirstRow: 40, // A40 downward until a blank
   blockTypeLastRow: 60,
   valueCol: 1, // column B

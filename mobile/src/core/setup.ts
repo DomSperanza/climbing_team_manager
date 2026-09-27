@@ -5,6 +5,7 @@
 // rule as deleting. Pure functions only, so it's tested against the example workbook.
 
 import { isoToSerial, weekdayOf, type ISODate } from "./logic/dates";
+import { LOG_TIME_HEADERS } from "./schema/layout";
 import type { ValueRange } from "./writes";
 
 export interface NewSheetOptions {
@@ -37,13 +38,14 @@ export function setupPlan(o: NewSheetOptions): { clear: string[]; write: ValueRa
     "'Athlete Profiles'!B6:C37", "'Athlete Profiles'!E6:N37", // not A/D: ID and Full Name formulas
     "'Coach Profiles'!B6:C19", "'Coach Profiles'!E6:N19",
     // Log: not D:F, whose library-autofill formulas blank themselves once C is empty.
-    "'Log a Workout'!A5:C200", "'Log a Workout'!G5:H200",
+    "'Log a Workout'!A5:C200", "'Log a Workout'!G5:H200", "'Log a Workout'!J5:K200",
     "'Progress Log'!A5:F260",
     ...(o.keepLibrary ? [] : ["'Exercise Library'!B6:H120"]),
   ];
   const write: ValueRange[] = [
     { range: "'Settings'!B5:B7", values: o.tierNames.map((t) => [t.trim()]) },
     { range: "'Settings'!B16:B17", values: [[isoToSerial(o.seasonStart)], [o.numberOfWeeks]] },
+    { range: "'Log a Workout'!J4:K4", values: [[...LOG_TIME_HEADERS]] }, // the app's Minutes / Order columns
   ];
   if (o.me) {
     const m = o.me;

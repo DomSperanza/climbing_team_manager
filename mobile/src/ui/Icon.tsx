@@ -17,6 +17,9 @@ const PATHS = {
   lock: "M7 11V8a5 5 0 0 1 10 0v3M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z",
   check: "M5 12l5 5L20 7",
   chevronDown: "M6 9l6 6 6-6",
+  chevronUp: "M6 15l6-6 6 6",
+  minus: "M5 12h14",
+  clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-13v4l3 2",
   close: "M6 6l12 12M18 6L6 18",
   search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4",
 } as const;

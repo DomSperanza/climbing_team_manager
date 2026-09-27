@@ -12,7 +12,7 @@
 // Everything here is pure (no network) so it can be tested against a simulated Sheet.
 
 import { cellToISO, isoToSerial, type ISODate } from "./logic/dates";
-import { ROW_LIMITS, TAB } from "./schema/layout";
+import { LOG_TIME_HEADERS, ROW_LIMITS, TAB } from "./schema/layout";
 import type { Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, Status, WorkoutBlock } from "./schema/model";
 import type { Cell, Rows } from "./schema/parse";
 
@@ -126,7 +126,7 @@ export function rangesFor(c: Change, row: number): { write: ValueRange[] } | { c
     switch (c.table) {
       case "athletes": case "coaches": return { clear: [r("B", "C"), r("E", "N")] }; // same cells as the Sheet's own delete
       case "library": return { clear: [r("B", "H")] };
-      case "log": return { clear: [r("A", "H")] };
+      case "log": return { clear: [r("A", "H"), r("J", "K")] }; // not I: the hidden Day Rk formula
       case "progress": return { clear: [r("A", "F")] };
     }
   }
@@ -137,7 +137,11 @@ export function rangesFor(c: Change, row: number): { write: ValueRange[] } | { c
       // Block Type / Description / Sets are written as values even when picked from the
       // library, like typing over the Sheet's autofill: the plan keeps what was planned
       // even if the library entry is edited later.
-      return { write: [{ range: r("A", "H"), values: [[date(v.date), v.group, v.libraryItem, v.blockType, v.description, v.setsRepsDuration, v.coach, v.notes]] }] };
+      return { write: [
+        { range: r("A", "H"), values: [[date(v.date), v.group, v.libraryItem, v.blockType, v.description, v.setsRepsDuration, v.coach, v.notes]] },
+        { range: r("J", "K"), values: [[v.minutes ?? "", v.order ?? ""]] },
+        LOG_TIME_HEADER_WRITE, // the Sheet as first built has no Minutes / Order columns
+      ] };
     }
     case "progress": {
       const v = c.value;
@@ -165,6 +169,8 @@ export function rangesFor(c: Change, row: number): { write: ValueRange[] } | { c
   }
 }
 
+const LOG_TIME_HEADER_WRITE: ValueRange = { range: `${q(TAB.log)}!J4:K4`, values: [[...LOG_TIME_HEADERS]] };
+
 /** A problem with the input that should stop the save, in words for the coach. */
 export function validateChange(c: Change): string | null {
   const v = c.value;
@@ -174,6 +180,7 @@ export function validateChange(c: Change): string | null {
       if (!(v as BlockInput).date) return "Pick a date.";
       if (!(v as BlockInput).group) return "Pick a group.";
       if (!(v as BlockInput).libraryItem && !(v as BlockInput).blockType && !(v as BlockInput).description) return "Pick an exercise, or fill in a block type or description.";
+      if ((v as BlockInput).minutes !== null && !((v as BlockInput).minutes! > 0 && (v as BlockInput).minutes! <= 600)) return "Minutes should be between 1 and 600.";
       return null;
     case "progress":
       if (!(v as ProgressInput).athleteFullName) return "Pick an athlete.";
@@ -200,6 +207,7 @@ export function trimmed<T extends object>(v: T): T {
 /** The three Sheets API calls a save needs; the real one is in google/sheets.ts. */
 export interface SheetWriter {
   read(range: string): Promise<Rows>;
+  readMany(ranges: string[]): Promise<Rows[]>;
   write(data: ValueRange[]): Promise<void>;
   clear(ranges: string[]): Promise<void>;
 }
@@ -229,4 +237,43 @@ export async function saveChange(sheet: SheetWriter, change: Change): Promise<nu
   if ("write" in plan) await sheet.write(plan.write);
   else await sheet.clear(plan.clear);
   return row;
+}
+
+/**
+ * Saves a new order for several blocks of one day (moving a block up or down): checks every
+ * row still holds its block, then writes only their Order cells, in one request.
+ */
+export async function saveOrder(sheet: SheetWriter, moves: { block: WorkoutBlock; order: number }[]): Promise<void> {
+  if (!moves.length) return;
+  const found = await sheet.readMany(moves.map((m) => identityRange("log", m.block.row)));
+  moves.forEach((m, i) => {
+    if (!rowStillMatches({ table: "log", row: m.block.row, was: m.block, value: null }, found[i] ?? [])) throw new SaveError(ROW_CHANGED_MESSAGE);
+  });
+  await sheet.write([
+    ...moves.map((m) => ({ range: `${q(TAB.log)}!K${m.block.row}:K${m.block.row}`, values: [[m.order]] })),
+    LOG_TIME_HEADER_WRITE,
+  ]);
+}
+
+/**
+ * Wraps a SheetWriter and records every write and clear, so the same cell changes can be
+ * replayed onto the app's own copy of the Sheet — the screen updates the moment a save
+ * succeeds, without waiting to re-download everything.
+ */
+export function recording(sheet: SheetWriter): { writer: SheetWriter; replayOnto: (target: SheetWriter) => Promise<void> } {
+  const log: ({ write: ValueRange[] } | { clear: string[] })[] = [];
+  return {
+    writer: {
+      read: (r) => sheet.read(r),
+      readMany: (r) => sheet.readMany(r),
+      write: async (d) => { await sheet.write(d); log.push({ write: d }); },
+      clear: async (r) => { await sheet.clear(r); log.push({ clear: r }); },
+    },
+    async replayOnto(target) {
+      for (const op of log) {
+        if ("write" in op) await target.write(op.write);
+        else await target.clear(op.clear);
+      }
+    },
+  };
 }

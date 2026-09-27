@@ -1,21 +1,24 @@
 // Add or edit one block in Log a Workout. Picking from the library fills in the block type,
-// description and sets — still editable afterwards, like typing over the Sheet's autofill.
+// description, sets and (when the library says, e.g. "10 min") the length — all still
+// editable afterwards, like typing over the Sheet's autofill.
 
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useAppState } from "@/data/store";
 import { ALL_COACHES, ALL_TEAM } from "@/core/schema/layout";
 import { autofillFromLibrary } from "@/core/logic/library";
+import { formatClock, dayTimeline, minutesFromText, orderForNew } from "@/core/logic/timeline";
 import { nextPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
 import { practiceInfo } from "@/core/logic/rotation";
 import type { BlockInput } from "@/core/writes";
 import { DateField } from "@/ui/DateField";
-import { FormScreen, SelectField, TextField } from "@/ui/form";
+import { ExercisePicker } from "@/ui/ExercisePicker";
+import { FormScreen, MinutesField, SelectField, TextField } from "@/ui/form";
 import { Empty, Screen } from "@/ui/kit";
 
 export default function EditBlock() {
   const { data } = useAppState();
-  const params = useLocalSearchParams<{ row?: string; date?: string }>();
+  const params = useLocalSearchParams<{ row?: string; date?: string; group?: string }>();
   const was = params.row ? data?.log.find((b) => b.row === Number(params.row)) : undefined;
 
   const [v, setV] = useState<BlockInput>(() => {
@@ -24,41 +27,50 @@ export default function EditBlock() {
     const info = data ? practiceInfo(data.settings, data.coaches, date) : null;
     return {
       date,
-      group: info?.featuredTier ?? ALL_TEAM,
+      group: params.group || info?.featuredTier || ALL_TEAM,
       libraryItem: "", blockType: "", description: "", setsRepsDuration: "",
       coach: info?.lead && info.lead !== ALL_COACHES ? info.lead : "",
-      notes: "",
+      notes: "", minutes: null, order: null, // order is chosen when saving (see below)
     };
   });
   if (!data) return null;
   if (params.row && !was) return <Screen><Empty>That block isn't in the workout log anymore.</Empty></Screen>;
   const set = (patch: Partial<BlockInput>) => setV((cur) => ({ ...cur, ...patch }));
-  const { settings, library, coaches } = data;
+  const { settings, library, coaches, log } = data;
+
+  // Where this block lands in its day: an existing block keeps its place (unless it moves to
+  // another day); a new one goes at the end, before a closing stretch.
+  const others = log.filter((b) => b.date === v.date && b.row !== was?.row);
+  const order = was && was.date === v.date ? was.order : orderForNew(others);
+  const draft = { ...v, order, row: was?.row ?? -1 };
+  const timed = dayTimeline([...others, draft], settings.practice, settings.tierNames).blocks.find((b) => b.block.row === draft.row);
+  const timing = v.minutes && timed ? `Runs ${formatClock(timed.start)}–${formatClock(timed.end, true)} on this day's plan.` : "Set a length to place it on the practice timeline.";
 
   const pickExercise = (name: string) => {
+    if (!name) return set({ libraryItem: "" });
     const fill = autofillFromLibrary(library, name);
-    set({ libraryItem: name, ...(fill ?? {}) });
+    set({ libraryItem: name, ...(fill ?? {}), ...(v.minutes === null && fill ? { minutes: minutesFromText(fill.setsRepsDuration) } : {}) });
   };
+  const value = (): BlockInput => ({ ...v, order });
 
   return (
     <FormScreen
-      build={() => (was ? { table: "log", row: was.row, was, value: v } : { table: "log", row: null, value: v })}
+      build={() => (was ? { table: "log", row: was.row, was, value: value() } : { table: "log", row: null, value: value() })}
       onDelete={was ? { change: () => ({ table: "log", row: was.row, was, value: null }), title: "Delete this block?", message: `"${was.libraryItem || was.blockType || "This block"}" will be removed from the plan in the Sheet.` } : undefined}
       deleteLabel="Delete block">
       <Stack.Screen options={{ title: was ? "Edit block" : "Add a block" }} />
-      <DateField label="Date" value={v.date} onChange={(date) => set({ date })} />
       <SelectField label="Group" value={v.group} onChange={(group) => set({ group })}
-        options={[...settings.tierNames.filter(Boolean), ALL_TEAM].map((value) => ({ value }))} />
-      <SelectField label="Pick from library" hint="Optional. Fills in the fields below, which you can still change." value={v.libraryItem}
-        allowBlank="None — type it in below" onChange={(name) => (name ? pickExercise(name) : set({ libraryItem: "" }))}
-        options={library.map((e) => ({ value: e.name, sub: [e.blockType, e.tier].filter(Boolean).join(" · ") }))} />
+        options={[...settings.tierNames.filter(Boolean), ALL_TEAM].map((g) => ({ value: g, sub: g === ALL_TEAM ? "Everyone together" : undefined }))} />
+      <ExercisePicker data={data} value={v.libraryItem} onChange={pickExercise} tier={v.group} />
+      <MinutesField value={v.minutes} onChange={(minutes) => set({ minutes })} hint={timing} />
       <SelectField label="Block type" value={v.blockType} onChange={(blockType) => set({ blockType })} allowBlank="—"
-        options={settings.blockTypes.map((value) => ({ value }))} />
+        options={settings.blockTypes.map((bt) => ({ value: bt }))} />
       <TextField label="Description" value={v.description} onChange={(description) => set({ description })} multiline />
-      <TextField label="Sets × reps / duration" value={v.setsRepsDuration} onChange={(setsRepsDuration) => set({ setsRepsDuration })} placeholder="e.g. 3 × 5, 10 min" />
+      <TextField label="Sets × reps" value={v.setsRepsDuration} onChange={(setsRepsDuration) => set({ setsRepsDuration })} placeholder="e.g. 3 × 5, 6 boulders × 2" />
       <SelectField label="Coach" value={v.coach} onChange={(coach) => set({ coach })} allowBlank="—"
         options={coaches.filter((c) => c.status === "Active").map((c) => ({ value: c.fullName, sub: c.role }))} />
       <TextField label="Notes" value={v.notes} onChange={(notes) => set({ notes })} multiline />
+      <DateField label="Date" value={v.date} onChange={(date) => set({ date })} />
     </FormScreen>
   );
 }

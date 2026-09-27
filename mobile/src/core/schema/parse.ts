@@ -2,6 +2,7 @@
 // -> typed models. Each range starts at its tab's header row (see RANGES in layout.ts).
 
 import { cellToISO } from "../logic/dates";
+import { DEFAULT_PRACTICE, parseTimeOfDay } from "../logic/timeline";
 import { ATH, CO, LIB, LOG, PROG, RANGES, RANGE_KEYS, SETTINGS, type RangeKey } from "./layout";
 import type { Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, SeasonSettings, Status, TeamData, WorkoutBlock } from "./model";
 
@@ -11,6 +12,12 @@ export type RawRanges = Record<RangeKey, Rows>;
 
 const str = (v: Cell | undefined): string => (v === undefined || v === null ? "" : String(v).trim());
 const num = (v: Cell | undefined): number => (typeof v === "number" ? v : Number(v) || 0);
+/** A number, or null when the cell is blank or not a number. */
+const optNum = (v: Cell | undefined): number | null => {
+  if (v === undefined || v === null || String(v).trim() === "") return null;
+  const n = typeof v === "number" ? v : Number(String(v).trim());
+  return isFinite(n) ? n : null;
+};
 const status = (v: Cell | undefined): Status => (str(v).toLowerCase() === "inactive" ? "Inactive" : "Active");
 const yes = (v: Cell | undefined): boolean => str(v).toLowerCase() === "yes";
 
@@ -38,6 +45,21 @@ export function parseSettings(rows: Rows): SeasonSettings {
     seasonStartDate: cellToISO(at(SETTINGS.seasonStartRow, SETTINGS.valueCol)),
     numberOfWeeks: num(at(SETTINGS.numWeeksRow, SETTINGS.valueCol)) || 16,
     blockTypes,
+    practice: parsePractice(at),
+  };
+}
+
+function parsePractice(at: (row: number, col: number) => Cell | undefined) {
+  const d = DEFAULT_PRACTICE;
+  const start = parseTimeOfDay(at(SETTINGS.practiceStartRow, SETTINGS.valueCol)) ?? d.start;
+  const end = parseTimeOfDay(at(SETTINGS.practiceEndRow, SETTINGS.valueCol));
+  const mins = (row: number, fallback: number) => optNum(at(row, SETTINGS.valueCol)) ?? fallback;
+  return {
+    start,
+    end: end !== null && end > start ? end : start + (d.end - d.start),
+    warmupMinutes: mins(SETTINGS.warmupMinutesRow, d.warmupMinutes),
+    tierBlockMinutes: mins(SETTINGS.tierBlockMinutesRow, d.tierBlockMinutes),
+    cooldownMinutes: mins(SETTINGS.cooldownMinutesRow, d.cooldownMinutes),
   };
 }
 
@@ -109,6 +131,8 @@ export function parseTeamData(raw: RawRanges): TeamData {
       setsRepsDuration: str(v[LOG.setsReps]),
       coach: str(v[LOG.coach]),
       notes: str(v[LOG.notes]),
+      minutes: optNum(v[LOG.minutes]),
+      order: optNum(v[LOG.order]),
     });
   }
 

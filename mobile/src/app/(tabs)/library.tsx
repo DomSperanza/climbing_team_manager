@@ -3,8 +3,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { useAppState } from "@/data/store";
-import { ALL_LEVELS } from "@/core/schema/layout";
-import { timesUsed } from "@/core/logic/library";
+import { filterLibrary, timesUsed } from "@/core/logic/library";
 import { Button, Empty, FilterChips, ListRow, Screen, SearchBox, TierChip } from "@/ui/kit";
 
 export default function LibraryList() {
@@ -15,12 +14,7 @@ export default function LibraryList() {
   if (!data) return null;
   const { library, settings, log } = data;
 
-  const q = query.trim().toLowerCase();
-  const visible = library
-    .filter((e) => !blockType || e.blockType === blockType)
-    // Picking a tier also shows "All Levels" exercises, since those suit every tier.
-    .filter((e) => !tier || e.tier === tier || (tier !== ALL_LEVELS && e.tier === ALL_LEVELS))
-    .filter((e) => !q || [e.name, e.description, e.equipment].some((s) => s.toLowerCase().includes(q)));
+  const visible = filterLibrary(library, { query, blockType, tier });
   const typesInUse = settings.blockTypes.filter((t) => library.some((e) => e.blockType === t));
 
   return (

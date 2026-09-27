@@ -49,7 +49,10 @@ export function memorySheet(raw: RawRanges): SheetWriter {
     ref.rows[ref.i][col] = v;
   };
 
-  return {
+  const self: SheetWriter = {
+    async readMany(ranges) {
+      return Promise.all(ranges.map((r) => self.read(r)));
+    },
     async read(range) {
       const { key, r1, c1, r2, c2 } = locate(range);
       const out: Rows = [];
@@ -79,4 +82,5 @@ export function memorySheet(raw: RawRanges): SheetWriter {
       }
     },
   };
+  return self;
 }

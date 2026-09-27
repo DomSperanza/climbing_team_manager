@@ -172,6 +172,19 @@ The web version has no app lock and doesn't encrypt its cache: a browser has now
 
 "Sign out & clear data" (under More) signs out of Google and wipes the saved copy.
 
+## Planning a practice
+
+Today shows the day as a timeline against the practice time in the Sheet's Settings tab: start and end time in B18–B19, and warm-up, tiered-block and cooldown minutes in B20–B22.
+
+- **Each block has a length and a place in the order.** Start and end times are worked out from those, so making one block longer pushes everything after it back. "All Team" blocks span every tier. Tier blocks run side by side, each tier on its own clock.
+- **The time bar** shows what's planned against the 2½ hours, and warns when the plan runs over.
+- **A closing stretch/cooldown stays at the end of practice.** Any unplanned time before it shows as an open slot you can tap to fill.
+- **Empty day:** "Start with the standard outline" adds the team warm-up and stretch from Settings in one tap.
+- **Rearrange:** move blocks up or down, or make them 5 minutes shorter or longer. Each tap saves straight away, so plans can change mid-practice.
+- **Picking an exercise** uses the Library tab's filters (block type, tier, search), starting on the block's own tier.
+
+**In the Sheet** these are two new columns on *Log a Workout*: **J = Minutes** and **K = Order**. The app adds their headers the first time it saves a block, and new Sheets have them from the start. You can also type them in Google Sheets. Rows without an Order come after the rest, in row order. The Sheet's own *Day View* tab still lists blocks in row order, not by the app's Order.
+
 ## How saving works (HANDOFF.md §2.3)
 
 - Saves go straight to the Sheet and **need a connection**. When the phone is offline, Save is disabled and says why. Nothing is queued on the phone.

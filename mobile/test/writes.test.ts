@@ -19,7 +19,7 @@ beforeEach(() => {
   const mem = memorySheet(raw);
   writes = [];
   clears = [];
-  sheet = { read: mem.read, write: (d) => { writes.push(d); return mem.write(d); }, clear: (r) => { clears.push(r); return mem.clear(r); } };
+  sheet = { read: mem.read, readMany: mem.readMany, write: (d) => { writes.push(d); return mem.write(d); }, clear: (r) => { clears.push(r); return mem.clear(r); } };
 });
 
 const athleteCell = (row: number, col: number) => raw.athletes[row - 5]?.[col];
@@ -75,13 +75,15 @@ describe("athletes", () => {
 describe("workout log", () => {
   const block: BlockInput = {
     date: "2026-10-01", group: "Advanced", libraryItem: "", blockType: "Strength", description: "Weighted pull-ups",
-    setsRepsDuration: "3 x 5", coach: "Jordan Lee", notes: "",
+    setsRepsDuration: "3 x 5", coach: "Jordan Lee", notes: "", minutes: 20, order: 3,
   };
 
   it("adds a block that shows on that day, stored as a real date", async () => {
     const row = await saveChange(sheet, { table: "log", row: null, value: block });
     expect(writes[0][0].values[0][0]).toBeTypeOf("number"); // a date serial, not text
     expect(team().log.filter((b) => b.date === "2026-10-01")).toEqual([{ row, ...block }]);
+    // Minutes / Order go in J:K (never I, the hidden Day Rk formula), with their headers.
+    expect(writes[0].map((w) => w.range)).toEqual([`'Log a Workout'!A${row}:H${row}`, `'Log a Workout'!J${row}:K${row}`, "'Log a Workout'!J4:K4"]);
   });
 
   it("counts toward the library's Times Used when picked from the library", async () => {
@@ -97,7 +99,7 @@ describe("workout log", () => {
     expect(team().log[0].notes).toBe("Moved to the cave");
     const now = team().log[0];
     await saveChange(sheet, { table: "log", row: now.row, was: now, value: null });
-    expect(clears.at(-1)).toEqual([`'Log a Workout'!A${now.row}:H${now.row}`]);
+    expect(clears.at(-1)).toEqual([`'Log a Workout'!A${now.row}:H${now.row}`, `'Log a Workout'!J${now.row}:K${now.row}`]);
     expect(team().log.find((b) => b.row === now.row)).toBeUndefined();
   });
 

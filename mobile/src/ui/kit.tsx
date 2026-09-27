@@ -150,7 +150,7 @@ export function FilterChips<V extends string>({ options, value, onChange, label 
   const s = useAppState();
   const tierNames = s.data?.settings.tierNames ?? [];
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel={label} style={{ marginBottom: 8 }} contentContainerStyle={{ gap: 8, paddingRight: 8 }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel={label} style={{ marginBottom: 8, flexGrow: 0, flexShrink: 0 }} contentContainerStyle={{ gap: 8, paddingRight: 8 }}>
       {options.map((o) => {
         const on = o.value === value;
         const c = o.tier ? tierColors(t, o.tier, tierNames) : { fg: t.accent, bg: t.surface2 };

@@ -510,7 +510,10 @@
      "Description / Activity\n(auto-fills, editable)",
      "Sets x Reps /\nDuration (auto-fills, editable)",
      "Coach",
-     "Notes"
+     "Notes",
+     "Day Rk",
+     "Minutes",
+     "Order"
     ],
     [
      46287,
@@ -520,7 +523,10 @@
      "Team warm up",
      "5:30-6:15 PM",
      "",
-     "EXAMPLE — reformatted from the 9/22 plan, overwrite or delete"
+     "EXAMPLE — reformatted from the 9/22 plan, overwrite or delete",
+     "",
+     45,
+     1
     ],
     [
      46287,
@@ -530,7 +536,10 @@
      "Dynos in groups. Doesn't need to be coordinated — slab or steep.",
      "6:15-7:00 PM",
      "",
-     "EXAMPLE"
+     "EXAMPLE",
+     "",
+     45,
+     2
     ],
     [
      46287,
@@ -540,7 +549,10 @@
      "Boulders ~1 grade below flash. Jump between moves, establish foot control on first swing in. Focus on accuracy and shoulder tension/control. Steep terrain only.",
      "6 boulders x2 sets, 3 min rest, 5 min between sets",
      "",
-     "EXAMPLE — picked from the Library, so Block Type/Description/Sets-Reps auto-filled"
+     "EXAMPLE — picked from the Library, so Block Type/Description/Sets-Reps auto-filled",
+     "",
+     45,
+     3
     ],
     [
      46287,
@@ -550,7 +562,10 @@
      "Hanging core, 4 sets. Team stretch.",
      "7:45-8:00 PM",
      "",
-     "EXAMPLE"
+     "EXAMPLE",
+     "",
+     15,
+     4
     ]
    ]
   },

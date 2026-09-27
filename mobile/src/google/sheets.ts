@@ -63,6 +63,12 @@ export function sheetWriter(spreadsheetId: string, token: string): SheetWriter {
       const data = await call<{ values?: Rows }>(sheetUrl(spreadsheetId) + "/values/" + encodeURIComponent(range) + "?" + params, token);
       return data.values ?? [];
     },
+    async readMany(ranges) {
+      const params = new URLSearchParams(READ_OPTIONS);
+      ranges.forEach((r) => params.append("ranges", r));
+      const data = await call<{ valueRanges: { values?: Rows }[] }>(sheetUrl(spreadsheetId) + "/values:batchGet?" + params, token);
+      return ranges.map((_, i) => data.valueRanges[i]?.values ?? []);
+    },
     async write(data: ValueRange[]) {
       // RAW: text is stored exactly as typed ("3/5" stays text, "=..." is never a formula);
       // dates arrive as serial numbers, which the Sheet's date columns display as dates.

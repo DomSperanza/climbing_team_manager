@@ -63,6 +63,8 @@ export interface WorkoutBlock {
   setsRepsDuration: string;
   coach: string;
   notes: string;
+  minutes: number | null; // J — how long the block runs
+  order: number | null; // K — its place in the practice (blank on rows typed straight into the Sheet)
 }
 
 export interface ProgressEntry {
@@ -80,6 +82,16 @@ export interface SeasonSettings {
   seasonStartDate: ISODate | null;
   numberOfWeeks: number;
   blockTypes: string[];
+  practice: PracticeTiming; // Settings!B18:B22
+}
+
+/** Times are minutes after midnight (17:30 = 1050). */
+export interface PracticeTiming {
+  start: number;
+  end: number;
+  warmupMinutes: number;
+  tierBlockMinutes: number;
+  cooldownMinutes: number;
 }
 
 export interface TeamData {

@@ -15,8 +15,11 @@ import { memorySheet } from "@/core/memorySheet";
 import { base64ToBytes, setupPlan, validateNewSheet, type NewSheetOptions } from "@/core/setup";
 import { parseTeamData, rawFromValueRanges, type RawRanges, type Rows } from "@/core/schema/parse";
 import { missingTabs, validateSheet } from "@/core/schema/validate";
-import type { TeamData } from "@/core/schema/model";
-import { SaveError, saveChange, type Change } from "@/core/writes";
+import type { TeamData, WorkoutBlock } from "@/core/schema/model";
+import { recording, SaveError, saveChange, saveOrder, type Change, type SheetWriter } from "@/core/writes";
+import { reorder, standardOutline } from "@/core/logic/timeline";
+import { ALL_TEAM } from "@/core/schema/layout";
+import type { ISODate } from "@/core/logic/dates";
 
 export type Source = { kind: "sheet"; spreadsheetId: string; title: string } | { kind: "demo" };
 
@@ -74,7 +77,13 @@ async function loadDemo() {
   await cacheSet(CACHE_KEY, { source: { kind: "demo" }, raw: r, fetchedAt } satisfies Cached);
 }
 
+// Bumped by every save. A refresh that started before a save finished would show data from
+// before it, so it's thrown away and run again.
+let saveCount = 0;
+let staleRefresh = false;
+
 async function loadSheet(spreadsheetId: string, token: string) {
+  const savesAtStart = saveCount;
   const info = await fetchSheetInfo(spreadsheetId, token);
   if (missingTabs(info.sheetTitles).length) throw new SheetsError(validateSheet(info.sheetTitles).join(" "), "layout");
   const r = rawFromValueRanges(await fetchAllRanges(spreadsheetId, token));
@@ -82,6 +91,7 @@ async function loadSheet(spreadsheetId: string, token: string) {
   if (problems.length) throw new SheetsError(problems.join(" "), "layout");
   const source: Source = { kind: "sheet", spreadsheetId, title: info.title };
   const fetchedAt = Date.now();
+  if (saveCount !== savesAtStart) { staleRefresh = true; return; }
   apply(source, r, fetchedAt);
   await cacheSet(CACHE_KEY, { source, raw: r, fetchedAt } satisfies Cached);
 }
@@ -167,6 +177,7 @@ export async function refresh() {
   } finally {
     update({ loading: false });
   }
+  if (staleRefresh) { staleRefresh = false; return refresh(); }
 }
 
 /**
@@ -294,25 +305,63 @@ export function cannotSaveReason(s: AppState): string | null {
 }
 
 /**
- * Saves one change straight to the Sheet (or, in demo mode, to the demo data), then reloads
- * everything so the app shows exactly what the Sheet now holds. Throws a message for the form.
+ * Runs a save against the Sheet (or, in demo mode, the demo data). The screen updates as soon
+ * as Google confirms — the same cell changes are applied to the app's own copy — and then
+ * the whole Sheet is re-read in the background, so the app ends up showing exactly what the
+ * Sheet holds. Throws a message for the screen that asked.
  */
-export async function save(change: Change): Promise<void> {
+async function runSave(op: (sheet: SheetWriter) => Promise<unknown>): Promise<void> {
   const source = state.source;
   if (!source || !raw) throw new SaveError("Nothing is connected.");
   if (source.kind === "demo") {
-    await saveChange(memorySheet(raw), change);
+    await op(memorySheet(raw));
     apply(source, raw, Date.now());
     await cacheSet(CACHE_KEY, { source, raw, fetchedAt: Date.now() } satisfies Cached);
     return;
   }
   const reason = cannotSaveReason(state);
   if (reason) throw new SaveError(reason);
+  let rec: ReturnType<typeof recording> | null = null;
   try {
-    await withToken((token) => saveChange(sheetWriter(source.spreadsheetId, token), change));
+    await withToken(async (token) => {
+      rec = recording(sheetWriter(source.spreadsheetId, token));
+      await op(rec.writer);
+    });
   } catch (e) {
     if (e instanceof SheetsError && e.kind === "auth") update({ needsSignIn: true });
     throw e;
+  } finally {
+    saveCount++;
   }
-  await refresh();
+  const local = raw;
+  if (rec && local) {
+    await (rec as ReturnType<typeof recording>).replayOnto(memorySheet(local));
+    apply(source, local, state.fetchedAt ?? Date.now());
+  }
+  refresh(); // re-sync in the background
+}
+
+/** Saves one change straight to the Sheet (add, edit or delete one row). */
+export function save(change: Change): Promise<void> {
+  return runSave((sheet) => saveChange(sheet, change));
+}
+
+/** Moves a workout block one place earlier or later in its day's plan. */
+export function moveBlock(dayBlocks: WorkoutBlock[], row: number, direction: -1 | 1): Promise<void> {
+  const moves = reorder(dayBlocks, row, direction);
+  return moves.length ? runSave((sheet) => saveOrder(sheet, moves)) : Promise.resolve();
+}
+
+/** Fills an empty day with the standard outline from Settings: team warm-up, then team stretch. */
+export function addStandardOutline(date: ISODate): Promise<void> {
+  const data = state.data;
+  if (!data) return Promise.resolve();
+  return runSave(async (sheet) => {
+    for (const o of standardOutline(data.settings.practice, data.settings.blockTypes)) {
+      await saveChange(sheet, { table: "log", row: null, value: {
+        date, group: ALL_TEAM, libraryItem: "", blockType: o.blockType, description: o.description,
+        setsRepsDuration: "", coach: "", notes: "", minutes: o.minutes, order: o.order,
+      } });
+    }
+  });
 }
