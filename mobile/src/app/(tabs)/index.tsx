@@ -11,12 +11,12 @@ import { addStandardOutline, cannotSaveReason, moveBlock, save, saveWorkoutDay, 
 import { attendanceOn, unrecorded } from "@/core/logic/attendance";
 import type { TeamData, WorkoutBlock } from "@/core/schema/model";
 import { daysBetween, formatLong, nextPracticeDay, stepPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
-import { dayTimeline, formatClock, formatDuration, reorder, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
+import { blockGroups, dayTimeline, formatClock, formatDuration, reorder, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
 import { DateField } from "@/ui/DateField";
 import { Icon, type IconName } from "@/ui/Icon";
 import { DayCoaches } from "@/ui/DayCoaches";
 import { saveOrAsk } from "@/ui/form";
-import { Banner, Button, Card, Empty, FilterChips, IconButton, LinkButton, Row, Screen, T, TierChip } from "@/ui/kit";
+import { Banner, Button, Card, Empty, FilterChips, GroupChips, IconButton, LinkButton, Row, Screen, T } from "@/ui/kit";
 import { tierColors, useTheme } from "@/ui/theme";
 
 function nearestPlannedDay(log: WorkoutBlock[], d: ISODate): ISODate | null {
@@ -97,7 +97,7 @@ export default function Today() {
             <T small muted>{focus ? `${focus} + All Team` : `${dayBlocks.length} block${dayBlocks.length === 1 ? "" : "s"}`} · {rearrange ? "use the arrows and ±5" : "tap one to edit"}</T>
             <LinkButton label={rearrange ? "Done" : "Rearrange"} onPress={() => { setRearrange(!rearrange); setError(null); }} />
           </Row>
-          {timeline.blocks.filter((tb) => !focus || tb.lane === null || tb.block.group === focus).map((tb) => (
+          {timeline.blocks.filter((tb) => !focus || tb.lanes === null || tb.lanes.includes(focus)).map((tb) => (
             <View key={tb.block.row}>
               {timeline.open && timeline.openBeforeRow === tb.block.row && <OpenSlot open={timeline.open} date={date} />}
               <BlockCard timed={tb} tierNames={settings.tierNames} rearrange={rearrange}
@@ -209,7 +209,7 @@ function BlockCard({ timed: tb, tierNames, rearrange, busy, disabled, canMoveUp,
   const b = tb.block;
   const title = b.libraryItem || b.blockType || b.description || "Block";
   const hasTime = b.minutes !== null;
-  const tint = tierColors(t, b.group, tierNames).fg;
+  const tint = tierColors(t, blockGroups(b.group, tierNames)?.[0] ?? b.group, tierNames).fg;
   const card = (pressed: boolean) => (
         <Card tint={tint} style={[{ flexDirection: "row", gap: 12, paddingLeft: 12 }, pressed && { opacity: 0.75 }]}>
           <View style={{ width: 52, alignItems: "flex-start" }}>
@@ -219,7 +219,7 @@ function BlockCard({ timed: tb, tierNames, rearrange, busy, disabled, canMoveUp,
           <View style={{ flex: 1, minWidth: 0 }}>
             <Row style={{ justifyContent: "space-between", flexWrap: "nowrap", alignItems: "flex-start" }}>
               <T bold style={{ flex: 1, fontSize: 17 }}>{title}</T>
-              <TierChip tier={b.group} tierNames={tierNames} />
+              <View style={{ maxWidth: "55%" }}><GroupChips group={b.group} tierNames={tierNames} /></View>
             </Row>
             {b.libraryItem && b.blockType ? <T small muted>{b.blockType}</T> : null}
             {!rearrange && b.description && b.description !== title ? <T style={{ marginTop: 4 }}>{b.description}</T> : null}

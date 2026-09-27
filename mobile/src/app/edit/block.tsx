@@ -7,17 +7,19 @@ import { useState } from "react";
 import { useAppState } from "@/data/store";
 import { ALL_TEAM } from "@/core/schema/layout";
 import { autofillFromLibrary } from "@/core/logic/library";
-import { formatClock, dayTimeline, minutesFromText, orderForNew } from "@/core/logic/timeline";
+import { blockGroups, formatClock, dayTimeline, minutesFromText, orderForNew } from "@/core/logic/timeline";
 import { nextPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
 import { coachForGroup } from "@/core/logic/assignments";
 import type { BlockInput } from "@/core/writes";
 import { DateField } from "@/ui/DateField";
 import { ExercisePicker } from "@/ui/ExercisePicker";
-import { FormScreen, MinutesField, SelectField, TextField } from "@/ui/form";
+import { FormScreen, GroupPicker, MinutesField, SelectField, TextField } from "@/ui/form";
 import { Empty, Screen } from "@/ui/kit";
 
 export default function EditBlock() {
   const { data } = useAppState();
+  // For a block shared by several groups, the first one decides the default coach.
+  const firstGroup = (group: string) => (data ? blockGroups(group, data.settings.tierNames)?.[0] : undefined) ?? ALL_TEAM;
   const params = useLocalSearchParams<{ row?: string; date?: string; group?: string }>();
   // The record as it was when the form opened: saving writes only what's changed from this,
   // and spots anything another coach changed meanwhile (a later refresh doesn't move it).
@@ -32,7 +34,7 @@ export default function EditBlock() {
       group,
       libraryItem: "", blockType: "", description: "", setsRepsDuration: "",
       // Whoever has this group that day, else the day's lead.
-      coach: (data && (coachForGroup(data, date, group) ?? coachForGroup(data, date, ALL_TEAM))) ?? "",
+      coach: (data && (coachForGroup(data, date, firstGroup(group)) ?? coachForGroup(data, date, ALL_TEAM))) ?? "",
       notes: "", minutes: null, order: null, // order is chosen when saving (see below)
     };
   });
@@ -62,12 +64,11 @@ export default function EditBlock() {
       onDelete={was ? { change: () => ({ table: "log", row: was.row, was, value: null }), title: "Delete this block?", message: `"${was.libraryItem || was.blockType || "This block"}" will be removed from the plan in the Sheet.` } : undefined}
       deleteLabel="Delete block">
       <Stack.Screen options={{ title: was ? "Edit block" : "Add a block" }} />
-      <SelectField label="Group" value={v.group} onChange={(group) => {
-        // The coach follows the group, unless someone picked a coach by hand.
-        const previousDefault = coachForGroup(data, v.date, v.group) ?? "";
-        set(!v.coach || v.coach === previousDefault ? { group, coach: coachForGroup(data, v.date, group) ?? v.coach } : { group });
-      }}
-        options={[...settings.tierNames.filter(Boolean), ALL_TEAM].map((g) => ({ value: g, sub: g === ALL_TEAM ? "Everyone together" : undefined }))} />
+      <GroupPicker value={v.group} tierNames={settings.tierNames} onChange={(group) => {
+        // The coach follows the (first) group, unless someone picked a coach by hand.
+        const previousDefault = coachForGroup(data, v.date, firstGroup(v.group)) ?? "";
+        set(!v.coach || v.coach === previousDefault ? { group, coach: coachForGroup(data, v.date, firstGroup(group)) ?? v.coach } : { group });
+      }} />
       <ExercisePicker data={data} value={v.libraryItem} onChange={pickExercise} tier={v.group} />
       <MinutesField value={v.minutes} onChange={(minutes) => set({ minutes })} hint={timing} />
       <SelectField label="Block type" value={v.blockType} onChange={(blockType) => set({ blockType })} allowBlank="—"

@@ -19,7 +19,7 @@ export interface DayRecord { entry: AttendanceEntry; blocks: TimedBlock[] }
 export function workoutFor(data: TeamData, date: ISODate, group: string): TimedBlock[] {
   const day = data.log.filter((b) => b.date === date);
   return dayTimeline(day, data.settings.practice, data.settings.tierNames).blocks
-    .filter((t) => t.lane === null || norm(t.block.group) === norm(group));
+    .filter((t) => t.lanes === null || t.lanes.some((l) => norm(l) === norm(group)));
 }
 
 /** Attendance for one date, by athlete name (the last row wins if someone was entered twice). */

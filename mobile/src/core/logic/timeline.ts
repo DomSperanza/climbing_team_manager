@@ -2,10 +2,13 @@
 // place in the order (Order, column K); start and end times are worked out from those and
 // the practice start time in Settings, so changing one block's minutes moves everything
 // after it. "All Team" blocks span every tier; tier blocks run side by side, each tier on
-// its own clock, and the next All Team block starts once every tier is done. A closing
+// its own clock, and the next All Team block starts once every tier is done. A block shared
+// by some groups (e.g. Intermediate + Developing) starts once those groups are free and holds
+// just those groups until it ends. A closing
 // stretch/cooldown is pinned to the end of practice, leaving any unplanned time before it
 // as an "open" gap.
 
+import { ALL_TEAM } from "../schema/layout";
 import type { PracticeTiming, WorkoutBlock } from "../schema/model";
 
 export const DEFAULT_PRACTICE: PracticeTiming = { start: 17 * 60 + 30, end: 20 * 60, warmupMinutes: 45, tierBlockMinutes: 90, cooldownMinutes: 15 };
@@ -57,7 +60,25 @@ export function inPlanOrder(blocks: WorkoutBlock[]): WorkoutBlock[] {
   return [...blocks].sort((a, b) => sortKey(a) - sortKey(b) || a.row - b.row);
 }
 
-export interface TimedBlock { block: WorkoutBlock; start: number; end: number; lane: string | null }
+/** `lanes` = the groups doing this block (null = everyone). */
+export interface TimedBlock { block: WorkoutBlock; start: number; end: number; lanes: string[] | null }
+
+/**
+ * The groups a block's Group cell names — one tier, several ("Intermediate, Developing"), or
+ * null for the whole team (All Team, all tiers, or anything that isn't a tier name).
+ */
+export function blockGroups(group: string, tierNames: string[]): string[] | null {
+  const tiers = tierNames.filter(Boolean);
+  const named = group.split(",").map((g) => g.trim().toLowerCase()).filter(Boolean);
+  const hit = tiers.filter((t) => named.includes(t.toLowerCase()));
+  return hit.length && hit.length < tiers.length ? hit : null;
+}
+
+/** The Group cell for a choice of groups, in Settings order; "All Team" when that's everyone (or no one). */
+export function groupText(selected: string[], tierNames: string[]): string {
+  const picked = tierNames.filter((t) => t && selected.includes(t));
+  return picked.length && picked.length < tierNames.filter(Boolean).length ? picked.join(", ") : ALL_TEAM;
+}
 
 export interface DayTimeline {
   blocks: TimedBlock[]; // in time order: by start, then All Team before tiers, tiers in Settings order
@@ -72,7 +93,6 @@ export interface DayTimeline {
 }
 
 export function dayTimeline(blocks: WorkoutBlock[], practice: PracticeTiming, tierNames: string[]): DayTimeline {
-  const tiers = new Set(tierNames.filter(Boolean));
   const laneEnd = new Map<string, number>();
   let allEnd = practice.start; // when the last All Team block ends
   const timed: TimedBlock[] = [];
@@ -92,15 +112,16 @@ export function dayTimeline(blocks: WorkoutBlock[], practice: PracticeTiming, ti
       }
     }
     const len = b.minutes ?? 0;
-    if (tiers.has(b.group)) {
-      const start = Math.max(laneEnd.get(b.group) ?? allEnd, allEnd);
-      laneEnd.set(b.group, start + len);
-      timed.push({ block: b, start, end: start + len, lane: b.group });
+    const lanes = blockGroups(b.group, tierNames);
+    if (lanes) {
+      const start = Math.max(allEnd, ...lanes.map((l) => laneEnd.get(l) ?? allEnd));
+      for (const l of lanes) laneEnd.set(l, start + len);
+      timed.push({ block: b, start, end: start + len, lanes });
     } else {
       const start = Math.max(allEnd, ...laneEnd.values());
       allEnd = start + len;
       for (const k of laneEnd.keys()) laneEnd.set(k, allEnd);
-      timed.push({ block: b, start, end: allEnd, lane: null });
+      timed.push({ block: b, start, end: allEnd, lanes: null });
     }
   }
   const end = Math.max(allEnd, ...laneEnd.values());
@@ -120,7 +141,7 @@ export function dayTimeline(blocks: WorkoutBlock[], practice: PracticeTiming, ti
 
 /** Time order for showing a day: start time, then All Team first, then tiers in Settings order. */
 function byTime(timed: TimedBlock[], tierNames: string[]): TimedBlock[] {
-  const rank = (t: TimedBlock) => (t.lane === null ? -1 : tierNames.indexOf(t.lane));
+  const rank = (t: TimedBlock) => (t.lanes === null ? -1 : Math.min(...t.lanes.map((l) => tierNames.indexOf(l))));
   return timed.map((t, i) => ({ t, i })) // i = plan position, the final tie-break
     .sort((a, b) => a.t.start - b.t.start || rank(a.t) - rank(b.t) || a.i - b.i)
     .map(({ t }) => t);
@@ -150,45 +171,42 @@ export function orderForNew(dayBlocks: WorkoutBlock[]): number {
 }
 
 /**
- * Moves one block one step earlier or later in its day, the way it looks on the timeline:
- * - a tier block swaps with the previous/next block of the same tier, or crosses the All Team
- *   block it runs into (into the neighbouring stretch of side-by-side tier blocks);
- * - an All Team block swaps with the neighbouring All Team block, or jumps a whole stretch of
- *   side-by-side tier blocks.
+ * Moves one block one step earlier or later in its day, the way it looks on the timeline. It
+ * steps past the nearest block that includes all of its groups:
+ * - a single-group block swaps with that group's previous/next block, or crosses the shared or
+ *   All Team block it runs into;
+ * - a block for several groups (or All Team) jumps its groups' separate blocks in one go.
  * Returns the new Order for every block whose number changes (the day is renumbered 1, 2, 3…
  * so rows typed into the Sheet get numbers too). Empty when it can't move that way.
  */
 export function reorder(dayBlocks: WorkoutBlock[], row: number, direction: -1 | 1, tierNames: string[]): { block: WorkoutBlock; order: number }[] {
-  const tiers = new Set(tierNames.filter(Boolean));
+  const allTiers = tierNames.filter(Boolean);
+  const lanesOf = (x: WorkoutBlock) => blockGroups(x.group, tierNames) ?? allTiers;
   const seq = inPlanOrder(dayBlocks);
   const i = seq.findIndex((b) => b.row === row);
   if (i < 0) return [];
   const b = seq[i];
-  const isTeam = (x: WorkoutBlock) => !tiers.has(x.group);
-  // Walk from i in `direction` to the nearest block in b's lane (same tier, or any All Team block).
-  let j = i + direction;
-  const inLane = (x: WorkoutBlock) => (isTeam(b) ? isTeam(x) : isTeam(x) || x.group === b.group);
-  while (j >= 0 && j < seq.length && !inLane(seq[j])) j += direction;
-  const skipped = Math.abs(j - i) - 1; // tier blocks passed on the way (only when b is All Team)
+  const mine = lanesOf(b);
+  const covers = (x: WorkoutBlock) => mine.every((l) => lanesOf(x).includes(l)); // x includes all of b's groups
+  const overlaps = (x: WorkoutBlock) => lanesOf(x).some((l) => mine.includes(l));
 
-  let target: number; // where b ends up in the sequence
-  if (j < 0 || j >= seq.length) {
-    if (!isTeam(b) || skipped === 0) return []; // already first/last in its lane
-    target = direction < 0 ? 0 : seq.length - 1; // an All Team block jumps the last stretch
-  } else if (isTeam(b) && skipped > 0) {
-    target = direction < 0 ? j + 1 : j - 1; // jump the stretch of tier blocks, stop at the next All Team block
-  } else if (!isTeam(b) && isTeam(seq[j])) {
-    target = j; // cross the All Team block into the neighbouring stretch
-  } else {
-    target = j; // swap with the neighbour in the same lane
+  let j = i + direction;
+  let spanned = false; // passed blocks of b's own groups on the way (b is wider than they are)
+  while (j >= 0 && j < seq.length && !covers(seq[j])) {
+    if (overlaps(seq[j])) spanned = true;
+    j += direction;
   }
-  if (target === i) return [];
   const moved = [...seq];
-  if (isTeam(b) && skipped === 0 || !isTeam(b) && !isTeam(seq[j] ?? b)) {
-    [moved[i], moved[target]] = [moved[target], moved[i]]; // a straight swap keeps both blocks' positions
+  const moveTo = (target: number) => { moved.splice(i, 1); moved.splice(target, 0, b); };
+  if (j < 0 || j >= seq.length) {
+    if (!spanned) return []; // already first/last for its groups
+    moveTo(direction < 0 ? 0 : seq.length - 1);
+  } else if (spanned) {
+    moveTo(direction < 0 ? j + 1 : j - 1); // jump the stretch, stop next to the block that includes it
+  } else if (lanesOf(seq[j]).length === mine.length) {
+    [moved[i], moved[j]] = [moved[j], moved[i]]; // same groups: swap
   } else {
-    moved.splice(i, 1);
-    moved.splice(target, 0, b);
+    moveTo(j); // cross a wider (shared or All Team) block
   }
   return moved.map((block, k) => ({ block, order: k + 1 })).filter(({ block, order }) => block.order !== order);
 }

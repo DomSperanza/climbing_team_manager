@@ -201,6 +201,7 @@ Today shows the day as a timeline against the practice time in the Sheet's Setti
 - **The time bar** shows what's planned against the 2½ hours, and warns when the plan runs over.
 - **A closing stretch/cooldown stays at the end of practice.** Any unplanned time before it shows as an open slot you can tap to fill.
 - **Empty day:** "Start with the standard outline" adds the team warm-up and stretch from Settings in one tap.
+- **A block can be for several groups** (e.g. Intermediate and Developing together): tap more than one group under "Who's doing it". It starts once all those groups are free, and athletes in any of them get it in their history. In the Sheet the Group cell reads "Intermediate, Developing". Because the column's dropdown only lists single groups, Google Sheets marks those cells with a small red "invalid" corner. The value is stored fine.
 - **The whole day is listed in time order.** Tier blocks that run at the same time appear together: All Team first, then tiers in Settings order.
 - **Rearrange:** move blocks earlier or later, or make them 5 minutes shorter or longer. Each tap saves straight away, so plans can change mid-practice. Moves follow each block's own group:
   - A tier block swaps with that tier's previous or next block, or crosses the All Team block it reaches.

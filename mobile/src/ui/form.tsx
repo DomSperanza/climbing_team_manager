@@ -9,7 +9,9 @@ import { cannotSaveReason, save, useAppState } from "@/data/store";
 import { ConflictError, type Change, type Conflict, type Resolve } from "@/core/writes";
 import { Icon } from "./Icon";
 import { Banner, Button, MAX_WIDTH, SearchBox, T } from "./kit";
-import { RADIUS, useTheme } from "./theme";
+import { RADIUS, tierColors, useTheme } from "./theme";
+import { blockGroups, groupText } from "@/core/logic/timeline";
+import { ALL_TEAM } from "@/core/schema/layout";
 
 // Athletes are minors (HANDOFF.md §1.6): nudge every note toward climbing-only content.
 export const NOTES_HINT = "Keep it climbing-specific (e.g. \"fingers sore, take it easy this week\") — no medical or family details.";
@@ -91,6 +93,37 @@ export function SelectField({ label, value, options, onChange, placeholder = "Ch
             }} />
         </View>
       </Modal>
+    </View>
+  );
+}
+
+/**
+ * Who does a workout block: All Team, or any mix of groups (tap several for a block they do
+ * together). Stored in the Group cell as "Intermediate, Developing".
+ */
+export function GroupPicker({ value, onChange, tierNames }: { value: string; onChange: (group: string) => void; tierNames: string[] }) {
+  const t = useTheme();
+  const tiers = tierNames.filter(Boolean);
+  const lanes = blockGroups(value, tierNames); // null = everyone
+  const toggle = (tier: string) => {
+    if (!lanes) return onChange(tier); // from All Team, start with just this group
+    const next = lanes.includes(tier) ? lanes.filter((l) => l !== tier) : [...lanes, tier];
+    onChange(groupText(next, tierNames));
+  };
+  const chip = (label: string, on: boolean, colors: { fg: string; bg: string }, onPress: () => void) => (
+    <Pressable key={label} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={label} onPress={onPress}
+      style={{ minHeight: 44, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, justifyContent: "center",
+        borderColor: on ? colors.fg : t.line, backgroundColor: on ? colors.bg : t.surface }}>
+      <Text style={{ color: on ? colors.fg : t.text, fontSize: 15, fontWeight: on ? "700" : "500" }}>{on ? "✓ " : ""}{label}</Text>
+    </Pressable>
+  );
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <FieldLabel label="Who's doing it" hint="Tap more than one group for a block they do together." />
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        {chip(ALL_TEAM, !lanes, tierColors(t, ALL_TEAM, tierNames), () => onChange(ALL_TEAM))}
+        {tiers.map((tier) => chip(tier, !!lanes?.includes(tier), tierColors(t, tier, tierNames), () => toggle(tier)))}
+      </View>
     </View>
   );
 }

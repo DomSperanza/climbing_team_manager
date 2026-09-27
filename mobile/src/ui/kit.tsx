@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { refresh, useAppState } from "@/data/store";
+import { blockGroups } from "@/core/logic/timeline";
 import { Icon, type IconName } from "./Icon";
 import { RADIUS, tierColors, useTheme } from "./theme";
 
@@ -92,6 +93,13 @@ export function TierChip({ tier, tierNames }: { tier: string; tierNames: string[
   if (!tier) return null;
   const c = tierColors(t, tier, tierNames);
   return <Chip label={tier} fg={c.fg} bg={c.bg} />;
+}
+
+/** The chips for a workout block's Group cell: one per group for a shared block ("Intermediate, Developing"). */
+export function GroupChips({ group, tierNames }: { group: string; tierNames: string[] }) {
+  const lanes = blockGroups(group, tierNames);
+  if (!lanes) return <TierChip tier={group} tierNames={tierNames} />;
+  return <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 4 }}>{lanes.map((l) => <TierChip key={l} tier={l} tierNames={tierNames} />)}</View>;
 }
 
 export function MutedChip({ label }: { label: string }) {

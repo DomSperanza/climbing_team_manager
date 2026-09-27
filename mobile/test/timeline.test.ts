@@ -4,7 +4,7 @@ import { teamFrom } from "./helpers";
 import { memorySheet } from "../src/core/memorySheet";
 import { parseTeamData, rawFromValueRanges, type Rows } from "../src/core/schema/parse";
 import { filterLibrary } from "../src/core/logic/library";
-import { dayTimeline, formatClock, formatDuration, minutesFromText, orderForNew, parseTimeOfDay, reorder, standardOutline } from "../src/core/logic/timeline";
+import { blockGroups, dayTimeline, formatClock, formatDuration, groupText, minutesFromText, orderForNew, parseTimeOfDay, reorder, standardOutline } from "../src/core/logic/timeline";
 import { recording, saveOrder, ROW_CHANGED_MESSAGE } from "../src/core/writes";
 import type { WorkoutBlock } from "../src/core/schema/model";
 
@@ -76,6 +76,43 @@ describe("a day's timeline", () => {
   it("orders rows typed straight into the Sheet (no Order) after the rest, by row", () => {
     const a = block("All Team", 10, null), b = block("All Team", 10, 1);
     expect(dayTimeline([a, b], team.settings.practice, tiers).blocks.map((x) => x.block)).toEqual([b, a]);
+  });
+});
+
+describe("blocks shared by several groups", () => {
+  it("reads and writes the Group cell", () => {
+    expect(blockGroups("Intermediate, Developing", tiers)).toEqual(["Intermediate", "Developing"]);
+    expect(blockGroups("developing,intermediate", tiers)).toEqual(["Intermediate", "Developing"]); // any case/order
+    expect(blockGroups("Advanced", tiers)).toEqual(["Advanced"]);
+    expect(blockGroups("All Team", tiers)).toBeNull();
+    expect(blockGroups("Advanced, Intermediate, Developing", tiers)).toBeNull(); // everyone
+    expect(groupText(["Developing", "Intermediate"], tiers)).toBe("Intermediate, Developing");
+    expect(groupText(["Advanced", "Intermediate", "Developing"], tiers)).toBe("All Team");
+    expect(groupText([], tiers)).toBe("All Team");
+  });
+
+  it("starts once all its groups are free and holds only those groups", () => {
+    const [adv, int, dev] = tiers;
+    const day = [block("All Team", 45, 1), block(int, 30, 2), block(dev, 15, 3), block(`${int}, ${dev}`, 30, 4), block(adv, 90, 5), block("All Team", 15, 6)];
+    const tl = dayTimeline(day, team.settings.practice, tiers);
+    expect(tl.blocks.map((b) => `${formatClock(b.start)}-${formatClock(b.end)} ${b.block.group}`)).toEqual([
+      "5:30-6:15 All Team", `6:15-7:45 ${adv}`, `6:15-6:45 ${int}`, `6:15-6:30 ${dev}`, `6:45-7:15 ${int}, ${dev}`, "7:45-8:00 All Team",
+    ]);
+    expect(tl.blocks[4].lanes).toEqual([int, dev]);
+  });
+
+  it("moving a shared block jumps its groups' own blocks; single-group blocks cross it", () => {
+    const [adv, int, dev] = tiers;
+    const W = block("All Team", 45, 1, "Warm-up"), I1 = block(int, 30, 2), D1 = block(dev, 30, 3), ID = block(`${int}, ${dev}`, 30, 4), A1 = block(adv, 60, 5);
+    const day = [W, I1, D1, ID, A1];
+    const order = (moves: { block: WorkoutBlock; order: number }[]) => {
+      const m = new Map(moves.map((x) => [x.block.row, x.order]));
+      return inPlanOrderRows(day.map((b) => ({ ...b, order: m.get(b.row) ?? b.order })));
+    };
+    const inPlanOrderRows = (bs: WorkoutBlock[]) => [...bs].sort((a, b) => a.order! - b.order!).map((b) => b.row);
+    expect(order(reorder(day, ID.row, -1, tiers))).toEqual([W.row, ID.row, I1.row, D1.row, A1.row]); // before both its groups' blocks
+    expect(order(reorder(day, I1.row, 1, tiers))).toEqual([W.row, D1.row, ID.row, I1.row, A1.row]); // Intermediate crosses the shared block
+    expect(reorder(day, A1.row, -1, tiers).length).toBeGreaterThan(0); // Advanced isn't blocked by the shared block
   });
 });
 

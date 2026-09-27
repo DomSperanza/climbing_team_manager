@@ -38,6 +38,15 @@ describe("saving a practice for the athletes", () => {
     expect(dev).toEqual(["Stretch/Cooldown", "Technique/Skill"]);
   });
 
+  it("a block shared by two groups is in both groups' workouts", async () => {
+    const { sheet, team } = setUp();
+    await saveChange(sheet, { table: "log", row: null, value: { date: DAY, group: "Intermediate, Developing", libraryItem: "", blockType: "Core", description: "Shared core circuit", setsRepsDuration: "", coach: "", notes: "", minutes: 20, order: 7 } });
+    const names = (g: string) => workoutFor(team(), DAY, g).map((t) => t.block.description);
+    expect(names("Developing")).toContain("Shared core circuit");
+    expect(names("Intermediate")).toContain("Shared core circuit");
+    expect(names("Advanced")).not.toContain("Shared core circuit");
+  });
+
   it("saving again only adds who's missing — absences and group changes stay", async () => {
     const { raw, sheet, team } = setUp();
     await saveDay(sheet, team(), DAY, false);
