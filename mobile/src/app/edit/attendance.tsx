@@ -16,6 +16,8 @@ export default function EditAttendance() {
   const { date, athlete: name } = useLocalSearchParams<{ date: string; athlete: string }>();
   const athlete = data?.athletes.find((a) => a.fullName === name);
   const existing = data && date && name ? recordFor(data, date, name) : undefined;
+  // What the coach started from: only fields changed from this are saved (see saveAthleteDay).
+  const [base] = useState(() => (existing ? { group: existing.group, here: existing.here, notes: existing.notes } : null));
   const [group, setGroup] = useState(existing?.group ?? athlete?.tier ?? "");
   const [here, setHere] = useState(existing?.here ?? true);
   const [notes, setNotes] = useState(existing?.notes ?? "");
@@ -24,7 +26,7 @@ export default function EditAttendance() {
 
   const blocks = here ? workoutFor(data, date, group) : [];
   return (
-    <FormScreen onSave={() => setAthleteDay(date, name, { group, here, notes })}>
+    <FormScreen onSave={(resolve) => setAthleteDay(date, name, { group, here, notes }, base, resolve)}>
       <Stack.Screen options={{ title: name }} />
       <T muted style={{ marginBottom: 12 }}>{formatLong(date)}, {date.slice(0, 4)}</T>
       <SwitchField label="Was there" hint={here ? undefined : "Kept as a missed practice in their history."} value={here} onChange={setHere} />

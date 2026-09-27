@@ -14,7 +14,9 @@ import { Empty, Screen } from "@/ui/kit";
 export default function EditProgress() {
   const { data } = useAppState();
   const params = useLocalSearchParams<{ row?: string; athlete?: string }>();
-  const was = params.row ? data?.progress.find((p) => p.row === Number(params.row)) : undefined;
+  // The record as it was when the form opened: saving writes only what's changed from this,
+  // and spots anything another coach changed meanwhile (a later refresh doesn't move it).
+  const [was] = useState(() => (params.row ? data?.progress.find((p) => p.row === Number(params.row)) : undefined));
 
   const [v, setV] = useState<ProgressInput>(() => {
     if (was) { const { row: _row, ...rest } = was; return rest; }

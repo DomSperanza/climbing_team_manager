@@ -9,6 +9,7 @@ import { formatLong, weekdayOf, type ISODate } from "@/core/logic/dates";
 import { ALL_TEAM } from "@/core/schema/layout";
 import type { TeamData } from "@/core/schema/model";
 import { assignCoach, cannotSaveReason, signedInCoach, useAppState } from "@/data/store";
+import { saveOrAsk } from "./form";
 import { Icon } from "./Icon";
 import { Banner, Card, Chip, LinkButton, MAX_WIDTH, Row, T, TierChip } from "./kit";
 import { RADIUS, useTheme } from "./theme";
@@ -26,11 +27,12 @@ export function DayCoaches({ data, date }: { data: TeamData; date: ISODate }) {
   const blocked = cannotSaveReason(s);
   const weekday = weekdayOf(date);
 
-  const assign = async (group: string, coach: string | null) => {
+  /** `expected` = who had the group when the picker opened; a different claim since then is a conflict. */
+  const assign = async (group: string, coach: string | null, expected: string | null) => {
     setPicking(null);
     setBusy(group);
     setError(null);
-    try { await assignCoach(date, group, coach); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); }
+    try { await saveOrAsk((resolve) => assignCoach(date, group, coach, expected, resolve)); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); }
   };
   const open = (group: string, current: string | null) => (blocked ? setError(blocked) : setPicking({ group, current }));
 
@@ -68,7 +70,7 @@ export function DayCoaches({ data, date }: { data: TeamData; date: ISODate }) {
       {error && <View style={{ marginHorizontal: -14, marginTop: 8 }}><Banner kind="error">{error}</Banner></View>}
 
       <CoachPicker picking={picking} data={data} date={date} me={me} onDuty={day.onDuty.map((c) => c.fullName)}
-        onPick={(coach) => picking && assign(picking.group, coach)} onClose={() => setPicking(null)} />
+        onPick={(coach) => picking && assign(picking.group, coach, picking.current)} onClose={() => setPicking(null)} />
     </Card>
   );
 }

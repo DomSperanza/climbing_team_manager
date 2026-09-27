@@ -35,7 +35,7 @@ describe("who's coaching a day", () => {
     expect(raw.assignments[0]).toEqual(["Date", "Group", "Coach"]);
     expect(coachForGroup(team(), THU, "Advanced")).toBe("Jordan Lee");
 
-    await saveAssignment(sheet, THU, "advanced", "Taylor Brooks", true); // same group, any case
+    await saveAssignment(sheet, THU, "advanced", "Taylor Brooks", true, "Jordan Lee"); // same group, any case
     expect(assignmentRows(raw)).toHaveLength(1);
     expect(coachForGroup(team(), THU, "Advanced")).toBe("Taylor Brooks");
     expect(tabsAdded).toHaveLength(1);
@@ -46,7 +46,7 @@ describe("who's coaching a day", () => {
     await saveAssignment(sheet, THU, "All Team", "Jordan Lee", false);
     expect(dayCoaching(team(), THU).lead).toBe("Jordan Lee");
     expect(coachForGroup(team(), THU, "All Team")).toBe("Jordan Lee");
-    await saveAssignment(sheet, THU, "All Team", null, true);
+    await saveAssignment(sheet, THU, "All Team", null, true, "Jordan Lee");
     expect(dayCoaching(team(), THU).lead).toBeNull();
   });
 
@@ -56,7 +56,7 @@ describe("who's coaching a day", () => {
     await saveAssignment(sheet, TUE, "Intermediate", "Taylor Brooks", true);
     expect(coachForGroup(team(), THU, "Intermediate")).toBe("Jordan Lee");
     expect(coachForGroup(team(), TUE, "Intermediate")).toBe("Taylor Brooks");
-    await saveAssignment(sheet, THU, "Intermediate", null, true);
+    await saveAssignment(sheet, THU, "Intermediate", null, true, "Jordan Lee");
     await saveAssignment(sheet, THU, "Developing", "Jordan Lee", true);
     expect(assignmentRows(raw)).toHaveLength(2); // the cleared row was reused
   });

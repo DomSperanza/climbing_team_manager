@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react";
 import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cannotSaveReason, save, useAppState } from "@/data/store";
-import type { Change } from "@/core/writes";
+import { ConflictError, type Change, type Conflict, type Resolve } from "@/core/writes";
 import { Icon } from "./Icon";
 import { Banner, Button, MAX_WIDTH, SearchBox, T } from "./kit";
 import { RADIUS, useTheme } from "./theme";
@@ -143,6 +143,28 @@ export function confirmAction(title: string, message: string, confirmLabel: stri
   Alert.alert(title, message, [{ text: "Cancel", style: "cancel" }, { text: confirmLabel, style: "destructive", onPress: onConfirm }]);
 }
 
+/** Asks a yes/no question; resolves true when the coach confirms. */
+export function askConfirm(title: string, message: string, confirmLabel: string): Promise<boolean> {
+  if (Platform.OS === "web") return Promise.resolve(window.confirm(`${title}\n\n${message}`));
+  return new Promise((done) => Alert.alert(title, message, [
+    { text: "Keep theirs", style: "cancel", onPress: () => done(false) },
+    { text: confirmLabel, onPress: () => done(true) },
+  ], { cancelable: true, onDismiss: () => done(false) }));
+}
+
+/**
+ * For one-tap saves (a switch, ±5 min, claiming a group): runs `fn`, and if another coach
+ * changed the same thing meanwhile, asks whether to use this coach's version instead.
+ */
+export async function saveOrAsk(fn: (resolve?: Resolve) => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (e) {
+    if (!(e instanceof ConflictError)) throw e;
+    if (await askConfirm("Changed by someone else", `${e.message}\n\nUse yours instead?`, "Use mine")) await fn("mine");
+  }
+}
+
 /**
  * The frame every add/edit screen shares: the fields, then Save (and Delete for existing
  * rows). `build` turns the form into a Change at the moment Save is pressed.
@@ -150,7 +172,7 @@ export function confirmAction(title: string, message: string, confirmLabel: stri
 export function FormScreen({ children, build, onSave, onDelete, deleteLabel = "Delete", note }: {
   children: ReactNode; deleteLabel?: string; note?: string;
   build?: () => Change; // a row to save…
-  onSave?: () => Promise<void>; // …or any other save
+  onSave?: (resolve?: Resolve) => Promise<void>; // …or any other save
 
   /** `leaveTo: "list"` when the screen behind this form shows the deleted record itself. */
   onDelete?: { change: () => Change; title: string; message: string; leaveTo?: "list" };
@@ -159,18 +181,21 @@ export function FormScreen({ children, build, onSave, onDelete, deleteLabel = "D
   const s = useAppState();
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<{ conflicts: Conflict[]; change: Change | null } | null>(null);
   const blocked = cannotSaveReason(s);
 
-  const run = async (kind: "save" | "delete", change: Change | null) => {
+  const run = async (kind: "save" | "delete", change: Change | null, resolve?: Resolve) => {
     setBusy(kind);
     setError(null);
+    setConflict(null);
     try {
-      await (change ? save(change) : onSave?.());
+      await (change ? save(change, resolve) : onSave?.(resolve));
       if (kind === "delete" && onDelete?.leaveTo === "list" && router.canDismiss()) router.dismissAll();
       else if (router.canGoBack()) router.back();
       else router.replace("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (e instanceof ConflictError) setConflict({ conflicts: e.conflicts, change });
+      else setError(e instanceof Error ? e.message : String(e));
       setBusy(null);
     }
   };
@@ -183,6 +208,21 @@ export function FormScreen({ children, build, onSave, onDelete, deleteLabel = "D
         {note ? <T small muted style={{ marginBottom: 12 }}>{note}</T> : null}
         {error && <View style={{ marginBottom: 12, marginHorizontal: -16 }}><Banner kind="error">{error}</Banner></View>}
         {blocked && <View style={{ marginBottom: 12, marginHorizontal: -16 }}><Banner>{blocked}</Banner></View>}
+        {conflict && (
+          <View accessibilityRole="alert" style={{ borderWidth: 1, borderColor: t.danger, borderRadius: RADIUS, padding: 14, marginBottom: 12, gap: 8, backgroundColor: t.errorBg }}>
+            <T bold>Someone else changed this while you were editing</T>
+            {conflict.conflicts.map((c) => (
+              <View key={c.label}>
+                <T small bold>{c.label}</T>
+                <T small>Theirs: {c.theirs || "(blank)"}</T>
+                <T small>Yours: {c.mine || "(blank)"}</T>
+              </View>
+            ))}
+            <T small muted>Your other changes will be saved either way.</T>
+            <Button label="Use mine" kind="primary" onPress={() => run("save", conflict.change, "mine")} />
+            <Button label="Keep theirs" onPress={() => run("save", conflict.change, "theirs")} />
+          </View>
+        )}
         <Button label={s.source?.kind === "demo" ? "Save" : "Save to the Sheet"} kind="primary" busy={busy === "save"} disabled={!!blocked || busy !== null}
           onPress={() => { try { run("save", build ? build() : null); } catch (e) { setError(String(e)); } }} />
         {onDelete && (

@@ -1,6 +1,11 @@
-// Saving to the Sheet (HANDOFF.md §2.3): every change is written straight through, online,
-// to the exact cells it touches — never whole rows — so two coaches editing different
-// fields of the same row can't clobber each other.
+// Saving to the Sheet (HANDOFF.md §2.3): every change is written straight through, online.
+// Coaches may be editing at the same time, so:
+// - An edit writes only the fields that coach changed, after re-reading the row. Two coaches
+//   changing different fields of one row both keep their changes; if both changed the same
+//   field, the save stops with a ConflictError so the coach can choose ("mine" / "theirs")
+//   instead of silently overwriting the other.
+// - A new row is re-checked just after it's written; if another coach took the same empty
+//   row at the same moment, it moves to the next free row.
 //
 // Rules carried over from the Sheet and Team_Tools_Apps_Script.gs:
 // - Formula columns are never written: IDs (A), Full Name (D), Times Used, hidden helpers.
@@ -204,39 +209,175 @@ export function trimmed<T extends object>(v: T): T {
 
 // ---- the save sequence --------------------------------------------------------------------
 
-/** The three Sheets API calls a save needs; the real one is in google/sheets.ts. */
+/** The Sheets API calls a save needs; the real one is in google/sheets.ts. */
 export interface SheetWriter {
   read(range: string): Promise<Rows>;
   readMany(ranges: string[]): Promise<Rows[]>;
   addTab(title: string): Promise<void>;
   write(data: ValueRange[]): Promise<void>;
   clear(ranges: string[]): Promise<void>;
+  /** Adds rows after the last row of a table, with the Sheet itself picking where (so two coaches never get the same row). Returns the range written. */
+  append(range: string, values: Cell[][]): Promise<string>;
 }
 
 export class SaveError extends Error {}
 
+/** One field two coaches changed differently. Values are as shown in the app. */
+export interface Conflict { label: string; theirs: string; mine: string }
+/** When there's a conflict: overwrite with mine, or keep theirs (my other changes still save). */
+export type Resolve = "mine" | "theirs";
+
+export class ConflictError extends SaveError {
+  constructor(readonly conflicts: Conflict[]) {
+    super("Someone else changed this while you were editing:\n" +
+      conflicts.map((c) => `• ${c.label}: they saved “${c.theirs || "(blank)"}”, you have “${c.mine || "(blank)"}”`).join("\n"));
+  }
+}
+
+// ---- fields, for writing only what changed --------------------------------------------------
+
+type Kind = "text" | "date" | "yesno" | "number" | "status";
+interface Field { key: string; col: string; label: string; kind: Kind }
+const f = (key: string, col: string, label: string, kind: Kind = "text"): Field => ({ key, col, label, kind });
+
+// Each table's editable cells (never the formula columns, never Age).
+const FIELDS: Record<Table, Field[]> = {
+  athletes: [f("firstName", "B", "First name"), f("lastName", "C", "Last name"), f("tier", "F", "Group"),
+    f("currentFlashGrade", "G", "Flash grade"), f("goalGrade", "H", "Goal grade"), f("strengths", "I", "Strengths"),
+    f("growthAreas", "J", "Growth areas"), f("currentFocus", "K", "Current focus"), f("joinDate", "L", "Join date", "date"),
+    f("status", "M", "Status", "status"), f("notes", "N", "Notes")],
+  coaches: [f("firstName", "B", "First name"), f("lastName", "C", "Last name"), f("role", "E", "Role"),
+    f("coachesMonday", "F", "Mondays", "yesno"), f("coachesTuesday", "G", "Tuesdays", "yesno"), f("coachesThursday", "H", "Thursdays", "yesno"),
+    f("otherDays", "I", "Other days"), f("email", "J", "Email"), f("phone", "K", "Phone"), f("specialties", "L", "Specialties"),
+    f("bio", "M", "Bio"), f("status", "N", "Status", "status")],
+  library: [f("blockType", "B", "Block type"), f("tier", "C", "Tier"), f("name", "D", "Name"), f("description", "E", "Description"),
+    f("setsRepsDuration", "F", "Sets × reps"), f("equipment", "G", "Equipment"), f("notesSource", "H", "Notes / source")],
+  log: [f("date", "A", "Date", "date"), f("group", "B", "Group"), f("libraryItem", "C", "Exercise"), f("blockType", "D", "Block type"),
+    f("description", "E", "Description"), f("setsRepsDuration", "F", "Sets × reps"), f("coach", "G", "Coach"), f("notes", "H", "Notes"),
+    f("minutes", "J", "Minutes", "number"), f("order", "K", "Order", "number")],
+  progress: [f("date", "A", "Date", "date"), f("athleteFullName", "B", "Athlete"), f("metricType", "C", "Metric"),
+    f("value", "D", "Value"), f("notes", "E", "Notes"), f("loggedBy", "F", "Logged by")],
+};
+const LAST_COL: Record<Table, string> = { athletes: "N", coaches: "N", library: "H", log: "K", progress: "F" };
+const colIdx = (letters: string) => [...letters].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+const cellStr = (v: unknown) => (v === undefined || v === null ? "" : String(v).trim());
+
+/** A value from the app, in the comparable form. */
+function fromModel(field: Field, v: unknown): string {
+  switch (field.kind) {
+    case "date": return (v as string | null) ?? "";
+    case "yesno": return v ? "Yes" : "No";
+    case "number": return v === null || v === undefined || v === "" ? "" : String(Number(v));
+    case "status": return v === "Inactive" ? "Inactive" : "Active";
+    default: return cellStr(v);
+  }
+}
+/** A cell from the Sheet, in the same comparable form. */
+function fromCell(field: Field, v: Cell | undefined): string {
+  switch (field.kind) {
+    case "date": return cellToISO(v) ?? "";
+    case "yesno": return cellStr(v).toLowerCase() === "yes" ? "Yes" : "No";
+    case "number": return cellStr(v) === "" ? "" : String(Number(v));
+    case "status": return cellStr(v).toLowerCase() === "inactive" ? "Inactive" : "Active";
+    default: return cellStr(v);
+  }
+}
+function toCell(field: Field, v: unknown): Cell {
+  switch (field.kind) {
+    case "date": return date((v as string | null) ?? null);
+    case "yesno": return yesNo(!!v);
+    case "number": return v === null || v === undefined ? "" : (v as number);
+    default: return (v as string) ?? "";
+  }
+}
+
 /**
- * Validates, finds the row (a fresh read — never the cached copy), checks an edited row
- * still holds the same record, then writes. Returns the Sheet row that was written.
+ * The cells to write for an edit, given the row as it is in the Sheet right now: only fields
+ * this coach changed; a field someone else also changed (differently) is a conflict.
  */
-export async function saveChange(sheet: SheetWriter, change: Change): Promise<number> {
+export function editPlan(c: Extract<Change, { was: unknown }>, fresh: Cell[], resolve?: Resolve): { write: ValueRange[]; conflicts: Conflict[] } {
+  const was = c.was as unknown as Record<string, unknown>;
+  const mine = c.value as unknown as Record<string, unknown>;
+  const write: ValueRange[] = [];
+  const conflicts: Conflict[] = [];
+  for (const field of FIELDS[c.table]) {
+    const base = fromModel(field, was[field.key]);
+    const next = fromModel(field, mine[field.key]);
+    const theirs = fromCell(field, fresh[colIdx(field.col)]);
+    if (next === base || next === theirs) continue; // I didn't change it, or it already says what I want
+    if (theirs !== base) {
+      conflicts.push({ label: field.label, theirs, mine: next });
+      if (resolve !== "mine") continue;
+    }
+    write.push({ range: `${q(TAB_OF[c.table])}!${field.col}${c.row}:${field.col}${c.row}`, values: [[toCell(field, mine[field.key])]] });
+  }
+  if (c.table === "log" && write.some((w) => /![JK]\d/.test(w.range))) write.push(LOG_TIME_HEADER_WRITE);
+  return { write, conflicts };
+}
+
+/** True when the identity cells of `row` (just re-read) hold the new record's values. */
+function holdsNewRecord(table: Table, value: object, identity: Rows): boolean {
+  const [a, b] = IDENTITY_COLS[table];
+  const got = identity[0] ?? [];
+  return FIELDS[table].filter((fl) => colIdx(fl.col) >= colIdx(a) && colIdx(fl.col) <= colIdx(b))
+    .every((fl) => fromCell(fl, got[colIdx(fl.col) - colIdx(a)]) === fromModel(fl, (value as Record<string, unknown>)[fl.key]));
+}
+
+const sleep = (ms: number) => (ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve());
+
+/** How long a new row waits before being re-checked (tests set 0). */
+export const saveTiming = { settleMs: 700 };
+
+export interface SaveOptions {
+  resolve?: Resolve; // how to settle a conflict the coach has already been shown
+  settleMs?: number; // wait before re-checking a new row (another coach's write may still be landing)
+}
+
+/**
+ * Validates, then:
+ * - new row: finds the first empty row (a fresh read), writes, waits a moment, and re-checks
+ *   the row still holds this record — if another coach took the same row at the same time,
+ *   tries the next free one;
+ * - edit: re-reads the row, checks it still holds the same record, and writes only the fields
+ *   this coach changed (ConflictError if someone else changed one of them too);
+ * - delete: checks the row still holds the record, then clears it.
+ * Returns the Sheet row.
+ */
+export async function saveChange(sheet: SheetWriter, change: Change, opts: SaveOptions = {}): Promise<number> {
   const problem = validateChange(change);
   if (problem) throw new SaveError(problem);
   const c = (change.value ? { ...change, value: trimmed(change.value) } : change) as Change;
+  const tab = q(TAB_OF[c.table]);
 
-  let row: number;
   if (c.row === null) {
-    const found = firstEmptyRow(c.table, await sheet.read(keyColumnRange(c.table)));
-    if (found === null) throw new SaveError(tableFullMessage(c.table));
-    row = found;
-  } else {
-    row = c.row;
-    if (!rowStillMatches(c, await sheet.read(identityRange(c.table, row)))) throw new SaveError(ROW_CHANGED_MESSAGE);
+    const taken = new Set<number>();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const keys = await sheet.read(keyColumnRange(c.table));
+      const { first } = ROW_LIMITS[c.table];
+      taken.forEach((r) => { keys[r - first] = ["taken"]; });
+      const row = firstEmptyRow(c.table, keys);
+      if (row === null) throw new SaveError(tableFullMessage(c.table));
+      const plan = rangesFor(c, row) as { write: ValueRange[] };
+      await sheet.write(plan.write);
+      await sleep(opts.settleMs ?? saveTiming.settleMs);
+      if (holdsNewRecord(c.table, c.value, await sheet.read(identityRange(c.table, row)))) return row;
+      taken.add(row); // someone else's record landed there — theirs stays, mine moves on
+    }
+    throw new SaveError("Other coaches were adding at the same moment and there was no free row. Refresh and try again.");
   }
 
-  const plan = rangesFor(c, row);
-  if ("write" in plan) await sheet.write(plan.write);
-  else await sheet.clear(plan.clear);
+  const row = c.row;
+  if (c.value === null) {
+    if (!rowStillMatches(c, await sheet.read(identityRange(c.table, row)))) throw new SaveError(ROW_CHANGED_MESSAGE);
+    await sheet.clear((rangesFor(c, row) as { clear: string[] }).clear);
+    return row;
+  }
+  const fresh = (await sheet.read(`${tab}!A${row}:${LAST_COL[c.table]}${row}`))[0] ?? [];
+  const [a, b] = IDENTITY_COLS[c.table];
+  if (!rowStillMatches(c, [fresh.slice(colIdx(a), colIdx(b) + 1)])) throw new SaveError(ROW_CHANGED_MESSAGE);
+  const plan = editPlan(c as Extract<Change, { was: unknown }>, fresh, opts.resolve);
+  if (plan.conflicts.length && !opts.resolve) throw new ConflictError(plan.conflicts);
+  if (plan.write.length) await sheet.write(plan.write);
   return row;
 }
 
@@ -268,6 +409,7 @@ export function recording(sheet: SheetWriter): { writer: SheetWriter; replayOnto
       read: (r) => sheet.read(r),
       readMany: (r) => sheet.readMany(r),
       addTab: (t) => sheet.addTab(t),
+      append: async (r, values) => { const at = await sheet.append(r, values); log.push({ write: [{ range: at, values }] }); return at; },
       write: async (d) => { await sheet.write(d); log.push({ write: d }); },
       clear: async (r) => { await sheet.clear(r); log.push({ clear: r }); },
     },

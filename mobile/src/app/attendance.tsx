@@ -9,6 +9,7 @@ import { attendanceOn, unrecorded } from "@/core/logic/attendance";
 import { formatLong } from "@/core/logic/dates";
 import type { Athlete, AttendanceEntry } from "@/core/schema/model";
 import { cannotSaveReason, saveWorkoutDay, setAthleteDay, useAppState } from "@/data/store";
+import { saveOrAsk } from "@/ui/form";
 import { Banner, Button, Empty, Row, Screen, Section, T, TierChip } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 
@@ -34,8 +35,10 @@ export default function Attendance() {
     setError(null);
     try { await fn(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); }
   };
-  const toggle = (r: AttendanceEntry) => run(r.athlete, () => setAthleteDay(date, r.athlete, { group: r.group, here: !r.here, notes: r.notes }));
-  const add = (a: Athlete) => run(a.fullName, () => setAthleteDay(date, a.fullName, { group: a.tier, here: true, notes: "" }));
+  const toggle = (r: AttendanceEntry) => run(r.athlete, () => saveOrAsk((resolve) =>
+    setAthleteDay(date, r.athlete, { group: r.group, here: !r.here, notes: r.notes }, { group: r.group, here: r.here, notes: r.notes }, resolve)));
+  const add = (a: Athlete) => run(a.fullName, () => saveOrAsk((resolve) =>
+    setAthleteDay(date, a.fullName, { group: a.tier, here: true, notes: "" }, null, resolve)));
 
   const row = (r: AttendanceEntry) => {
     const a = byName.get(r.athlete.toLowerCase());

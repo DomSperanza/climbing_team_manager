@@ -16,10 +16,10 @@ import { base64ToBytes, setupPlan, validateNewSheet, type NewSheetOptions } from
 import { parseTeamData, rawFromValueRanges, type RawRanges, type Rows } from "@/core/schema/parse";
 import { missingTabs, validateSheet } from "@/core/schema/validate";
 import type { TeamData, WorkoutBlock } from "@/core/schema/model";
-import { recording, SaveError, saveChange, saveOrder, type Change, type SheetWriter } from "@/core/writes";
+import { recording, SaveError, saveChange, saveOrder, type Change, type Resolve, type SheetWriter } from "@/core/writes";
 import { reorder, standardOutline } from "@/core/logic/timeline";
 import { saveAssignment } from "@/core/logic/assignments";
-import { saveAthleteDay, saveDay } from "@/core/logic/attendance";
+import { saveAthleteDay, saveDay, type DayValue } from "@/core/logic/attendance";
 import { ALL_TEAM, rangeKeysFor } from "@/core/schema/layout";
 import type { ISODate } from "@/core/logic/dates";
 
@@ -117,6 +117,7 @@ async function withToken<T>(fn: (token: string) => Promise<T>): Promise<T> {
 // ---- startup, lock ------------------------------------------------------------------------
 
 let backgroundedAt: number | null = null;
+const REFRESH_AFTER_MS = 30_000; // re-read the Sheet when the app comes back after this long
 
 async function lockIfNeeded() {
   if (!lock.LOCK_SUPPORTED || state.source?.kind !== "sheet") return;
@@ -131,7 +132,12 @@ export async function init() {
   RNAppState.addEventListener("change", (s) => {
     if (s === "background") backgroundedAt = Date.now();
     if (s === "active" && backgroundedAt !== null) {
-      if (Date.now() - backgroundedAt > lock.RELOCK_AFTER_MS) lockIfNeeded();
+      const away = Date.now() - backgroundedAt;
+      if (away > lock.RELOCK_AFTER_MS) lockIfNeeded();
+      // Back after a while: pick up what other coaches changed meanwhile, quietly.
+      if (away > REFRESH_AFTER_MS && state.source?.kind === "sheet" && state.online) {
+        auth.accessToken().then((token) => { if (token) refresh(); }).catch(() => {});
+      }
       backgroundedAt = null;
     }
   });
@@ -344,9 +350,13 @@ async function runSave(op: (sheet: SheetWriter) => Promise<unknown>): Promise<vo
   refresh(); // re-sync in the background
 }
 
-/** Saves one change straight to the Sheet (add, edit or delete one row). */
-export function save(change: Change): Promise<void> {
-  return runSave((sheet) => saveChange(sheet, change));
+/**
+ * Saves one change straight to the Sheet (add, edit or delete one row). An edit writes only
+ * the fields changed; if another coach changed one of them meanwhile it throws a
+ * ConflictError, and the coach's choice comes back as `resolve`.
+ */
+export function save(change: Change, resolve?: Resolve): Promise<void> {
+  return runSave((sheet) => saveChange(sheet, change, { resolve }));
 }
 
 /** Moves a workout block one place earlier or later in its day's plan. */
@@ -355,10 +365,13 @@ export function moveBlock(dayBlocks: WorkoutBlock[], row: number, direction: -1 
   return moves.length ? runSave((sheet) => saveOrder(sheet, moves)) : Promise.resolve();
 }
 
-/** Gives `group` on `date` to `coach` (a full name), or clears it with null. "All Team" = the day's lead. */
-export function assignCoach(date: ISODate, group: string, coach: string | null): Promise<void> {
+/**
+ * Gives `group` on `date` to `coach` (a full name), or clears it with null. "All Team" = the
+ * day's lead. `expected` = who the coach saw there; a different claim meanwhile is a conflict.
+ */
+export function assignCoach(date: ISODate, group: string, coach: string | null, expected: string | null, resolve?: Resolve): Promise<void> {
   const tabExists = (raw?.assignments.length ?? 0) > 0;
-  return runSave((sheet) => saveAssignment(sheet, date, group, coach, tabExists));
+  return runSave((sheet) => saveAssignment(sheet, date, group, coach, tabExists, expected, resolve));
 }
 
 /** "Save workout": records the day for every active athlete not yet recorded. Resolves to how many were added. */
@@ -371,10 +384,10 @@ export async function saveWorkoutDay(date: ISODate): Promise<number> {
   return added;
 }
 
-/** One athlete's day: their group that day, whether they were there, brief notes. */
-export function setAthleteDay(date: ISODate, athlete: string, value: { group: string; here: boolean; notes: string }): Promise<void> {
+/** One athlete's day: their group that day, whether they were there, brief notes. `base` = what the coach started from. */
+export function setAthleteDay(date: ISODate, athlete: string, value: DayValue, base: DayValue | null, resolve?: Resolve): Promise<void> {
   const tabExists = (raw?.attendance.length ?? 0) > 0;
-  return runSave((sheet) => saveAthleteDay(sheet, date, athlete, value, tabExists));
+  return runSave((sheet) => saveAthleteDay(sheet, date, athlete, value, base, tabExists, resolve));
 }
 
 /** The Coach Profiles entry for whoever is signed in (matched by email), if there is one. */

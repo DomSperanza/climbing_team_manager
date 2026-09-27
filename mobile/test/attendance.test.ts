@@ -41,8 +41,8 @@ describe("saving a practice for the athletes", () => {
   it("saving again only adds who's missing — absences and group changes stay", async () => {
     const { raw, sheet, team } = setUp();
     await saveDay(sheet, team(), DAY, false);
-    await saveAthleteDay(sheet, DAY, "Sam Nguyen", { group: "Developing", here: false, notes: "" }, true);
-    await saveAthleteDay(sheet, DAY, "Alex Rivera", { group: "Intermediate", here: true, notes: "Fingers sore, skipped hangs" }, true);
+    await saveAthleteDay(sheet, DAY, "Sam Nguyen", { group: "Developing", here: false, notes: "" }, null, true);
+    await saveAthleteDay(sheet, DAY, "Alex Rivera", { group: "Intermediate", here: true, notes: "Fingers sore, skipped hangs" }, null, true);
     expect(await saveDay(sheet, team(), DAY, true)).toBe(0);
     expect(filledRows(raw)).toHaveLength(2);
     expect(recordFor(team(), DAY, "Sam Nguyen")?.here).toBe(false);
@@ -53,12 +53,12 @@ describe("saving a practice for the athletes", () => {
   it("an athlete's history: newest first, with what they did; absent days have no blocks", async () => {
     const { sheet, team } = setUp();
     await saveDay(sheet, team(), DAY, false);
-    await saveAthleteDay(sheet, "2026-09-24", "Alex Rivera", { group: "Advanced", here: false, notes: "" }, true);
+    await saveAthleteDay(sheet, "2026-09-24", "Alex Rivera", { group: "Advanced", here: false, notes: "" }, null, true);
     const alex = team().athletes.find((a) => a.fullName === "Alex Rivera")!;
     const history = athleteHistory(team(), alex);
     expect(history.map((h) => [h.entry.date, h.entry.here, h.blocks.length])).toEqual([["2026-09-24", false, 0], [DAY, true, 4]]);
     // Moved to Developing for the day → only All Team blocks (none on the demo day besides Advanced ones).
-    await saveAthleteDay(sheet, DAY, "Alex Rivera", { group: "Developing", here: true, notes: "" }, true);
+    await saveAthleteDay(sheet, DAY, "Alex Rivera", { group: "Developing", here: true, notes: "" }, null, true);
     expect(athleteHistory(team(), alex).find((h) => h.entry.date === DAY)!.blocks).toEqual([]);
   });
 

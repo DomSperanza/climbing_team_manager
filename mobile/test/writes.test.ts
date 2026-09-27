@@ -19,7 +19,7 @@ beforeEach(() => {
   const mem = memorySheet(raw);
   writes = [];
   clears = [];
-  sheet = { read: mem.read, readMany: mem.readMany, addTab: mem.addTab, write: (d) => { writes.push(d); return mem.write(d); }, clear: (r) => { clears.push(r); return mem.clear(r); } };
+  sheet = { read: mem.read, readMany: mem.readMany, addTab: mem.addTab, append: mem.append, write: (d) => { writes.push(d); return mem.write(d); }, clear: (r) => { clears.push(r); return mem.clear(r); } };
 });
 
 const athleteCell = (row: number, col: number) => raw.athletes[row - 5]?.[col];

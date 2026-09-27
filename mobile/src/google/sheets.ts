@@ -83,6 +83,15 @@ export function sheetWriter(spreadsheetId: string, token: string): SheetWriter {
         if (!(e instanceof SheetsError && e.kind === "layout")) throw e; // 400 = it already exists
       }
     },
+    async append(range, values) {
+      // Google finds the end of the table itself, one request at a time, so two coaches
+      // appending together each get their own rows.
+      const params = new URLSearchParams({ valueInputOption: "RAW", insertDataOption: "INSERT_ROWS" });
+      const res = await call<{ updates?: { updatedRange?: string } }>(
+        sheetUrl(spreadsheetId) + "/values/" + encodeURIComponent(range) + ":append?" + params, token, { method: "POST", body: { values } });
+      const at = res.updates?.updatedRange ?? range;
+      return at.startsWith("'") ? at : at.replace(/^([^!]+)!/, "'$1'!"); // same quoting as the app's own ranges
+    },
     async clear(ranges: string[]) {
       await call(sheetUrl(spreadsheetId) + "/values:batchClear", token, { method: "POST", body: { ranges } });
     },

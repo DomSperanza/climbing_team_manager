@@ -15,6 +15,7 @@ import { dayTimeline, formatClock, formatDuration, reorder, type DayTimeline, ty
 import { DateField } from "@/ui/DateField";
 import { Icon, type IconName } from "@/ui/Icon";
 import { DayCoaches } from "@/ui/DayCoaches";
+import { saveOrAsk } from "@/ui/form";
 import { Banner, Button, Card, Empty, FilterChips, IconButton, LinkButton, Row, Screen, T, TierChip } from "@/ui/kit";
 import { tierColors, useTheme } from "@/ui/theme";
 
@@ -55,7 +56,7 @@ export default function Today() {
   const resize = (b: WorkoutBlock, delta: number) => quick(b.row, () => {
     const minutes = Math.max(5, (b.minutes ?? 0) + delta);
     const { row: _row, ...value } = b;
-    return save({ table: "log", row: b.row, was: b, value: { ...value, minutes } });
+    return saveOrAsk((resolve) => save({ table: "log", row: b.row, was: b, value: { ...value, minutes } }, resolve));
   });
   const move = (b: WorkoutBlock, dir: -1 | 1) => quick(b.row, () => moveBlock(dayBlocks, b.row, dir));
 

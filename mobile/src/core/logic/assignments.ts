@@ -6,7 +6,7 @@
 
 import { ASSIGNMENT_HEADERS, ALL_TEAM, OPTIONAL_TAB } from "../schema/layout";
 import type { Coach, TeamData } from "../schema/model";
-import type { SheetWriter } from "../writes";
+import { ConflictError, type Resolve, type SheetWriter } from "../writes";
 import { cellToISO, isoToSerial, isPracticeDay, weekdayOf, type ISODate, type PracticeDay } from "./dates";
 
 const TAB = `'${OPTIONAL_TAB.assignments}'`;
@@ -48,24 +48,26 @@ export function coachForGroup(data: TeamData, date: ISODate, group: string): str
 }
 
 /**
- * Sets (or with coach null, clears) who has `group` on `date`. Reads the tab fresh first so it
- * updates the existing row rather than adding a duplicate, and adds the tab if it's missing.
+ * Sets (or with coach null, clears) who has `group` on `date`. `expected` is who the coach saw
+ * there when they started; if someone else claimed it meanwhile, it stops with a
+ * ConflictError (unless `resolve` says whose to keep). Reads the tab fresh, updates the
+ * existing row rather than adding a duplicate, and adds the tab if it's missing.
  */
-export async function saveAssignment(sheet: SheetWriter, date: ISODate, group: string, coach: string | null, tabExists: boolean): Promise<void> {
+export async function saveAssignment(sheet: SheetWriter, date: ISODate, group: string, coach: string | null,
+  tabExists: boolean, expected: string | null = null, resolve?: Resolve): Promise<void> {
   if (!tabExists) await sheet.addTab(OPTIONAL_TAB.assignments);
-  const rows = await sheet.read(`${TAB}!A2:C2000`);
-  const matches: number[] = [];
-  let firstEmpty = -1;
-  rows.forEach((r, i) => {
-    if (cellToISO(r[0]) === date && norm(r[1]) === norm(group)) matches.push(i + 2);
-    else if (firstEmpty < 0 && r.every((c) => String(c ?? "").trim() === "")) firstEmpty = i + 2;
-  });
-  const header = { range: `${TAB}!A1:C1`, values: [[...ASSIGNMENT_HEADERS]] };
+  const rows = await sheet.read(`${TAB}!A2:C`);
+  const matches = rows.map((r, i) => (cellToISO(r[0]) === date && norm(r[1]) === norm(group) ? i + 2 : 0)).filter(Boolean);
+  const theirs = matches.length ? String(rows[matches[0] - 2][2] ?? "").trim() || null : null;
+  if (norm(theirs) !== norm(expected) && norm(theirs) !== norm(coach)) {
+    if (!resolve) throw new ConflictError([{ label: norm(group) === norm(ALL_TEAM) ? "Lead" : group, theirs: theirs ?? "open", mine: coach ?? "open" }]);
+    if (resolve === "theirs") return;
+  }
+  await sheet.write([{ range: `${TAB}!A1:C1`, values: [[...ASSIGNMENT_HEADERS]] }]);
   if (coach) {
-    const row = matches.shift() ?? (firstEmpty > 0 ? firstEmpty : rows.length + 2);
-    await sheet.write([header, { range: `${TAB}!A${row}:C${row}`, values: [[isoToSerial(date), group, coach]] }]);
-  } else {
-    await sheet.write([header]);
+    const row = matches.shift();
+    if (row) await sheet.write([{ range: `${TAB}!A${row}:C${row}`, values: [[isoToSerial(date), group, coach]] }]);
+    else await sheet.append(`${TAB}!A1:C`, [[isoToSerial(date), group, coach]]);
   }
   if (matches.length) await sheet.clear(matches.map((r) => `${TAB}!A${r}:C${r}`)); // clearing, or duplicates
 }

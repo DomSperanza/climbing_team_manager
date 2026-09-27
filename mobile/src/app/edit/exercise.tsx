@@ -12,7 +12,9 @@ import { Empty, Screen } from "@/ui/kit";
 export default function EditExercise() {
   const { data } = useAppState();
   const params = useLocalSearchParams<{ row?: string }>();
-  const was = params.row ? data?.library.find((e) => e.row === Number(params.row)) : undefined;
+  // The record as it was when the form opened: saving writes only what's changed from this,
+  // and spots anything another coach changed meanwhile (a later refresh doesn't move it).
+  const [was] = useState(() => (params.row ? data?.library.find((e) => e.row === Number(params.row)) : undefined));
 
   const [v, setV] = useState<ExerciseInput>(() => {
     if (was) { const { row: _r, id: _i, ...rest } = was; return rest; }

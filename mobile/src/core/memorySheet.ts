@@ -53,6 +53,17 @@ export function memorySheet(raw: RawRanges): SheetWriter {
 
   const self: SheetWriter = {
     async addTab() { /* every tab the app knows already has a place in RawRanges */ },
+    async append(range, values) {
+      const { key, c1 } = locate(range, raw);
+      const rows = raw[key];
+      let last = rows.length - 1;
+      while (last >= 0 && !(rows[last] ?? []).some((c) => String(c ?? "").trim() !== "")) last--;
+      const r1 = startRow(key) + last + 1;
+      const letter = (i: number) => String.fromCharCode(65 + i);
+      const at = `'${TAB_NAME[key]}'!${letter(c1)}${r1}:${letter(c1 + values[0].length - 1)}${r1 + values.length - 1}`;
+      await self.write([{ range: at, values }]);
+      return at;
+    },
     async readMany(ranges) {
       return Promise.all(ranges.map((r) => self.read(r)));
     },

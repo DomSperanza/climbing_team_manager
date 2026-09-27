@@ -81,7 +81,7 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=            # only for the iPhone build
 ```
 
-**Rebuild after changing these.** They're baked into the app. Until they're set, the Connect screen explains that sign-in isn't set up, and demo mode still works.
+**Rebuild after changing these.** They're baked into the app, and the bundler can cache the old values, so run `npx expo start --clear` once (then stop it) before `npm run build:apk`. Until they're set, the Connect screen explains that sign-in isn't set up, and demo mode still works.
 
 If Android sign-in says *"Google rejected this copy of the app"*, the package name or SHA-1 in the Android client doesn't match the build.
 
@@ -208,6 +208,16 @@ Today shows the day as a timeline against the practice time in the Sheet's Setti
 - **Picking an exercise** uses the Library tab's filters (block type, tier, search), starting on the block's own tier.
 
 **In the Sheet** these are two new columns on *Log a Workout*: **J = Minutes** and **K = Order**. The app adds their headers the first time it saves a block, and new Sheets have them from the start. You can also type them in Google Sheets. Rows without an Order come after the rest, in row order. The Sheet's own *Day View* tab still lists blocks in row order, not by the app's Order.
+
+## When two coaches save at the same time
+
+Nothing is queued on the phone: every save goes straight to Google (HANDOFF.md §2.3). These are the safeguards when two coaches overlap:
+
+- **Only what you changed is written.** Each form remembers the record as it was when you opened it. On Save, the app re-reads that row and writes only the fields you changed. If another coach changed a different field of the same athlete, block or day meanwhile, both changes are kept.
+- **Same field, different values: you choose.** If they changed the very field you changed, nothing is overwritten. The form shows both versions ("Theirs … / Yours …") with **Use mine** and **Keep theirs**, and your other changes save either way. One-tap actions (the "was there" switch, ±5 minutes, claiming a group) ask the same question in a short prompt.
+- **Adding rows can't collide.** A new athlete, coach, exercise, block or progress entry is re-checked just after it's written. If another coach took the same empty row in the same moment, yours moves to the next free row. Attendance and Coach Assignments rows are added by Google itself, one request at a time. If two coaches tap **Save workout** together, any duplicate rows are cleared.
+- **Rows that moved are caught.** If someone sorted or deleted rows in the Sheet since your last refresh, the app stops and asks you to refresh rather than write into the wrong row.
+- **Phones catch up on their own.** Every save re-reads the Sheet, and so does coming back to the app after 30 seconds or more away.
 
 ## How saving works (HANDOFF.md §2.3)
 
