@@ -63,7 +63,9 @@ export function Section({ title, action, children }: { title?: string; action?: 
 
 export function Empty({ children }: { children: ReactNode }) {
   const t = useTheme();
-  return <View style={[styles.empty, { borderColor: t.line }]}>{typeof children === "string" ? <T muted style={{ textAlign: "center" }}>{children}</T> : children}</View>;
+  // Plain text (including text with values mixed in) gets the app's text style; anything else is laid out as given.
+  const isText = typeof children === "string" || (Array.isArray(children) && children.every((c) => typeof c === "string" || typeof c === "number"));
+  return <View style={[styles.empty, { borderColor: t.line }]}>{isText ? <T muted style={{ textAlign: "center" }}>{children}</T> : children}</View>;
 }
 
 /** A label/value pair that renders nothing when the value is blank. */

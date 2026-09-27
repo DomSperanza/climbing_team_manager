@@ -19,6 +19,7 @@ import type { TeamData, WorkoutBlock } from "@/core/schema/model";
 import { recording, SaveError, saveChange, saveOrder, type Change, type SheetWriter } from "@/core/writes";
 import { reorder, standardOutline } from "@/core/logic/timeline";
 import { saveAssignment } from "@/core/logic/assignments";
+import { saveAthleteDay, saveDay } from "@/core/logic/attendance";
 import { ALL_TEAM, rangeKeysFor } from "@/core/schema/layout";
 import type { ISODate } from "@/core/logic/dates";
 
@@ -358,6 +359,22 @@ export function moveBlock(dayBlocks: WorkoutBlock[], row: number, direction: -1 
 export function assignCoach(date: ISODate, group: string, coach: string | null): Promise<void> {
   const tabExists = (raw?.assignments.length ?? 0) > 0;
   return runSave((sheet) => saveAssignment(sheet, date, group, coach, tabExists));
+}
+
+/** "Save workout": records the day for every active athlete not yet recorded. Resolves to how many were added. */
+export async function saveWorkoutDay(date: ISODate): Promise<number> {
+  const data = state.data;
+  if (!data) return 0;
+  const tabExists = (raw?.attendance.length ?? 0) > 0;
+  let added = 0;
+  await runSave(async (sheet) => { added = await saveDay(sheet, data, date, tabExists); });
+  return added;
+}
+
+/** One athlete's day: their group that day, whether they were there, brief notes. */
+export function setAthleteDay(date: ISODate, athlete: string, value: { group: string; here: boolean; notes: string }): Promise<void> {
+  const tabExists = (raw?.attendance.length ?? 0) > 0;
+  return runSave((sheet) => saveAthleteDay(sheet, date, athlete, value, tabExists));
 }
 
 /** The Coach Profiles entry for whoever is signed in (matched by email), if there is one. */

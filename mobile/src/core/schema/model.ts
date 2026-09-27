@@ -85,6 +85,16 @@ export interface Assignment {
   coach: string; // full name
 }
 
+/** One athlete at one practice ("Attendance" tab). What they did = that day's plan for `group` plus All Team blocks. */
+export interface AttendanceEntry {
+  row: number;
+  date: ISODate;
+  athlete: string; // full name, like the Progress Log
+  group: string; // their group that day (usually their tier; can be changed for the day)
+  here: boolean; // false = marked absent
+  notes: string;
+}
+
 export interface SeasonSettings {
   tierNames: string[]; // Settings!B5:B7, the groups athletes are split into
   blockTypes: string[];
@@ -108,4 +118,5 @@ export interface TeamData {
   log: WorkoutBlock[];
   progress: ProgressEntry[];
   assignments: Assignment[];
+  attendance: AttendanceEntry[];
 }

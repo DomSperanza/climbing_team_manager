@@ -147,8 +147,11 @@ export function confirmAction(title: string, message: string, confirmLabel: stri
  * The frame every add/edit screen shares: the fields, then Save (and Delete for existing
  * rows). `build` turns the form into a Change at the moment Save is pressed.
  */
-export function FormScreen({ children, build, onDelete, deleteLabel = "Delete", note }: {
-  children: ReactNode; build: () => Change; deleteLabel?: string; note?: string;
+export function FormScreen({ children, build, onSave, onDelete, deleteLabel = "Delete", note }: {
+  children: ReactNode; deleteLabel?: string; note?: string;
+  build?: () => Change; // a row to save…
+  onSave?: () => Promise<void>; // …or any other save
+
   /** `leaveTo: "list"` when the screen behind this form shows the deleted record itself. */
   onDelete?: { change: () => Change; title: string; message: string; leaveTo?: "list" };
 }) {
@@ -158,11 +161,11 @@ export function FormScreen({ children, build, onDelete, deleteLabel = "Delete", 
   const [error, setError] = useState<string | null>(null);
   const blocked = cannotSaveReason(s);
 
-  const run = async (kind: "save" | "delete", change: Change) => {
+  const run = async (kind: "save" | "delete", change: Change | null) => {
     setBusy(kind);
     setError(null);
     try {
-      await save(change);
+      await (change ? save(change) : onSave?.());
       if (kind === "delete" && onDelete?.leaveTo === "list" && router.canDismiss()) router.dismissAll();
       else if (router.canGoBack()) router.back();
       else router.replace("/");
@@ -181,7 +184,7 @@ export function FormScreen({ children, build, onDelete, deleteLabel = "Delete", 
         {error && <View style={{ marginBottom: 12, marginHorizontal: -16 }}><Banner kind="error">{error}</Banner></View>}
         {blocked && <View style={{ marginBottom: 12, marginHorizontal: -16 }}><Banner>{blocked}</Banner></View>}
         <Button label={s.source?.kind === "demo" ? "Save" : "Save to the Sheet"} kind="primary" busy={busy === "save"} disabled={!!blocked || busy !== null}
-          onPress={() => { try { run("save", build()); } catch (e) { setError(String(e)); } }} />
+          onPress={() => { try { run("save", build ? build() : null); } catch (e) { setError(String(e)); } }} />
         {onDelete && (
           <Button label={deleteLabel} kind="danger" style={{ marginTop: 12 }} busy={busy === "delete"} disabled={!!blocked || busy !== null}
             onPress={() => confirmAction(onDelete.title, onDelete.message, deleteLabel, () => run("delete", onDelete.change()))} />

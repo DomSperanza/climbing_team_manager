@@ -181,6 +181,18 @@ Today lists everyone on that day: every Active coach with that weekday ticked in
 
 **In the Sheet** claims live in a small tab, **Coach Assignments** (Date | Group | Coach, where Group "All Team" is the lead). The app adds the tab the first time someone claims a group, and you can edit it in Google Sheets too.
 
+## Saving a workout for the athletes
+
+After practice, tap **Save workout** at the bottom of Today. Every active athlete gets that day in their profile: their group's blocks plus the All Team ones. The **Who was there** list then opens:
+- **Switch someone off** if they weren't there. It's kept as a missed practice.
+- **Tap a name** to put them in a different group for that day (e.g. an Intermediate climber joining Advanced), or add a brief note.
+
+Saving again later only adds anyone who wasn't recorded yet. Absences, group changes and notes stay as they are.
+
+On an athlete's profile, **Workouts** shows their recent practices, and **See all** lists every saved day. You can filter to missed days, days in another group, or days with notes. Tap any day to change it.
+
+**In the Sheet** this is the **Attendance** tab (Date | Athlete | Group | Here | Notes). The app adds it the first time you save a workout. What an athlete did is looked up from that day's plan in *Log a Workout*, so fixing the plan afterwards fixes their history too. Athletes are matched by name, like the Progress Log.
+
 ## Planning a practice
 
 Today shows the day as a timeline against the practice time in the Sheet's Settings tab: start and end time in B18–B19, and warm-up, tiered-block and cooldown minutes in B20–B22.

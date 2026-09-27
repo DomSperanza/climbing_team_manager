@@ -8,12 +8,14 @@ import type { SheetWriter, ValueRange } from "./writes";
 
 const colIndex = (letters: string) => [...letters].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
 
-function locate(range: string): { key: RangeKey; r1: number; c1: number; r2: number; c2: number } {
-  const m = range.match(/^'(.+)'!([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+function locate(range: string, raw: RawRanges): { key: RangeKey; r1: number; c1: number; r2: number; c2: number } {
+  const m = range.match(/^'(.+)'!([A-Z]+)(\d+):([A-Z]+)(\d+)?$/);
   if (!m) throw new Error("memorySheet: unsupported range " + range);
   const key = RANGE_KEYS.find((k) => TAB_NAME[k] === m[1]);
   if (!key) throw new Error("memorySheet: unknown tab " + m[1]);
-  return { key, c1: colIndex(m[2]), r1: Number(m[3]), c2: colIndex(m[4]), r2: Number(m[5]) };
+  // Open-ended ranges ("A2:E") run to the last row there is.
+  const r2 = m[5] ? Number(m[5]) : Math.max(Number(m[3]), startRow(key) + raw[key].length - 1);
+  return { key, c1: colIndex(m[2]), r1: Number(m[3]), c2: colIndex(m[4]), r2 };
 }
 
 /** First Sheet row held in raw[key] (the header row of that tab's range). */
@@ -55,7 +57,7 @@ export function memorySheet(raw: RawRanges): SheetWriter {
       return Promise.all(ranges.map((r) => self.read(r)));
     },
     async read(range) {
-      const { key, r1, c1, r2, c2 } = locate(range);
+      const { key, r1, c1, r2, c2 } = locate(range, raw);
       const out: Rows = [];
       for (let r = r1; r <= r2; r++) {
         const src = raw[key][r - startRow(key)] ?? [];
@@ -67,7 +69,7 @@ export function memorySheet(raw: RawRanges): SheetWriter {
     },
     async write(data: ValueRange[]) {
       for (const { range, values } of data) {
-        const { key, r1, c1, r2, c2 } = locate(range);
+        const { key, r1, c1, r2, c2 } = locate(range, raw);
         if (values.length !== r2 - r1 + 1 || values.some((v) => v.length !== c2 - c1 + 1)) {
           throw new Error(`memorySheet: ${values.length}x${values[0]?.length} values don't fit ${range}`);
         }
@@ -77,7 +79,7 @@ export function memorySheet(raw: RawRanges): SheetWriter {
     },
     async clear(ranges: string[]) {
       for (const range of ranges) {
-        const { key, r1, c1, r2, c2 } = locate(range);
+        const { key, r1, c1, r2, c2 } = locate(range, raw);
         for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) set(key, r, c, "");
         for (let r = r1; r <= r2; r++) recompute(raw, key, r);
       }

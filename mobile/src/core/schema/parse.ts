@@ -3,8 +3,8 @@
 
 import { cellToISO } from "../logic/dates";
 import { DEFAULT_PRACTICE, parseTimeOfDay } from "../logic/timeline";
-import { ASSIGN, ATH, CO, LIB, LOG, PROG, RANGES, RANGE_KEYS, SETTINGS, type RangeKey } from "./layout";
-import type { Assignment, Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, SeasonSettings, Status, TeamData, WorkoutBlock } from "./model";
+import { ASSIGN, ATTEND, ATH, CO, LIB, LOG, PROG, RANGES, RANGE_KEYS, SETTINGS, type RangeKey } from "./layout";
+import type { Assignment, AttendanceEntry, Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, SeasonSettings, Status, TeamData, WorkoutBlock } from "./model";
 
 export type Cell = string | number | boolean;
 export type Rows = Cell[][];
@@ -152,7 +152,17 @@ export function parseTeamData(raw: RawRanges): TeamData {
     if (date && str(v[ASSIGN.group]) && str(v[ASSIGN.coach])) assignments.push({ row, date, group: str(v[ASSIGN.group]), coach: str(v[ASSIGN.coach]) });
   }
 
-  return { settings: parseSettings(raw.settings ?? []), athletes, coaches, library, log, progress, assignments };
+  const attendance: AttendanceEntry[] = [];
+  for (const { row, v } of dataRows(raw, "attendance")) {
+    const date = cellToISO(v[ATTEND.date]);
+    if (!date || !str(v[ATTEND.athlete])) continue;
+    attendance.push({
+      row, date, athlete: str(v[ATTEND.athlete]), group: str(v[ATTEND.group]),
+      here: str(v[ATTEND.here]).toLowerCase() !== "no", notes: str(v[ATTEND.notes]),
+    });
+  }
+
+  return { settings: parseSettings(raw.settings ?? []), athletes, coaches, library, log, progress, assignments, attendance };
 }
 
 /** Sheets API batchGet valueRanges (in RANGE_KEYS order) -> RawRanges. */

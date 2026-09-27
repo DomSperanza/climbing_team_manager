@@ -1,10 +1,14 @@
-// One athlete's profile with their Progress Log. Edit the profile or log progress from here.
+// One athlete's profile: details, recent workouts (from saved practices) and their Progress
+// Log. Edit the profile, open their full workout history, or log progress from here.
 
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Pressable, View } from "react-native";
 import { useAppState } from "@/data/store";
 import { formatShort } from "@/core/logic/dates";
-import { Button, Card, Empty, Field, H2, IconButton, MutedChip, Row, Screen, Section, T, TierChip } from "@/ui/kit";
+import { athleteHistory } from "@/core/logic/attendance";
+import type { Athlete } from "@/core/schema/model";
+import { AthleteDay } from "@/ui/AthleteDay";
+import { Button, Card, Empty, Field, H2, IconButton, LinkButton, MutedChip, Row, Screen, Section, T, TierChip } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 
 const longDate = (d: string | null) => (d ? `${formatShort(d)}, ${d.slice(0, 4)}` : "");
@@ -49,6 +53,7 @@ export default function AthleteDetail() {
         <Field label="Joined" value={longDate(a.joinDate)} />
         {!a.currentFocus && !a.strengths && !a.growthAreas && !a.notes && !a.joinDate && <T muted>No details yet — tap the pencil to add some.</T>}
       </Card>
+      <Workouts athlete={a} />
       <Section title={`Progress (${entries.length})`}>
         <Button label="Log progress" icon="plus" kind="primary" style={{ marginBottom: 10 }}
           onPress={() => router.push({ pathname: "/edit/progress", params: { athlete: String(a.row) } })} />
@@ -68,5 +73,26 @@ export default function AthleteDetail() {
         ))}
       </Section>
     </Screen>
+  );
+}
+
+const RECENT = 3;
+
+/** The athlete's recent practices; the rest are on the full history screen. */
+function Workouts({ athlete }: { athlete: Athlete }) {
+  const { data } = useAppState();
+  if (!data) return null;
+  const history = athleteHistory(data, athlete);
+  const here = history.filter((h) => h.entry.here).length;
+  return (
+    <Section title={`Workouts (${here} practice${here === 1 ? "" : "s"})`}
+      action={history.length ? <LinkButton label={history.length === 1 ? "See day" : `See all ${history.length} days`} onPress={() => router.push(`/workouts/${athlete.row}`)} /> : undefined}>
+      {history.length === 0 ? <Empty>No workouts saved yet. Use "Save workout" at the bottom of Today after practice.</Empty> : (
+        <>
+          {history.length > here && <T small muted style={{ marginBottom: 8 }}>There for {here} of the last {history.length} saved practices.</T>}
+          {history.slice(0, RECENT).map((h) => <AthleteDay key={h.entry.date} record={h} athlete={athlete} tierNames={data.settings.tierNames} />)}
+        </>
+      )}
+    </Section>
   );
 }

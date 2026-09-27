@@ -53,6 +53,9 @@ export default function RootLayout() {
           <Stack.Screen name="edit/coach" options={{ presentation: "modal", title: "Coach" }} />
           <Stack.Screen name="edit/exercise" options={{ presentation: "modal", title: "Exercise" }} />
           <Stack.Screen name="share" options={{ presentation: "modal", title: "Share this Sheet" }} />
+          <Stack.Screen name="attendance" options={{ title: "Who was there" }} />
+          <Stack.Screen name="workouts/[row]" options={{ title: "Workouts" }} />
+          <Stack.Screen name="edit/attendance" options={{ presentation: "modal", title: "Practice" }} />
         </Stack.Protected>
         <Stack.Protected guard={!hasData}>
           <Stack.Screen name="connect" options={{ headerShown: false, title: "Rock Team" }} />

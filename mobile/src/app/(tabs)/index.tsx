@@ -7,8 +7,9 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
-import { addStandardOutline, cannotSaveReason, moveBlock, save, useAppState } from "@/data/store";
-import type { WorkoutBlock } from "@/core/schema/model";
+import { addStandardOutline, cannotSaveReason, moveBlock, save, saveWorkoutDay, useAppState } from "@/data/store";
+import { attendanceOn, unrecorded } from "@/core/logic/attendance";
+import type { TeamData, WorkoutBlock } from "@/core/schema/model";
 import { daysBetween, formatLong, nextPracticeDay, stepPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
 import { dayTimeline, formatClock, formatDuration, reorder, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
 import { DateField } from "@/ui/DateField";
@@ -107,9 +108,48 @@ export default function Today() {
           ))}
         </>
       )}
-      <Button label="Add a block" icon="plus" kind={dayBlocks.length ? "primary" : "plain"} style={{ marginTop: 12 }}
+      <Button label="Add a block" icon="plus" style={{ marginTop: 12 }}
         onPress={() => router.push({ pathname: "/edit/block", params: focus ? { date, group: focus } : { date } })} />
+      <SaveWorkout data={data} date={date} blocked={blocked} />
     </Screen>
+  );
+}
+
+/**
+ * "Save workout": after practice, records the day for every athlete (their group's blocks
+ * plus All Team ones land in their profile), then opens "Who was there" to mark absences.
+ */
+function SaveWorkout({ data, date, blocked }: { data: TeamData; date: ISODate; blocked: string | null }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const recorded = [...attendanceOn(data, date).values()];
+  const missing = unrecorded(data, date);
+  if (!recorded.length && !data.log.some((b) => b.date === date)) return null; // nothing planned, nothing saved
+  const here = recorded.filter((r) => r.here).length;
+  const openList = () => router.push({ pathname: "/attendance", params: { date } });
+  const saveAll = async () => {
+    setBusy(true);
+    setError(null);
+    try { await saveWorkoutDay(date); openList(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  };
+  return (
+    <Card style={{ marginTop: 16, gap: 10 }}>
+      <T bold>After practice</T>
+      <T small muted>
+        {recorded.length === 0
+          ? `Save this workout to each athlete's profile (${missing.length} athlete${missing.length === 1 ? "" : "s"}, each with their group's blocks). Then switch off anyone who wasn't there.`
+          : `Saved for ${here} athlete${here === 1 ? "" : "s"}${recorded.length > here ? ` (${recorded.length - here} not there)` : ""}${missing.length ? ` · ${missing.length} not recorded yet` : ""}.`}
+      </T>
+      {error && <View style={{ marginHorizontal: -14 }}><Banner kind="error">{error}</Banner></View>}
+      {recorded.length === 0 ? (
+        <Button label="Save workout" icon="check" kind="primary" busy={busy} disabled={!!blocked || !missing.length} onPress={saveAll} />
+      ) : (
+        <>
+          <Button label="Who was there" icon="athletes" kind="primary" onPress={openList} />
+          {missing.length > 0 && <Button label={`Add ${missing.length} not recorded yet`} icon="plus" busy={busy} disabled={!!blocked} onPress={saveAll} />}
+        </>
+      )}
+    </Card>
   );
 }
 
