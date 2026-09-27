@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import demo from "../src/data/demo-fixture.json";
 import { memorySheet } from "../src/core/memorySheet";
 import { parseTeamData, rawFromValueRanges, type RawRanges, type Rows } from "../src/core/schema/parse";
-import { coachesFor } from "../src/core/logic/rotation";
+import { coachesOn } from "../src/core/logic/assignments";
 import { timesUsed } from "../src/core/logic/library";
 import { ROW_CHANGED_MESSAGE, SaveError, saveChange, type AthleteInput, type BlockInput, type CoachInput, type SheetWriter, type ValueRange } from "../src/core/writes";
 
@@ -110,14 +110,14 @@ describe("workout log", () => {
 });
 
 describe("coaches, library and progress", () => {
-  it("a new Thursday coach joins the Thursday rotation in row order", async () => {
+  it("a new Thursday coach is listed as on for Thursdays", async () => {
     const coach: CoachInput = {
       firstName: "Casey", lastName: "Park", role: "Coach", coachesMonday: false, coachesTuesday: false, coachesThursday: true,
       otherDays: "", email: "", phone: "", specialties: "", bio: "", status: "Active",
     };
-    const before = coachesFor(team().coaches, "Thursday").map((c) => c.fullName);
+    const before = coachesOn(team().coaches, "Thursday").map((c) => c.fullName);
     await saveChange(sheet, { table: "coaches", row: null, value: coach });
-    expect(coachesFor(team().coaches, "Thursday").map((c) => c.fullName)).toEqual([...before, "Casey Park"]);
+    expect(coachesOn(team().coaches, "Thursday").map((c) => c.fullName)).toEqual([...before, "Casey Park"]);
     expect(writes[0][1].values[0].slice(1, 4)).toEqual(["No", "No", "Yes"]);
   });
 

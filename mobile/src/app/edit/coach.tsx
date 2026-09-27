@@ -1,4 +1,4 @@
-// Add or edit a coach. The Mon/Tue/Thu switches drive the lead-coach rotation.
+// Add or edit a coach. The Mon/Tue/Thu switches decide which days they're listed as on.
 
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -29,10 +29,9 @@ export default function EditCoach() {
       onDelete={was ? {
         change: () => ({ table: "coaches", row: was.row, was, value: null }),
         title: `Remove ${was.fullName}?`,
-        message: "This clears their row in the Sheet, which changes everyone's place in the rotation. To pause them, switch them to Inactive instead.",
+        message: "This clears their row in the Sheet. To pause them instead, switch them to Inactive.",
       } : undefined}
-      deleteLabel="Remove coach"
-      note="Removing or deactivating a coach, or changing their days, reshuffles that day's rotation for the rest of the season.">
+      deleteLabel="Remove coach">
       <Stack.Screen options={{ title: was ? `Edit ${was.firstName}` : "Add a coach" }} />
       <TextField label="First name" value={v.firstName} onChange={(firstName) => set({ firstName })} autoCapitalize="words" />
       <TextField label="Last name" value={v.lastName} onChange={(lastName) => set({ lastName })} autoCapitalize="words" />

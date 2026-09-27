@@ -55,8 +55,6 @@ export function rangeKeysFor(sheetTitles: string[]): RangeKey[] {
 // Settings cells (1-based rows as seen in the Sheet, 0-based columns).
 export const SETTINGS = {
   tierRows: [5, 6, 7], // B5:B7
-  seasonStartRow: 16, // B16
-  numWeeksRow: 17, // B17
   practiceStartRow: 18, // B18 "5:30 PM"
   practiceEndRow: 19, // B19 "8:00 PM"
   warmupMinutesRow: 20, // B20

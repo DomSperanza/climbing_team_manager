@@ -5,7 +5,6 @@ import Svg, { Path } from "react-native-svg";
 
 const PATHS = {
   today: "M7 3v2M17 3v2M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm4 8h2v2H9z",
-  schedule: "M4 6h16M4 12h16M4 18h10",
   athletes: "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 9c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 0 1 0 6.5M21 20c0-2.6-1.6-4.8-4-5.6",
   library: "M5 4h4v16H5zM10 4h4v16h-4zM15.5 4.5l3.8-1 3.2 15.6-3.8 1z",
   more: "M5 12h.01M12 12h.01M19 12h.01",

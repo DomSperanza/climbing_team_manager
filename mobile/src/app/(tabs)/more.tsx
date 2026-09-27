@@ -43,7 +43,6 @@ export default function More() {
           </View>
         ))}
         <Button label="Add a coach" icon="plus" style={{ marginTop: 6 }} onPress={() => router.push("/edit/coach")} />
-        <T small muted style={{ marginTop: 8 }}>The rotation follows the coaches' order in the Sheet, so a new coach joins the end of the rotation.</T>
       </Section>
 
       <Section title="Data">

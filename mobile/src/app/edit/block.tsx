@@ -5,11 +5,10 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useAppState } from "@/data/store";
-import { ALL_COACHES, ALL_TEAM } from "@/core/schema/layout";
+import { ALL_TEAM } from "@/core/schema/layout";
 import { autofillFromLibrary } from "@/core/logic/library";
 import { formatClock, dayTimeline, minutesFromText, orderForNew } from "@/core/logic/timeline";
 import { nextPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
-import { practiceInfo } from "@/core/logic/rotation";
 import { coachForGroup } from "@/core/logic/assignments";
 import type { BlockInput } from "@/core/writes";
 import { DateField } from "@/ui/DateField";
@@ -25,14 +24,13 @@ export default function EditBlock() {
   const [v, setV] = useState<BlockInput>(() => {
     if (was) { const { row: _row, ...rest } = was; return rest; }
     const date: ISODate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : nextPracticeDay(todayISO());
-    const info = data ? practiceInfo(data.settings, data.coaches, date) : null;
-    const group = params.group || info?.featuredTier || ALL_TEAM;
+    const group = params.group || ALL_TEAM;
     return {
       date,
       group,
       libraryItem: "", blockType: "", description: "", setsRepsDuration: "",
       // Whoever has this group that day, else the day's lead.
-      coach: (data && (coachForGroup(data, date, group) ?? coachForGroup(data, date, ALL_TEAM))) ?? (info?.lead && info.lead !== ALL_COACHES ? info.lead : ""),
+      coach: (data && (coachForGroup(data, date, group) ?? coachForGroup(data, date, ALL_TEAM))) ?? "",
       notes: "", minutes: null, order: null, // order is chosen when saving (see below)
     };
   });

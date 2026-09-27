@@ -6,7 +6,7 @@ One codebase ([Expo](https://expo.dev) / React Native) that builds:
 - **an iPhone app**: this needs a Mac, or Expo's cloud build service, once. See [iPhone](#iphone);
 - **a web app** that installs from the browser ("Add to Home Screen") and works offline.
 
-It does everything the Phase 2a web app does: today's plan, the season rotation, the roster with progress, the exercise library, and the coaches. It also **saves to the Sheet**, which is Phase 2b. A coach can add, edit and delete workout blocks, progress entries, athletes, coaches and exercises from their phone.
+It covers today's plan, who's coaching which group, the roster with progress, the exercise library, and the coaches. It also **saves to the Sheet**, which is Phase 2b. A coach can add, edit and delete workout blocks, progress entries, athletes, coaches and exercises from their phone.
 
 It can also **create the team Sheet** in your Google Drive, already set up, and **share it** with coaches by email. See [Creating and sharing the team Sheet](#creating-and-sharing-the-team-sheet).
 
@@ -89,15 +89,14 @@ If Android sign-in says *"Google rejected this copy of the app"*, the package na
 
 **Create:** on the first screen, tap **Create a new team Sheet**, then choose:
 - a name;
-- the three tier names;
-- the first Thursday of the season and how many weeks it runs;
+- the three group names;
 - whether to start with the ~20-exercise starter library;
 - whether to add yourself as the first coach.
 
 Then sign in. What the app does next:
 
 1. It uploads the team workbook (`Climbing_Team_Tiered_Practice_System.xlsx`, built into the app) to your Google Drive. Drive converts it into a Google Sheet, the same way the original Sheet was made, so every tab, formula, dropdown, color rule and named range comes across.
-2. It fills in Settings (tiers, season start, weeks), clears the example rows, and adds you as a coach. It uses the same "clear the editable cells, keep the formulas" rule as deleting.
+2. It fills in the group names in Settings, clears the example rows, and adds you as a coach. It uses the same "clear the editable cells, keep the formulas" rule as deleting.
 3. It connects to the new Sheet.
 
 The new Sheet is **private**: it's in your Drive, and nobody else can open it until you share it.
@@ -177,9 +176,8 @@ The web version has no app lock and doesn't encrypt its cache: a browser has now
 Today lists everyone on that day: every Active coach with that weekday ticked in Coach Profiles. Below them are the day's **lead** and one row per **tier**.
 
 - **Any coach can claim a group, or hand it to someone else,** on any day. Tap its row, then pick a coach. Coaches who are on that weekday are listed first, and "Me" is at the top when your Google account's email matches your Coach Profiles entry.
-- **The lead starts as the rotation's pick** (marked "by rotation") until someone changes it for that date. Clearing it goes back to the rotation.
+- **The lead and every group start open** each day until a coach claims them.
 - **Building a group's workout:** tap that group's chip above the plan to see just its blocks plus the All Team ones. **Add a block** then starts with that group and its coach.
-- **The Schedule tab** shows the leads and claimed groups each week, using the rotation where nobody has changed anything.
 
 **In the Sheet** claims live in a small tab, **Coach Assignments** (Date | Group | Coach, where Group "All Team" is the lead). The app adds the tab the first time someone claims a group, and you can edit it in Google Sheets too.
 
@@ -208,7 +206,7 @@ Today shows the day as a timeline against the practice time in the Sheet's Setti
 ## Development
 
 ```bash
-npm test          # rotation vs. the Sheet's own formulas, parsing, validation, dates, and saving
+npm test          # parsing, validation, dates, timeline, coach claims, saving, new-Sheet setup
 npm run typecheck
 npm run lint
 ```
@@ -219,7 +217,7 @@ npm run lint
 src/
   core/            plain TypeScript, no React Native, fully tested
     schema/        where everything lives in the Sheet, parsing, validation
-    logic/         rotation, dates, library lookups (ported from the Sheet's formulas)
+    logic/         dates, timeline, coach claims, library lookups
     writes.ts      what each save writes, and the save sequence
     setup.ts       setting up a newly created Sheet, and the Drive upload body
     memorySheet.ts the Sheet stand-in used by demo mode and the tests
@@ -243,6 +241,6 @@ scripts/           web post-build step, Android Studio launcher
 ## Known limitations
 
 - **Links between tabs use names**, as in the Sheet. Renaming an athlete disconnects their past progress entries, and renaming an exercise disconnects its Times Used count. The edit forms warn about this.
-- **Rotation quirk, kept on purpose.** The Thursday lead-coach turn also advances on "All Team" weeks, so with 4 Thursday coaches the 4th never leads. This matches the Sheet. Fixing it means changing the Sheet's formula and `src/core/logic/rotation.ts` together.
 - **No USA Climbing category field yet** (HANDOFF.md §1.6). It needs a column change in the Sheet and a check of the current official category list first.
 - A plain `npm audit` reports warnings in Expo's development tooling. They don't affect the built app.
+- **No rotation.** The app doesn't use the Sheet's *Rotation Schedule* or *Full Team Calendar* tabs (the featured tier and lead-coach cycle). Coaches claim the lead and groups day by day instead. Those tabs still work in Google Sheets, and nothing in the app writes to them.

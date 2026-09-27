@@ -4,7 +4,7 @@ import { teamFrom } from "./helpers";
 import { rawFromValueRanges, type Rows } from "../src/core/schema/parse";
 import { validateSheet } from "../src/core/schema/validate";
 import { autofillFromLibrary, timesUsed } from "../src/core/logic/library";
-import { cellToISO, nextPracticeDay, stepPracticeDay, thursdayOfWeek } from "../src/core/logic/dates";
+import { cellToISO, nextPracticeDay, stepPracticeDay } from "../src/core/logic/dates";
 
 const team = teamFrom(demo);
 
@@ -12,8 +12,6 @@ describe("parsing the real workbook", () => {
   it("reads settings", () => {
     expect(team.settings).toMatchObject({
       tierNames: ["Advanced", "Intermediate", "Developing"],
-      seasonStartDate: "2026-09-24",
-      numberOfWeeks: 16,
     });
     expect(team.settings.blockTypes).toHaveLength(8);
   });
@@ -78,6 +76,5 @@ describe("dates", () => {
     expect(nextPracticeDay("2026-09-25")).toBe("2026-09-28"); // Fri -> Mon
     expect(stepPracticeDay("2026-09-24", 1)).toBe("2026-09-28"); // Thu -> Mon
     expect(stepPracticeDay("2026-09-24", -1)).toBe("2026-09-22"); // Thu -> Tue
-    expect(thursdayOfWeek("2026-09-27")).toBe("2026-09-24"); // Sunday belongs to the week before
   });
 });

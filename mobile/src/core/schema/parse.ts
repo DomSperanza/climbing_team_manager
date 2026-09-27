@@ -42,8 +42,6 @@ export function parseSettings(rows: Rows): SeasonSettings {
   }
   return {
     tierNames: SETTINGS.tierRows.map((r) => str(at(r, SETTINGS.valueCol))),
-    seasonStartDate: cellToISO(at(SETTINGS.seasonStartRow, SETTINGS.valueCol)),
-    numberOfWeeks: num(at(SETTINGS.numWeeksRow, SETTINGS.valueCol)) || 16,
     blockTypes,
     practice: parsePractice(at),
   };

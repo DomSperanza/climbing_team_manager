@@ -79,12 +79,6 @@ export function stepPracticeDay(d: ISODate, dir: 1 | -1): ISODate {
   return cur;
 }
 
-/** The Thursday of the Monday-starting week containing `d`. */
-export function thursdayOfWeek(d: ISODate): ISODate {
-  const dow = new Date(toMs(d)).getUTCDay(); // 0 = Sunday
-  const mondayOffset = (dow + 6) % 7;
-  return addDays(d, 3 - mondayOffset);
-}
 
 export function formatLong(d: ISODate): string {
   const [y, m, day] = d.split("-").map(Number);

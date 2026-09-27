@@ -4,30 +4,25 @@
 // and clears the example rows, using the same "clear the editable cells, keep the formulas"
 // rule as deleting. Pure functions only, so it's tested against the example workbook.
 
-import { isoToSerial, weekdayOf, type ISODate } from "./logic/dates";
 import { LOG_TIME_HEADERS } from "./schema/layout";
 import type { ValueRange } from "./writes";
 
 export interface NewSheetOptions {
   name: string;
   tierNames: [string, string, string];
-  seasonStart: ISODate;
-  numberOfWeeks: number;
   keepLibrary: boolean; // the ~21 starter exercises from the team's real practice plans
   me: {
     firstName: string; lastName: string; role: string; email: string;
     coachesMonday: boolean; coachesTuesday: boolean; coachesThursday: boolean;
-  } | null; // added as the first coach, so the rotation has someone in it
+  } | null; // added as the first coach
 }
 
 export function validateNewSheet(o: NewSheetOptions): string | null {
   if (!o.name.trim()) return "Give the Sheet a name.";
   const tiers = o.tierNames.map((t) => t.trim());
-  if (tiers.some((t) => !t)) return "All three tiers need a name.";
-  if (new Set(tiers.map((t) => t.toLowerCase())).size !== 3) return "The three tiers need different names.";
-  if (tiers.some((t) => ["all team", "all levels", "all coaches"].includes(t.toLowerCase()))) return "\"All Team\", \"All Levels\" and \"All Coaches\" are already used by the Sheet — pick other tier names.";
-  if (weekdayOf(o.seasonStart) !== "Thursday") return "The season has to start on a Thursday (the tiered practice night).";
-  if (!Number.isInteger(o.numberOfWeeks) || o.numberOfWeeks < 1 || o.numberOfWeeks > 52) return "Number of weeks should be between 1 and 52.";
+  if (tiers.some((t) => !t)) return "All three groups need a name.";
+  if (new Set(tiers.map((t) => t.toLowerCase())).size !== 3) return "The three groups need different names.";
+  if (tiers.some((t) => ["all team", "all levels", "all coaches"].includes(t.toLowerCase()))) return "\"All Team\", \"All Levels\" and \"All Coaches\" are already used by the Sheet — pick other group names.";
   if (o.me && (!o.me.firstName.trim() || !o.me.lastName.trim())) return "Add your first and last name, or switch off \"Add me as a coach\".";
   return null;
 }
@@ -44,7 +39,6 @@ export function setupPlan(o: NewSheetOptions): { clear: string[]; write: ValueRa
   ];
   const write: ValueRange[] = [
     { range: "'Settings'!B5:B7", values: o.tierNames.map((t) => [t.trim()]) },
-    { range: "'Settings'!B16:B17", values: [[isoToSerial(o.seasonStart)], [o.numberOfWeeks]] },
     { range: "'Log a Workout'!J4:K4", values: [[...LOG_TIME_HEADERS]] }, // the app's Minutes / Order columns
   ];
   if (o.me) {
@@ -99,12 +93,4 @@ export function multipartBody(metadata: object, mediaType: string, media: Uint8A
   body.set(media, head.length);
   body.set(tail, head.length + media.length);
   return body;
-}
-
-/** The next Thursday on or after `d` — the default season start. */
-export function nextThursday(d: ISODate): ISODate {
-  const [y, m, day] = d.split("-").map(Number);
-  const t = new Date(Date.UTC(y, m - 1, day));
-  t.setUTCDate(t.getUTCDate() + ((4 - t.getUTCDay() + 7) % 7));
-  return t.toISOString().slice(0, 10);
 }

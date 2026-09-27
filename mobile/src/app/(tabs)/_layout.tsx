@@ -11,7 +11,6 @@ import { useTheme } from "@/ui/theme";
 
 const TABS: { name: string; label: string; title: string; icon: IconName }[] = [
   { name: "index", label: "Today", title: "Today's plan", icon: "today" },
-  { name: "schedule", label: "Schedule", title: "Season schedule", icon: "schedule" },
   { name: "athletes", label: "Athletes", title: "Athletes", icon: "athletes" },
   { name: "library", label: "Library", title: "Exercise library", icon: "library" },
   { name: "more", label: "More", title: "Coaches & settings", icon: "more" },

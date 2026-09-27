@@ -23,7 +23,7 @@ function walk(dir) {
 writeFileSync(join(DIST, "manifest.webmanifest"), JSON.stringify({
   name: "Rock Team",
   short_name: "Rock Team",
-  description: "Practice plans, rotation, roster and exercise library for the climbing team.",
+  description: "Practice plans, roster and exercise library for the climbing team.",
   start_url: base,
   scope: base,
   display: "standalone",

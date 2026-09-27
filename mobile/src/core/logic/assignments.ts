@@ -2,21 +2,26 @@
 // weekday in Coach Profiles (and Active) is on. Any coach can claim a group for a date, or
 // hand it to someone else; those claims live in the "Coach Assignments" tab (Date | Group |
 // Coach), which the app adds the first time someone claims a group. The day's lead is the
-// "All Team" claim — until someone sets it, the rotation's pick stands in as a suggestion.
+// "All Team" claim.
 
-import { ASSIGNMENT_HEADERS, ALL_COACHES, ALL_TEAM, OPTIONAL_TAB } from "../schema/layout";
+import { ASSIGNMENT_HEADERS, ALL_TEAM, OPTIONAL_TAB } from "../schema/layout";
 import type { Coach, TeamData } from "../schema/model";
 import type { SheetWriter } from "../writes";
 import { cellToISO, isoToSerial, isPracticeDay, weekdayOf, type ISODate, type PracticeDay } from "./dates";
-import { coachesFor, practiceInfo } from "./rotation";
 
 const TAB = `'${OPTIONAL_TAB.assignments}'`;
 const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
 
 export interface DayCoaching {
   onDuty: Coach[]; // in Coach Profiles order
-  lead: { coach: string | null; suggested: boolean }; // suggested = the rotation's pick, nobody has set it
+  lead: string | null; // the "All Team" claim
   groups: { group: string; coach: string | null }[]; // one per tier, in Settings order
+}
+
+/** Active coaches who coach on `day`, in Coach Profiles order. */
+export function coachesOn(coaches: Coach[], day: PracticeDay): Coach[] {
+  const flag = day === "Monday" ? "coachesMonday" : day === "Tuesday" ? "coachesTuesday" : "coachesThursday";
+  return coaches.filter((c) => c.status === "Active" && c[flag]).sort((a, b) => a.row - b.row);
 }
 
 /** Claims for one date: group → coach (the last row wins if a group was entered twice). */
@@ -28,12 +33,9 @@ export function claimsOn(data: TeamData, date: ISODate): Map<string, string> {
 
 export function dayCoaching(data: TeamData, date: ISODate): DayCoaching {
   const claims = claimsOn(data, date);
-  const onDuty = isPracticeDay(date) ? coachesFor(data.coaches, weekdayOf(date) as PracticeDay) : [];
-  const rotation = practiceInfo(data.settings, data.coaches, date).lead;
-  const leadClaim = claims.get(norm(ALL_TEAM)) ?? null;
   return {
-    onDuty,
-    lead: leadClaim ? { coach: leadClaim, suggested: false } : { coach: rotation && rotation !== ALL_COACHES ? rotation : null, suggested: true },
+    onDuty: isPracticeDay(date) ? coachesOn(data.coaches, weekdayOf(date) as PracticeDay) : [],
+    lead: claims.get(norm(ALL_TEAM)) ?? null,
     groups: data.settings.tierNames.filter(Boolean).map((group) => ({ group, coach: claims.get(norm(group)) ?? null })),
   };
 }
@@ -41,7 +43,7 @@ export function dayCoaching(data: TeamData, date: ISODate): DayCoaching {
 /** The coach who has `group` that day — the default "Coach" for a new block in that group. */
 export function coachForGroup(data: TeamData, date: ISODate, group: string): string | null {
   const day = dayCoaching(data, date);
-  if (norm(group) === norm(ALL_TEAM)) return day.lead.coach;
+  if (norm(group) === norm(ALL_TEAM)) return day.lead;
   return day.groups.find((g) => norm(g.group) === norm(group))?.coach ?? null;
 }
 

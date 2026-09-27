@@ -10,7 +10,6 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 import { addStandardOutline, cannotSaveReason, moveBlock, save, useAppState } from "@/data/store";
 import type { WorkoutBlock } from "@/core/schema/model";
 import { daysBetween, formatLong, nextPracticeDay, stepPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
-import { practiceInfo } from "@/core/logic/rotation";
 import { dayTimeline, formatClock, formatDuration, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
 import { DateField } from "@/ui/DateField";
 import { Icon, type IconName } from "@/ui/Icon";
@@ -27,7 +26,6 @@ function nearestPlannedDay(log: WorkoutBlock[], d: ISODate): ISODate | null {
 }
 
 export default function Today() {
-  const t = useTheme();
   const s = useAppState();
   const { d } = useLocalSearchParams<{ d?: string }>();
   const [rearrange, setRearrange] = useState(false);
@@ -41,12 +39,10 @@ export default function Today() {
   const date = d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : nextPracticeDay(today);
   const show = (next: ISODate) => { setRearrange(false); setError(null); router.setParams({ d: next }); };
 
-  const { settings, coaches, log } = data;
-  const info = practiceInfo(settings, coaches, date);
+  const { settings, log } = data;
   const dayBlocks = log.filter((b) => b.date === date);
   const timeline = dayTimeline(dayBlocks, settings.practice, settings.tierNames);
   const nearest = dayBlocks.length ? null : nearestPlannedDay(log, date);
-  const featured = info.featuredTier ? tierColors(t, info.featuredTier, settings.tierNames) : null;
   const blocked = cannotSaveReason(s);
 
   /** Runs one quick change, showing a spinner on that block until the Sheet has it. */
@@ -73,25 +69,7 @@ export default function Today() {
         <View style={{ alignItems: "center", marginBottom: 8 }}><LinkButton label="Jump to the next practice" onPress={() => show(nextPracticeDay(today))} /></View>
       )}
 
-      {(info.week === null || info.featuredTier) && (
-        <Card tint={featured?.fg} style={featured ? { backgroundColor: featured.bg, borderColor: featured.bg } : undefined}>
-          {info.week === null ? (
-            <T>Before the season starts{settings.seasonStartDate ? ` (${formatLong(settings.seasonStartDate)})` : ""}.</T>
-          ) : (
-            <View style={{ gap: 6 }}>
-              {info.featuredTier && (
-                <Row style={{ justifyContent: "space-between" }}>
-                  <T small muted>Featured tier</T>
-                  <TierChip tier={info.featuredTier} tierNames={settings.tierNames} />
-                </Row>
-              )}
-              <T small muted>Week {info.week}{info.day === "Thursday" ? ` · cycle week ${((info.week - 1) % 4) + 1} of 4` : ""}</T>
-            </View>
-          )}
-        </Card>
-      )}
-
-      <DayCoaches data={data} date={date} heading={info.week !== null && !info.featuredTier ? `Week ${info.week}` : undefined} />
+      <DayCoaches data={data} date={date} />
 
       <TimeBudget timeline={timeline} blockCount={dayBlocks.length} />
 

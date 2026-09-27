@@ -216,7 +216,7 @@ export async function connectSheet(spreadsheetId: string) {
 
 /**
  * Creates a new, private team Sheet in the signed-in coach's Google Drive from the team
- * workbook, sets it up for this season (see core/setup.ts), and connects to it.
+ * workbook, sets it up (see core/setup.ts), and connects to it.
  */
 export async function createTeamSheet(options: NewSheetOptions) {
   const problem = validateNewSheet(options);
@@ -232,7 +232,7 @@ export async function createTeamSheet(options: NewSheetOptions) {
       const { TEMPLATE_XLSX_BASE64 } = await import("./template-xlsx");
       return createSheetFromWorkbook(token, options.name.trim(), base64ToBytes(TEMPLATE_XLSX_BASE64));
     });
-    update({ setupStep: "Setting up your season…" });
+    update({ setupStep: "Setting up the Sheet…" });
     const plan = setupPlan({ ...options, me });
     await withToken(async (token) => {
       const sheet = sheetWriter(spreadsheetId, token);

@@ -7,14 +7,12 @@ import { memorySheet } from "../src/core/memorySheet";
 import { parseTeamData, rawFromValueRanges, type Rows } from "../src/core/schema/parse";
 import { validateSheet } from "../src/core/schema/validate";
 import { TAB } from "../src/core/schema/layout";
-import { coachesFor, featuredTier } from "../src/core/logic/rotation";
-import { base64ToBytes, multipartBody, nextThursday, setupPlan, utf8, validateNewSheet, type NewSheetOptions } from "../src/core/setup";
+import { coachesOn } from "../src/core/logic/assignments";
+import { base64ToBytes, multipartBody, setupPlan, utf8, validateNewSheet, type NewSheetOptions } from "../src/core/setup";
 
 const options: NewSheetOptions = {
   name: "Rock Team 2026–27",
   tierNames: ["Crushers", "Senders", "Rising"],
-  seasonStart: "2026-10-01",
-  numberOfWeeks: 20,
   keepLibrary: true,
   me: { firstName: "Dana", lastName: "Reyes", role: "Head Coach", email: "dana@example.com", coachesMonday: false, coachesTuesday: false, coachesThursday: true },
 };
@@ -32,20 +30,20 @@ async function setUp(o: NewSheetOptions) {
 describe("setting up a new team Sheet", () => {
   it("fills in Settings and clears every example row", async () => {
     const { team, raw } = await setUp(options);
-    expect(team.settings).toMatchObject({ tierNames: ["Crushers", "Senders", "Rising"], seasonStartDate: "2026-10-01", numberOfWeeks: 20 });
+    expect(team.settings.tierNames).toEqual(["Crushers", "Senders", "Rising"]);
     expect(team.athletes).toEqual([]);
     expect(team.log).toEqual([]);
     expect(team.progress).toEqual([]);
     expect(team.library.length).toBeGreaterThan(15); // starter library kept
-    expect(featuredTier(team.settings, 2)).toBe("Senders");
     // Still a valid Rock Team sheet — headers untouched.
     expect(validateSheet(Object.values(TAB), raw)).toEqual([]);
   });
 
-  it("adds the creator as the first coach, so Thursdays have a lead", async () => {
+  it("adds the creator as the first coach, on the days they chose", async () => {
     const { team } = await setUp(options);
     expect(team.coaches.map((c) => [c.row, c.fullName, c.role, c.email])).toEqual([[6, "Dana Reyes", "Head Coach", "dana@example.com"]]);
-    expect(coachesFor(team.coaches, "Thursday").map((c) => c.fullName)).toEqual(["Dana Reyes"]);
+    expect(coachesOn(team.coaches, "Thursday").map((c) => c.fullName)).toEqual(["Dana Reyes"]);
+    expect(coachesOn(team.coaches, "Monday")).toEqual([]);
   });
 
   it("leaves the formula columns alone and can drop the starter library", async () => {
@@ -58,12 +56,9 @@ describe("setting up a new team Sheet", () => {
 
   it("checks the options", () => {
     expect(validateNewSheet(options)).toBeNull();
-    expect(validateNewSheet({ ...options, seasonStart: "2026-10-02" })).toMatch(/Thursday/);
     expect(validateNewSheet({ ...options, tierNames: ["A", "a", "B"] })).toMatch(/different names/);
     expect(validateNewSheet({ ...options, tierNames: ["A", "All Team", "B"] })).toMatch(/already used/);
     expect(validateNewSheet({ ...options, name: " " })).toMatch(/name/);
-    expect(nextThursday("2026-09-27")).toBe("2026-10-01");
-    expect(nextThursday("2026-10-01")).toBe("2026-10-01");
   });
 });
 

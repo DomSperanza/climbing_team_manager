@@ -6,7 +6,7 @@ import { RANGE_KEYS, rangeKeysFor } from "../src/core/schema/layout";
 import { coachForGroup, dayCoaching, saveAssignment } from "../src/core/logic/assignments";
 import type { SheetWriter } from "../src/core/writes";
 
-const THU = "2026-09-24"; // week 1, Advanced featured; Taylor Brooks is the only Thursday coach
+const THU = "2026-09-24"; // Taylor Brooks is the only Thursday coach
 const TUE = "2026-09-22";
 
 function setUp() {
@@ -19,11 +19,11 @@ function setUp() {
 const assignmentRows = (raw: RawRanges) => raw.assignments.slice(1).filter((r) => r.some((c) => String(c ?? "") !== ""));
 
 describe("who's coaching a day", () => {
-  it("everyone set for that weekday is on; the rotation suggests the lead", () => {
+  it("everyone set for that weekday is on; the lead and groups start open", () => {
     const { team } = setUp();
     const thu = dayCoaching(team(), THU);
     expect(thu.onDuty.map((c) => c.fullName)).toEqual(["Taylor Brooks"]);
-    expect(thu.lead).toEqual({ coach: "Taylor Brooks", suggested: true });
+    expect(thu.lead).toBeNull();
     expect(thu.groups).toEqual([{ group: "Advanced", coach: null }, { group: "Intermediate", coach: null }, { group: "Developing", coach: null }]);
     expect(dayCoaching(team(), TUE).onDuty.map((c) => c.fullName)).toEqual(["Jordan Lee"]);
   });
@@ -41,13 +41,13 @@ describe("who's coaching a day", () => {
     expect(tabsAdded).toHaveLength(1);
   });
 
-  it("setting the lead overrides the rotation; clearing goes back to it", async () => {
+  it("setting and clearing the lead", async () => {
     const { sheet, team } = setUp();
     await saveAssignment(sheet, THU, "All Team", "Jordan Lee", false);
-    expect(dayCoaching(team(), THU).lead).toEqual({ coach: "Jordan Lee", suggested: false });
+    expect(dayCoaching(team(), THU).lead).toBe("Jordan Lee");
     expect(coachForGroup(team(), THU, "All Team")).toBe("Jordan Lee");
     await saveAssignment(sheet, THU, "All Team", null, true);
-    expect(dayCoaching(team(), THU).lead).toEqual({ coach: "Taylor Brooks", suggested: true });
+    expect(dayCoaching(team(), THU).lead).toBeNull();
   });
 
   it("claims are per date and reuse emptied rows", async () => {

@@ -86,9 +86,7 @@ export interface Assignment {
 }
 
 export interface SeasonSettings {
-  tierNames: string[]; // Settings!B5:B7, in order — order drives the rotation
-  seasonStartDate: ISODate | null;
-  numberOfWeeks: number;
+  tierNames: string[]; // Settings!B5:B7, the groups athletes are split into
   blockTypes: string[];
   practice: PracticeTiming; // Settings!B18:B22
 }

@@ -13,9 +13,9 @@ import { Icon } from "./Icon";
 import { Banner, Card, Chip, LinkButton, MAX_WIDTH, Row, T, TierChip } from "./kit";
 import { RADIUS, useTheme } from "./theme";
 
-type Picking = { group: string; current: string | null; set: boolean } | null; // set = someone chose it (not the rotation)
+type Picking = { group: string; current: string | null } | null;
 
-export function DayCoaches({ data, date, heading }: { data: TeamData; date: ISODate; heading?: string }) {
+export function DayCoaches({ data, date }: { data: TeamData; date: ISODate }) {
   const t = useTheme();
   const s = useAppState();
   const [picking, setPicking] = useState<Picking>(null);
@@ -32,16 +32,16 @@ export function DayCoaches({ data, date, heading }: { data: TeamData; date: ISOD
     setError(null);
     try { await assignCoach(date, group, coach); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); }
   };
-  const open = (group: string, current: string | null, set: boolean) => (blocked ? setError(blocked) : setPicking({ group, current, set }));
+  const open = (group: string, current: string | null) => (blocked ? setError(blocked) : setPicking({ group, current }));
 
   const rows = [
-    { group: ALL_TEAM, label: "Lead", coach: day.lead.coach, set: !day.lead.suggested, note: day.lead.suggested && day.lead.coach ? "by rotation" : "" },
-    ...day.groups.map((g) => ({ group: g.group, label: g.group, coach: g.coach, set: !!g.coach, note: "" })),
+    { group: ALL_TEAM, label: "Lead", coach: day.lead },
+    ...day.groups.map((g) => ({ group: g.group, label: g.group, coach: g.coach })),
   ];
 
   return (
     <Card>
-      <T small muted>{heading ? `${heading} · ` : ""}On {weekday}s</T>
+      <T small muted>On {weekday}s</T>
       <Row style={{ marginTop: 6, gap: 6 }}>
         {day.onDuty.length
           ? day.onDuty.map((c) => <Chip key={c.row} label={c.fullName} fg={t.text} bg={t.surface2} />)
@@ -51,14 +51,14 @@ export function DayCoaches({ data, date, heading }: { data: TeamData; date: ISOD
       <View style={{ marginTop: 12, gap: 2 }}>
         {rows.map((r) => (
           <Pressable key={r.group} accessibilityRole="button" accessibilityLabel={`${r.label}: ${r.coach ?? "open"}. Change`}
-            onPress={() => open(r.group, r.coach, r.set)}
+            onPress={() => open(r.group, r.coach)}
             style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingVertical: 6, borderTopWidth: 1, borderTopColor: t.line, opacity: pressed ? 0.6 : 1 })}>
             <View style={{ width: 118 }}>
               {r.group === ALL_TEAM ? <T small bold>Lead</T> : <TierChip tier={r.group} tierNames={data.settings.tierNames} />}
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               {r.coach
-                ? <T bold numberOfLines={1}>{r.coach}{r.note ? <T small muted> · {r.note}</T> : null}</T>
+                ? <T bold numberOfLines={1}>{r.coach}</T>
                 : <T muted>Open — tap to claim</T>}
             </View>
             {busy === r.group ? <ActivityIndicator color={t.accent} /> : <Icon name="edit" size={18} color={t.muted} />}
@@ -110,8 +110,8 @@ function CoachPicker({ picking, data, date, me, onDuty, onPick, onClose }: {
               </Pressable>
             );
           }}
-          ListFooterComponent={picking?.set ? (
-            <View style={{ padding: 12 }}><LinkButton label={picking.group === ALL_TEAM ? "Clear — go back to the rotation's pick" : "Nobody — leave it open"} onPress={() => onPick(null)} /></View>
+          ListFooterComponent={picking?.current ? (
+            <View style={{ padding: 12 }}><LinkButton label="Nobody — leave it open" onPress={() => onPick(null)} /></View>
           ) : null} />
       </View>
     </Modal>
