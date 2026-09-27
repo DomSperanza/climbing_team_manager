@@ -1,0 +1,595 @@
+{
+ "sheetTitles": [
+  "Read Me",
+  "Log a Workout",
+  "Day View",
+  "Athlete Profiles",
+  "Coach Profiles",
+  "Exercise Library",
+  "Rotation Schedule",
+  "Full Team Calendar",
+  "Progress Log",
+  "Settings"
+ ],
+ "valueRanges": [
+  {
+   "range": "'Settings'!A1:C60",
+   "values": [
+    [
+     "Settings — the control panel"
+    ],
+    [
+     "Edit only the yellow cells. Everything else in the workbook reads from here."
+    ],
+    [],
+    [
+     "GROUP NAMES"
+    ],
+    [
+     "Group A — top performers",
+     "Advanced"
+    ],
+    [
+     "Group B — mid-range",
+     "Intermediate"
+    ],
+    [
+     "Group C — developing",
+     "Developing"
+    ],
+    [],
+    [
+     "COACHES"
+    ],
+    [
+     "Coaches now have their own tab -> see \"Coach Profiles\". Add, remove, or reassign coaches there (including which day(s) they coach) and every dropdown and rotation elsewhere in this workbook updates automatically — no fixed coach count here anymore."
+    ],
+    [],
+    [],
+    [],
+    [
+     "THURSDAY PRACTICE TIMING"
+    ],
+    [
+     "These describe the tiered Thursday block specifically. Monday/Tuesday keep whatever format the head coach already runs — see the Full Team Calendar tab."
+    ],
+    [
+     "Season start date (first Thursday under this system)",
+     46289
+    ],
+    [
+     "Number of weeks scheduled below",
+     16
+    ],
+    [
+     "Practice start time",
+     "5:30 PM"
+    ],
+    [
+     "Practice end time",
+     "8:00 PM"
+    ],
+    [
+     "Team warm-up (minutes)",
+     45
+    ],
+    [
+     "Tiered group block (minutes)",
+     90
+    ],
+    [
+     "Team stretch / cooldown (minutes)",
+     15
+    ],
+    [
+     "Check: block lengths sum to practice length?",
+     "OK"
+    ],
+    [],
+    [
+     "4-WEEK ROTATION PATTERN (auto — reads Group Names above)"
+    ],
+    [
+     "Cycle Week",
+     "Featured Tier"
+    ],
+    [
+     1,
+     "Advanced"
+    ],
+    [
+     2,
+     "Intermediate"
+    ],
+    [
+     3,
+     "Developing"
+    ],
+    [
+     4,
+     "All Team"
+    ],
+    [],
+    [
+     "DROPDOWN LIST HELPERS (used by data-validation dropdowns — don't delete)"
+    ],
+    [
+     "Group + All Team",
+     "",
+     "Group + All Levels"
+    ],
+    [
+     "Advanced",
+     "",
+     "Advanced"
+    ],
+    [
+     "Intermediate",
+     "",
+     "Intermediate"
+    ],
+    [
+     "Developing",
+     "",
+     "Developing"
+    ],
+    [
+     "All Team",
+     "",
+     "All Levels"
+    ],
+    [],
+    [
+     "Block Types (Log a Workout, Exercise Library)"
+    ],
+    [
+     "Warm-up"
+    ],
+    [
+     "Strength"
+    ],
+    [
+     "Power"
+    ],
+    [
+     "Technique/Skill"
+    ],
+    [
+     "Coordination/Balance"
+    ],
+    [
+     "Core"
+    ],
+    [
+     "Stretch/Cooldown"
+    ],
+    [
+     "Other"
+    ]
+   ]
+  },
+  {
+   "range": "'Athlete Profiles'!A5:N",
+   "values": [
+    [
+     "ID",
+     "First Name",
+     "Last Name",
+     "Full Name",
+     "Age",
+     "Group",
+     "Current\nFlash Grade",
+     "Goal\nGrade",
+     "Strengths",
+     "Growth Areas",
+     "Current Focus / Goal",
+     "Join Date",
+     "Status",
+     "Notes"
+    ],
+    [
+     1,
+     "Alex",
+     "Rivera",
+     "Alex Rivera",
+     13,
+     "Advanced",
+     "V6",
+     "V8",
+     "Big power moves, competition composure",
+     "Foot precision on slab",
+     "Qualify for divisionals",
+     45170,
+     "Active",
+     "EXAMPLE ROW — overwrite or delete"
+    ],
+    [
+     2,
+     "Sam",
+     "Nguyen",
+     "Sam Nguyen",
+     10,
+     "Developing",
+     "V1",
+     "V3",
+     "Enthusiasm, coordination drills",
+     "Confidence on lead/overhang",
+     "Stick 3 moves in a row without a pause",
+     45672,
+     "Active",
+     "EXAMPLE ROW — overwrite or delete"
+    ]
+   ]
+  },
+  {
+   "range": "'Coach Profiles'!A5:N",
+   "values": [
+    [
+     "ID",
+     "First Name",
+     "Last Name",
+     "Full Name",
+     "Role",
+     "Mon?",
+     "Tue?",
+     "Thu?",
+     "Other Days",
+     "Email",
+     "Phone",
+     "Specialties / Certifications",
+     "Bio / Notes",
+     "Status"
+    ],
+    [
+     1,
+     "Jordan",
+     "Lee",
+     "Jordan Lee",
+     "Head Coach",
+     "Yes",
+     "Yes",
+     "No",
+     "",
+     "jordan@example.com",
+     "(555) 010-2231",
+     "USAC Level 2, Youth Development",
+     "Leads Monday & Tuesday team practices.",
+     "Active"
+    ],
+    [
+     2,
+     "Taylor",
+     "Brooks",
+     "Taylor Brooks",
+     "Coach",
+     "No",
+     "No",
+     "Yes",
+     "",
+     "taylor@example.com",
+     "(555) 010-4470",
+     "Youth coordination, competition prep",
+     "Plans and leads the Thursday tiered block.",
+     "Active"
+    ]
+   ]
+  },
+  {
+   "range": "'Exercise Library'!A5:H",
+   "values": [
+    [
+     "ID",
+     "Block Type",
+     "Tier",
+     "Workout / Exercise Name",
+     "Description / Instructions",
+     "Suggested Sets x Reps\n/ Duration",
+     "Equipment",
+     "Notes / Source"
+    ],
+    [
+     1,
+     "Warm-up",
+     "All Levels",
+     "Full-Body Warm-Up",
+     "General movement, light traverse, joint mobility.",
+     "15-20 min",
+     "None",
+     "Standard opener, every practice"
+    ],
+    [
+     2,
+     "Warm-up",
+     "All Levels",
+     "Ladder Drill",
+     "Ladder 5 down / 10 down evens as a warm-up movement drill.",
+     "5-10 down per set",
+     "Ladder wall/board",
+     "From current plan"
+    ],
+    [
+     3,
+     "Power",
+     "Advanced",
+     "Campus Board Ladder",
+     "Jump catches, 1-max, 1-minus-1/max, 1-8 fast, with box jumps between sets.",
+     "Per current plan progression",
+     "Campus board, plyo box",
+     "From 9/15 plan"
+    ],
+    [
+     4,
+     "Power",
+     "Advanced",
+     "Boulder Eliminates",
+     "Pick boulders just below flash limit; remove holds until moves no longer go.",
+     "15 min max per boulder",
+     "Bouldering wall",
+     "From 9/14 plan"
+    ],
+    [
+     5,
+     "Power",
+     "Advanced",
+     "Above-Limit Bouldering",
+     "Two groups, 30 min; try each boulder ~10 min (3 boulders total).",
+     "30 min per group",
+     "Bouldering wall",
+     "From 8/31 plan"
+    ],
+    [
+     6,
+     "Power",
+     "Intermediate",
+     "3-Move Power Boulders (Partner)",
+     "Two coordination boulders (one hand, one foot) + two power moves; try, switch roles, repeat.",
+     "Per pair, rotate roles",
+     "Bouldering wall",
+     "From 9/8 plan"
+    ],
+    [
+     7,
+     "Power",
+     "Developing",
+     "3-Move Power Boulders (Partner) — Lite",
+     "Same idea, lower intensity holds/angles, more coaching touch-points.",
+     "Per pair, rotate roles",
+     "Bouldering wall",
+     "Adapted from Intermediate version"
+    ],
+    [
+     8,
+     "Strength",
+     "Advanced",
+     "One-Arm / Weighted Hangs",
+     "Progressive hang protocol.",
+     "6x3-5 sec",
+     "Hangboard, weight belt",
+     "From 9/1 plan"
+    ],
+    [
+     9,
+     "Strength",
+     "Advanced",
+     "Weighted Pull-Ups",
+     "",
+     "4x4 reps",
+     "Pull-up bar, weight belt",
+     "From 9/1 plan"
+    ],
+    [
+     10,
+     "Strength",
+     "Intermediate",
+     "Cable Bench / Incline Press",
+     "",
+     "3x6",
+     "Cable machine",
+     "From 9/1 plan"
+    ],
+    [
+     11,
+     "Strength",
+     "Intermediate",
+     "Box Jumps",
+     "",
+     "3x3",
+     "Plyo box",
+     "From 9/1 plan"
+    ],
+    [
+     12,
+     "Technique/Skill",
+     "Advanced",
+     "Lock-Off Hover Drill (Overhang)",
+     "Overhangs only, hold each position, stable body, not locked off. 10 boulders, 3 min rest between.",
+     "10 boulders, 3 min rest",
+     "Overhung terrain",
+     "From 9/3 plan"
+    ],
+    [
+     13,
+     "Technique/Skill",
+     "Advanced",
+     "Foot Cut Drill",
+     "Boulders ~1 grade below flash. Jump between moves, establish foot control on first swing in. Focus on accuracy and shoulder tension/control. Steep terrain only.",
+     "6 boulders x2 sets, 3 min rest, 5 min between sets",
+     "Steep bouldering terrain",
+     "From 9/22 plan"
+    ],
+    [
+     14,
+     "Technique/Skill",
+     "Intermediate",
+     "Balance Work — Back Flags/Steps",
+     "Back flags only, back steps only, open-hip squats only; off foot engaged every rep.",
+     "5 boulders per constraint",
+     "Bouldering wall",
+     "From 9/8 plan"
+    ],
+    [
+     15,
+     "Technique/Skill",
+     "Developing",
+     "Open-Feet Technique Circuit",
+     "Heel hooks only, drop knees only, back-steps only (with smear off foot) — 3 boulders each.",
+     "3 boulders per constraint",
+     "Bouldering wall",
+     "From 9/8 plan (younger group)"
+    ],
+    [
+     16,
+     "Coordination/Balance",
+     "Developing",
+     "Coordination/Power/Balance Skills L1-4",
+     "One at a time, 1 min max, 2 attempts max per skill.",
+     "1 min max, 2 attempts",
+     "Spray wall / moon board",
+     "From 9/3 plan"
+    ],
+    [
+     17,
+     "Coordination/Balance",
+     "Developing",
+     "Sloth Climbing Drill",
+     "Move upward slowly with both hands and feet; focus on control and foot placement accuracy.",
+     "Full wall, slow pace",
+     "Any wall",
+     "From 9/22 plan (younger group)"
+    ],
+    [
+     18,
+     "Coordination/Balance",
+     "All Levels",
+     "Boulder Golf",
+     "Golf-style scoring across boulders in groups; 1 v-up per point after each boulder.",
+     "Per group rotation",
+     "Bouldering wall",
+     "From 9/10 plan — good for confidence/fun"
+    ],
+    [
+     19,
+     "Core",
+     "All Levels",
+     "Hanging Core Circuit",
+     "4 sets, 4 exercises.",
+     "4x4 exercises",
+     "Pull-up bar / hangboard",
+     "Standard closer"
+    ],
+    [
+     20,
+     "Core",
+     "All Levels",
+     "Floor Core + Stretch",
+     "10 min floor core circuit followed by team stretch.",
+     "10 min",
+     "Mats",
+     "Standard closer"
+    ],
+    [
+     21,
+     "Stretch/Cooldown",
+     "All Levels",
+     "Team Stretch",
+     "Full-body static stretch, cool down.",
+     "10-15 min",
+     "Mats",
+     "Standard closer"
+    ]
+   ]
+  },
+  {
+   "range": "'Log a Workout'!A4:H",
+   "values": [
+    [
+     "Date",
+     "Group",
+     "Pick from Library\n(optional)",
+     "Block Type",
+     "Description / Activity\n(auto-fills, editable)",
+     "Sets x Reps /\nDuration (auto-fills, editable)",
+     "Coach",
+     "Notes"
+    ],
+    [
+     46287,
+     "Advanced",
+     "",
+     "Warm-up",
+     "Team warm up",
+     "5:30-6:15 PM",
+     "",
+     "EXAMPLE — reformatted from the 9/22 plan, overwrite or delete"
+    ],
+    [
+     46287,
+     "Advanced",
+     "",
+     "Power",
+     "Dynos in groups. Doesn't need to be coordinated — slab or steep.",
+     "6:15-7:00 PM",
+     "",
+     "EXAMPLE"
+    ],
+    [
+     46287,
+     "Advanced",
+     "Foot Cut Drill",
+     "Technique/Skill",
+     "Boulders ~1 grade below flash. Jump between moves, establish foot control on first swing in. Focus on accuracy and shoulder tension/control. Steep terrain only.",
+     "6 boulders x2 sets, 3 min rest, 5 min between sets",
+     "",
+     "EXAMPLE — picked from the Library, so Block Type/Description/Sets-Reps auto-filled"
+    ],
+    [
+     46287,
+     "Advanced",
+     "",
+     "Core",
+     "Hanging core, 4 sets. Team stretch.",
+     "7:45-8:00 PM",
+     "",
+     "EXAMPLE"
+    ]
+   ]
+  },
+  {
+   "range": "'Progress Log'!A4:F",
+   "values": [
+    [
+     "Date",
+     "Athlete",
+     "Metric Type",
+     "Value",
+     "Notes / Context",
+     "Logged By"
+    ],
+    [
+     46273,
+     "Alex Rivera",
+     "Flash Grade",
+     "V6",
+     "Consistently flashing V6 on steep terrain now.",
+     "Coach 1 Name"
+    ],
+    [
+     46280,
+     "Alex Rivera",
+     "Comp Placement",
+     "2nd place",
+     "Regional qualifier, strong finals performance.",
+     "Coach 2 Name"
+    ],
+    [
+     46273,
+     "Sam Nguyen",
+     "Coach Note",
+     "—",
+     "Big improvement in foot placement accuracy this week.",
+     "Your Name"
+    ]
+   ]
+  }
+ ]
+}
