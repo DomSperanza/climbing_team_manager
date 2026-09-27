@@ -1,0 +1,406 @@
+{
+ "rotation": [
+  {
+   "week": 1,
+   "date": 46289,
+   "cycle": 1,
+   "tier": "Crushers",
+   "lead": "Taylor Brooks"
+  },
+  {
+   "week": 2,
+   "date": 46296,
+   "cycle": 2,
+   "tier": "Senders",
+   "lead": "Casey Park"
+  },
+  {
+   "week": 3,
+   "date": 46303,
+   "cycle": 3,
+   "tier": "Rising",
+   "lead": "Morgan Diaz"
+  },
+  {
+   "week": 4,
+   "date": 46310,
+   "cycle": 4,
+   "tier": "All Team",
+   "lead": "All Coaches"
+  },
+  {
+   "week": 5,
+   "date": 46317,
+   "cycle": 1,
+   "tier": "Crushers",
+   "lead": "Taylor Brooks"
+  },
+  {
+   "week": 6,
+   "date": 46324,
+   "cycle": 2,
+   "tier": "Senders",
+   "lead": "Casey Park"
+  },
+  {
+   "week": 7,
+   "date": 46331,
+   "cycle": 3,
+   "tier": "Rising",
+   "lead": "Morgan Diaz"
+  },
+  {
+   "week": 8,
+   "date": 46338,
+   "cycle": 4,
+   "tier": "All Team",
+   "lead": "All Coaches"
+  },
+  {
+   "week": 9,
+   "date": 46345,
+   "cycle": 1,
+   "tier": "Crushers",
+   "lead": "Taylor Brooks"
+  },
+  {
+   "week": 10,
+   "date": 46352,
+   "cycle": 2,
+   "tier": "Senders",
+   "lead": "Casey Park"
+  },
+  {
+   "week": 11,
+   "date": 46359,
+   "cycle": 3,
+   "tier": "Rising",
+   "lead": "Morgan Diaz"
+  },
+  {
+   "week": 12,
+   "date": 46366,
+   "cycle": 4,
+   "tier": "All Team",
+   "lead": "All Coaches"
+  },
+  {
+   "week": 13,
+   "date": 46373,
+   "cycle": 1,
+   "tier": "Crushers",
+   "lead": "Taylor Brooks"
+  },
+  {
+   "week": 14,
+   "date": 46380,
+   "cycle": 2,
+   "tier": "Senders",
+   "lead": "Casey Park"
+  },
+  {
+   "week": 15,
+   "date": 46387,
+   "cycle": 3,
+   "tier": "Rising",
+   "lead": "Morgan Diaz"
+  },
+  {
+   "week": 16,
+   "date": 46394,
+   "cycle": 4,
+   "tier": "All Team",
+   "lead": "All Coaches"
+  }
+ ],
+ "calendar": [
+  {
+   "date": 46286,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46287,
+   "day": "Tuesday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46289,
+   "day": "Thursday",
+   "coach": "Taylor Brooks",
+   "tier": "Crushers"
+  },
+  {
+   "date": 46293,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46294,
+   "day": "Tuesday",
+   "coach": "Casey Park",
+   "tier": "—"
+  },
+  {
+   "date": 46296,
+   "day": "Thursday",
+   "coach": "Casey Park",
+   "tier": "Senders"
+  },
+  {
+   "date": 46300,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46301,
+   "day": "Tuesday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46303,
+   "day": "Thursday",
+   "coach": "Morgan Diaz",
+   "tier": "Rising"
+  },
+  {
+   "date": 46307,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46308,
+   "day": "Tuesday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46310,
+   "day": "Thursday",
+   "coach": "All Coaches",
+   "tier": "All Team"
+  },
+  {
+   "date": 46314,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46315,
+   "day": "Tuesday",
+   "coach": "Casey Park",
+   "tier": "—"
+  },
+  {
+   "date": 46317,
+   "day": "Thursday",
+   "coach": "Taylor Brooks",
+   "tier": "Crushers"
+  },
+  {
+   "date": 46321,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46322,
+   "day": "Tuesday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46324,
+   "day": "Thursday",
+   "coach": "Casey Park",
+   "tier": "Senders"
+  },
+  {
+   "date": 46328,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46329,
+   "day": "Tuesday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46331,
+   "day": "Thursday",
+   "coach": "Morgan Diaz",
+   "tier": "Rising"
+  },
+  {
+   "date": 46335,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46336,
+   "day": "Tuesday",
+   "coach": "Casey Park",
+   "tier": "—"
+  },
+  {
+   "date": 46338,
+   "day": "Thursday",
+   "coach": "All Coaches",
+   "tier": "All Team"
+  },
+  {
+   "date": 46342,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46343,
+   "day": "Tuesday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46345,
+   "day": "Thursday",
+   "coach": "Taylor Brooks",
+   "tier": "Crushers"
+  },
+  {
+   "date": 46349,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46350,
+   "day": "Tuesday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46352,
+   "day": "Thursday",
+   "coach": "Casey Park",
+   "tier": "Senders"
+  },
+  {
+   "date": 46356,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46357,
+   "day": "Tuesday",
+   "coach": "Casey Park",
+   "tier": "—"
+  },
+  {
+   "date": 46359,
+   "day": "Thursday",
+   "coach": "Morgan Diaz",
+   "tier": "Rising"
+  },
+  {
+   "date": 46363,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46364,
+   "day": "Tuesday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46366,
+   "day": "Thursday",
+   "coach": "All Coaches",
+   "tier": "All Team"
+  },
+  {
+   "date": 46370,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46371,
+   "day": "Tuesday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46373,
+   "day": "Thursday",
+   "coach": "Taylor Brooks",
+   "tier": "Crushers"
+  },
+  {
+   "date": 46377,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46378,
+   "day": "Tuesday",
+   "coach": "Casey Park",
+   "tier": "—"
+  },
+  {
+   "date": 46380,
+   "day": "Thursday",
+   "coach": "Casey Park",
+   "tier": "Senders"
+  },
+  {
+   "date": 46384,
+   "day": "Monday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46385,
+   "day": "Tuesday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46387,
+   "day": "Thursday",
+   "coach": "Morgan Diaz",
+   "tier": "Rising"
+  },
+  {
+   "date": 46391,
+   "day": "Monday",
+   "coach": "Morgan Diaz",
+   "tier": "—"
+  },
+  {
+   "date": 46392,
+   "day": "Tuesday",
+   "coach": "Jordan Lee",
+   "tier": "—"
+  },
+  {
+   "date": 46394,
+   "day": "Thursday",
+   "coach": "All Coaches",
+   "tier": "All Team"
+  }
+ ]
+}

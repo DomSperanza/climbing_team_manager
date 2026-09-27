@@ -1,0 +1,54 @@
+# Builds the web version of the app (mobile/) and publishes it to GitHub Pages on every push
+# to main: https://<owner>.github.io/<repo>/
+# The Google sign-in client ID comes from the repository variable GOOGLE_WEB_CLIENT_ID
+# (Settings → Secrets and variables → Actions → Variables). It isn't a secret. Until it's
+# set, the site works in demo mode only.
+name: Web app → GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", "Climbing_Team_Tiered_Practice_System.xlsx", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: mobile/.nvmrc
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:web
+        env:
+          WEB_BASE_URL: /${{ github.event.repository.name }}
+          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: mobile/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
