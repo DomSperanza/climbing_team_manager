@@ -10,7 +10,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 import { addStandardOutline, cannotSaveReason, moveBlock, save, useAppState } from "@/data/store";
 import type { WorkoutBlock } from "@/core/schema/model";
 import { daysBetween, formatLong, nextPracticeDay, stepPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
-import { dayTimeline, formatClock, formatDuration, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
+import { dayTimeline, formatClock, formatDuration, reorder, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
 import { DateField } from "@/ui/DateField";
 import { Icon, type IconName } from "@/ui/Icon";
 import { DayCoaches } from "@/ui/DayCoaches";
@@ -100,7 +100,8 @@ export default function Today() {
               {timeline.open && timeline.openBeforeRow === tb.block.row && <OpenSlot open={timeline.open} date={date} />}
               <BlockCard timed={tb} tierNames={settings.tierNames} rearrange={rearrange}
                 busy={busyRow === tb.block.row} disabled={!!blocked || busyRow !== null}
-                first={tb === timeline.blocks[0]} last={tb === timeline.blocks[timeline.blocks.length - 1]}
+                canMoveUp={reorder(dayBlocks, tb.block.row, -1, settings.tierNames).length > 0}
+                canMoveDown={reorder(dayBlocks, tb.block.row, 1, settings.tierNames).length > 0}
                 onMove={(dir) => move(tb.block, dir)} onResize={(delta) => resize(tb.block, delta)} />
             </View>
           ))}
@@ -159,8 +160,8 @@ function TimeBudget({ timeline: tl, blockCount }: { timeline: DayTimeline; block
   );
 }
 
-function BlockCard({ timed: tb, tierNames, rearrange, busy, disabled, first, last, onMove, onResize }: {
-  timed: TimedBlock; tierNames: string[]; rearrange: boolean; busy: boolean; disabled: boolean; first: boolean; last: boolean;
+function BlockCard({ timed: tb, tierNames, rearrange, busy, disabled, canMoveUp, canMoveDown, onMove, onResize }: {
+  timed: TimedBlock; tierNames: string[]; rearrange: boolean; busy: boolean; disabled: boolean; canMoveUp: boolean; canMoveDown: boolean;
   onMove: (dir: -1 | 1) => void; onResize: (delta: number) => void;
 }) {
   const t = useTheme();
@@ -194,8 +195,8 @@ function BlockCard({ timed: tb, tierNames, rearrange, busy, disabled, first, las
                 <QuickButton icon="minus" label="5 min shorter" text="5" onPress={() => onResize(-5)} disabled={disabled || (b.minutes ?? 0) <= 5} />
                 <QuickButton icon="plus" label="5 min longer" text="5" onPress={() => onResize(5)} disabled={disabled} />
                 <View style={{ flex: 1 }} />
-                <QuickButton icon="chevronUp" label="Move earlier" onPress={() => onMove(-1)} disabled={disabled || first} />
-                <QuickButton icon="chevronDown" label="Move later" onPress={() => onMove(1)} disabled={disabled || last} />
+                <QuickButton icon="chevronUp" label="Move earlier" onPress={() => onMove(-1)} disabled={disabled || !canMoveUp} />
+                <QuickButton icon="chevronDown" label="Move later" onPress={() => onMove(1)} disabled={disabled || !canMoveDown} />
               </Row>
             )}
           </View>

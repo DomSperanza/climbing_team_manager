@@ -41,12 +41,13 @@ describe("a day's timeline", () => {
     expect(tl).toMatchObject({ plannedMinutes: 150, availableMinutes: 150, overBy: 0, untimed: 0 });
   });
 
-  it("runs tiers side by side between All Team blocks", () => {
+  it("runs tiers side by side between All Team blocks, listed in time order", () => {
     const [adv, int, dev] = tiers;
-    const day = [block("All Team", 45, 1), block(adv, 60, 2), block(adv, 30, 3), block(int, 90, 4), block(dev, 45, 5), block("All Team", 15, 6)];
+    // Planned tier by tier (Developing first), but shown by start time; ties list tiers in Settings order.
+    const day = [block("All Team", 45, 1), block(dev, 45, 2), block(dev, 45, 3), block(adv, 60, 4), block(adv, 30, 5), block(int, 90, 6), block("All Team", 15, 7)];
     const tl = dayTimeline(day, team.settings.practice, tiers);
-    expect(tl.blocks.map((b) => `${b.block.group} ${formatClock(b.start)}-${formatClock(b.end)}`)).toEqual([
-      "All Team 5:30-6:15", `${adv} 6:15-7:15`, `${adv} 7:15-7:45`, `${int} 6:15-7:45`, `${dev} 6:15-7:00`, "All Team 7:45-8:00",
+    expect(tl.blocks.map((b) => `${formatClock(b.start)}-${formatClock(b.end)} ${b.block.group}`)).toEqual([
+      "5:30-6:15 All Team", `6:15-7:15 ${adv}`, `6:15-7:45 ${int}`, `6:15-7:00 ${dev}`, `7:00-7:45 ${dev}`, `7:15-7:45 ${adv}`, "7:45-8:00 All Team",
     ]);
     expect(tl.overBy).toBe(0);
   });
@@ -90,14 +91,31 @@ describe("adding and moving blocks", () => {
 
   it("moving renumbers the day 1, 2, 3 and only touches rows that change", () => {
     const [a, b, c] = [block("All Team", 10, 1), block("All Team", 10, 2), block("All Team", 10, 3)];
-    expect(reorder([a, b, c], c.row, -1).map((m) => [m.block.row, m.order])).toEqual([[c.row, 2], [b.row, 3]]);
-    expect(reorder([a, b, c], a.row, -1)).toEqual([]); // already first
+    expect(reorder([a, b, c], c.row, -1, tiers).map((m) => [m.block.row, m.order])).toEqual([[c.row, 2], [b.row, 3]]);
+    expect(reorder([a, b, c], a.row, -1, tiers)).toEqual([]); // already first
+  });
+
+  it("moves follow each block's own group on the timeline", () => {
+    const [adv, int] = tiers;
+    const W = block("All Team", 45, 1, "Warm-up"), A1 = block(adv, 30, 2), A2 = block(adv, 30, 3), I1 = block(int, 60, 4), S = block("All Team", 15, 5, "Stretch/Cooldown");
+    const day = [W, A1, A2, I1, S];
+    const after = (row: number, dir: -1 | 1) => {
+      const moves = new Map(reorder(day, row, dir, tiers).map((m) => [m.block.row, m.order]));
+      const moved = day.map((b) => ({ ...b, order: moves.get(b.row) ?? b.order }));
+      return dayTimeline(moved, team.settings.practice, tiers).blocks.map((t) => `${formatClock(t.start)} ${t.block.row === W.row ? "W" : t.block.row === S.row ? "S" : t.block.row === A1.row ? "A1" : t.block.row === A2.row ? "A2" : "I1"}`);
+    };
+    expect(after(A2.row, -1)).toEqual(["5:30 W", "6:15 A2", "6:15 I1", "6:45 A1", "7:45 S"]); // swap within Advanced
+    expect(after(I1.row, 1)).toEqual(["5:30 W", "6:15 A1", "6:45 A2", "7:15 S", "7:30 I1"]); // crosses the stretch
+    expect(after(S.row, -1)).toEqual(["5:30 W", "6:15 S", "6:30 A1", "6:30 I1", "7:00 A2"]); // jumps the whole tier stretch
+    expect(reorder(day, W.row, -1, tiers)).toEqual([]);
+    expect(reorder(day, S.row, 1, tiers)).toEqual([]);
+    expect(reorder(day, A1.row, -1, tiers)).not.toEqual([]); // can cross the warm-up if wanted
   });
 
   it("saves only the Order cells, after checking each row, and replays onto the local copy", async () => {
     const raw = rawFromValueRanges(structuredClone(demo.valueRanges) as { values?: Rows }[]);
     const day = parseTeamData(raw).log;
-    const moves = reorder(day, day[3].row, -1);
+    const moves = reorder(day, day[3].row, -1, tiers);
     const sheetRaw = rawFromValueRanges(structuredClone(demo.valueRanges) as { values?: Rows }[]);
     const rec = recording(memorySheet(sheetRaw));
     await saveOrder(rec.writer, moves);

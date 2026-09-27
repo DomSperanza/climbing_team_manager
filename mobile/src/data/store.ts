@@ -350,7 +350,7 @@ export function save(change: Change): Promise<void> {
 
 /** Moves a workout block one place earlier or later in its day's plan. */
 export function moveBlock(dayBlocks: WorkoutBlock[], row: number, direction: -1 | 1): Promise<void> {
-  const moves = reorder(dayBlocks, row, direction);
+  const moves = reorder(dayBlocks, row, direction, state.data?.settings.tierNames ?? []);
   return moves.length ? runSave((sheet) => saveOrder(sheet, moves)) : Promise.resolve();
 }
 
