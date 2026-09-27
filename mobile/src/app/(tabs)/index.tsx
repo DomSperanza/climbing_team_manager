@@ -1,5 +1,6 @@
-// Today — the phone replacement for the Sheet's Day View: one practice day's plan as a
-// timeline, top to bottom, against the practice time in Settings (e.g. 5:30–8:00 PM).
+// Today — the phone replacement for the Sheet's Day View: who's coaching and who has which
+// group, then the day's plan as a timeline against the practice time in Settings (e.g.
+// 5:30–8:00 PM). Pick a group to see and build just that group's part of the plan.
 // Tap a block to edit it; "Rearrange" shows quick controls for changes mid-practice
 // (move up/down, ±5 minutes), each saved with one tap.
 
@@ -13,7 +14,8 @@ import { practiceInfo } from "@/core/logic/rotation";
 import { dayTimeline, formatClock, formatDuration, type DayTimeline, type TimedBlock } from "@/core/logic/timeline";
 import { DateField } from "@/ui/DateField";
 import { Icon, type IconName } from "@/ui/Icon";
-import { Banner, Button, Card, Empty, IconButton, LinkButton, Row, Screen, T, TierChip } from "@/ui/kit";
+import { DayCoaches } from "@/ui/DayCoaches";
+import { Banner, Button, Card, Empty, FilterChips, IconButton, LinkButton, Row, Screen, T, TierChip } from "@/ui/kit";
 import { tierColors, useTheme } from "@/ui/theme";
 
 function nearestPlannedDay(log: WorkoutBlock[], d: ISODate): ISODate | null {
@@ -29,6 +31,7 @@ export default function Today() {
   const s = useAppState();
   const { d } = useLocalSearchParams<{ d?: string }>();
   const [rearrange, setRearrange] = useState(false);
+  const [focus, setFocus] = useState(""); // a tier, or "" for the whole day
   const [busyRow, setBusyRow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const data = s.data;
@@ -70,30 +73,35 @@ export default function Today() {
         <View style={{ alignItems: "center", marginBottom: 8 }}><LinkButton label="Jump to the next practice" onPress={() => show(nextPracticeDay(today))} /></View>
       )}
 
-      <Card tint={featured?.fg} style={featured ? { backgroundColor: featured.bg, borderColor: featured.bg } : undefined}>
-        {info.week === null ? (
-          <T>Before the season starts{settings.seasonStartDate ? ` (${formatLong(settings.seasonStartDate)})` : ""}.</T>
-        ) : (
-          <View style={{ gap: 6 }}>
-            <Row style={{ justifyContent: "space-between" }}>
-              <T small muted>{info.day === "Thursday" ? "Lead coach" : "Coach on duty"}</T>
-              <T bold>{info.lead ?? `— add a ${info.day} coach —`}</T>
-            </Row>
-            {info.featuredTier && (
-              <Row style={{ justifyContent: "space-between" }}>
-                <T small muted>Featured tier</T>
-                <TierChip tier={info.featuredTier} tierNames={settings.tierNames} />
-              </Row>
-            )}
-            <T small muted>Week {info.week}{info.day === "Thursday" ? ` · cycle week ${((info.week - 1) % 4) + 1} of 4` : ""}</T>
-          </View>
-        )}
-      </Card>
+      {(info.week === null || info.featuredTier) && (
+        <Card tint={featured?.fg} style={featured ? { backgroundColor: featured.bg, borderColor: featured.bg } : undefined}>
+          {info.week === null ? (
+            <T>Before the season starts{settings.seasonStartDate ? ` (${formatLong(settings.seasonStartDate)})` : ""}.</T>
+          ) : (
+            <View style={{ gap: 6 }}>
+              {info.featuredTier && (
+                <Row style={{ justifyContent: "space-between" }}>
+                  <T small muted>Featured tier</T>
+                  <TierChip tier={info.featuredTier} tierNames={settings.tierNames} />
+                </Row>
+              )}
+              <T small muted>Week {info.week}{info.day === "Thursday" ? ` · cycle week ${((info.week - 1) % 4) + 1} of 4` : ""}</T>
+            </View>
+          )}
+        </Card>
+      )}
+
+      <DayCoaches data={data} date={date} heading={info.week !== null && !info.featuredTier ? `Week ${info.week}` : undefined} />
 
       <TimeBudget timeline={timeline} blockCount={dayBlocks.length} />
 
       {error && <View style={{ marginHorizontal: -16, marginBottom: 10 }}><Banner kind="error">{error}</Banner></View>}
       {rearrange && blocked && <View style={{ marginHorizontal: -16, marginBottom: 10 }}><Banner>{blocked}</Banner></View>}
+
+      <FilterChips label="Show group" value={focus} onChange={setFocus} options={[
+        { value: "", label: "Whole day" },
+        ...settings.tierNames.filter(Boolean).map((tn) => ({ value: tn, label: tn, tier: tn })),
+      ]} />
 
       {dayBlocks.length === 0 ? (
         <Empty>
@@ -106,22 +114,22 @@ export default function Today() {
       ) : (
         <>
           <Row style={{ justifyContent: "space-between", marginVertical: 8 }}>
-            <T small muted>{dayBlocks.length} block{dayBlocks.length === 1 ? "" : "s"} · {rearrange ? "use the arrows and ±5" : "tap one to edit"}</T>
+            <T small muted>{focus ? `${focus} + All Team` : `${dayBlocks.length} block${dayBlocks.length === 1 ? "" : "s"}`} · {rearrange ? "use the arrows and ±5" : "tap one to edit"}</T>
             <LinkButton label={rearrange ? "Done" : "Rearrange"} onPress={() => { setRearrange(!rearrange); setError(null); }} />
           </Row>
-          {timeline.blocks.map((tb, i) => (
+          {timeline.blocks.filter((tb) => !focus || tb.lane === null || tb.block.group === focus).map((tb) => (
             <View key={tb.block.row}>
               {timeline.open && timeline.openBeforeRow === tb.block.row && <OpenSlot open={timeline.open} date={date} />}
               <BlockCard timed={tb} tierNames={settings.tierNames} rearrange={rearrange}
                 busy={busyRow === tb.block.row} disabled={!!blocked || busyRow !== null}
-                first={i === 0} last={i === timeline.blocks.length - 1}
+                first={tb === timeline.blocks[0]} last={tb === timeline.blocks[timeline.blocks.length - 1]}
                 onMove={(dir) => move(tb.block, dir)} onResize={(delta) => resize(tb.block, delta)} />
             </View>
           ))}
         </>
       )}
       <Button label="Add a block" icon="plus" kind={dayBlocks.length ? "primary" : "plain"} style={{ marginTop: 12 }}
-        onPress={() => router.push({ pathname: "/edit/block", params: { date } })} />
+        onPress={() => router.push({ pathname: "/edit/block", params: focus ? { date, group: focus } : { date } })} />
     </Screen>
   );
 }

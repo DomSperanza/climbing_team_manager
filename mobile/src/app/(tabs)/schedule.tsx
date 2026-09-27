@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { useAppState } from "@/data/store";
-import { formatShort, thursdayOfWeek, todayISO, weekdayOf } from "@/core/logic/dates";
+import { addDays, formatShort, thursdayOfWeek, todayISO, weekdayOf } from "@/core/logic/dates";
+import { dayCoaching } from "@/core/logic/assignments";
 import { coachesFor, seasonWeeks, weekNumberFor } from "@/core/logic/rotation";
 import { Banner, Button, Card, Empty, Row, Screen, T, TierChip } from "@/ui/kit";
 import { tierColors, useTheme } from "@/ui/theme";
@@ -31,9 +32,13 @@ export default function Schedule() {
   return (
     <Screen>
       {warnings.map((w) => <View key={w} style={{ marginHorizontal: -16, marginBottom: 10 }}><Banner>{w}</Banner></View>)}
-      <T small muted style={{ marginBottom: 10 }}>Tap a week to see that Thursday's plan.</T>
+      <T small muted style={{ marginBottom: 10 }}>Leads come from the rotation until a coach changes them on Today. Tap a week to see that Thursday.</T>
       {weeks.map((w) => {
         const isCurrent = w.week === currentWeek;
+        // Claims made on Today replace the rotation's picks; the rotation fills in the rest.
+        const thu = dayCoaching(data, w.thursday);
+        const lead = (d: number) => dayCoaching(data, addDays(w.thursday, d)).lead.coach;
+        const claimed = thu.groups.filter((g) => g.coach);
         const c = tierColors(t, w.featuredTier, settings.tierNames);
         return (
           <Pressable key={w.week} accessibilityRole="button" onPress={() => router.navigate({ pathname: "/", params: { d: w.thursday } })}>
@@ -45,9 +50,10 @@ export default function Schedule() {
                 </Row>
                 <Row style={{ marginTop: 6 }}>
                   <TierChip tier={w.featuredTier} tierNames={settings.tierNames} />
-                  <T bold style={{ flex: 1 }} numberOfLines={1}>{w.thursdayLead ?? "— no Thursday coach —"}</T>
+                  <T bold style={{ flex: 1 }} numberOfLines={1}>{thu.lead.coach ?? w.thursdayLead ?? "— no Thursday coach —"}</T>
                 </Row>
-                <T small muted style={{ marginTop: 4 }}>Mon: {w.mondayLead ?? "—"} · Tue: {w.tuesdayLead ?? "—"}</T>
+                {claimed.length > 0 && <T small style={{ marginTop: 4 }}>{claimed.map((g) => `${g.group}: ${g.coach}`).join(" · ")}</T>}
+                <T small muted style={{ marginTop: 4 }}>Mon: {lead(-3) ?? "—"} · Tue: {lead(-2) ?? "—"}</T>
               </Card>
             )}
           </Pressable>

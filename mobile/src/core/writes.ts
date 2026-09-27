@@ -208,6 +208,7 @@ export function trimmed<T extends object>(v: T): T {
 export interface SheetWriter {
   read(range: string): Promise<Rows>;
   readMany(ranges: string[]): Promise<Rows[]>;
+  addTab(title: string): Promise<void>;
   write(data: ValueRange[]): Promise<void>;
   clear(ranges: string[]): Promise<void>;
 }
@@ -266,6 +267,7 @@ export function recording(sheet: SheetWriter): { writer: SheetWriter; replayOnto
     writer: {
       read: (r) => sheet.read(r),
       readMany: (r) => sheet.readMany(r),
+      addTab: (t) => sheet.addTab(t),
       write: async (d) => { await sheet.write(d); log.push({ write: d }); },
       clear: async (r) => { await sheet.clear(r); log.push({ clear: r }); },
     },

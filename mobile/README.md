@@ -172,6 +172,17 @@ The web version has no app lock and doesn't encrypt its cache: a browser has now
 
 "Sign out & clear data" (under More) signs out of Google and wipes the saved copy.
 
+## Who's coaching
+
+Today lists everyone on that day: every Active coach with that weekday ticked in Coach Profiles. Below them are the day's **lead** and one row per **tier**.
+
+- **Any coach can claim a group, or hand it to someone else,** on any day. Tap its row, then pick a coach. Coaches who are on that weekday are listed first, and "Me" is at the top when your Google account's email matches your Coach Profiles entry.
+- **The lead starts as the rotation's pick** (marked "by rotation") until someone changes it for that date. Clearing it goes back to the rotation.
+- **Building a group's workout:** tap that group's chip above the plan to see just its blocks plus the All Team ones. **Add a block** then starts with that group and its coach.
+- **The Schedule tab** shows the leads and claimed groups each week, using the rotation where nobody has changed anything.
+
+**In the Sheet** claims live in a small tab, **Coach Assignments** (Date | Group | Coach, where Group "All Team" is the lead). The app adds the tab the first time someone claims a group, and you can edit it in Google Sheets too.
+
 ## Planning a practice
 
 Today shows the day as a timeline against the practice time in the Sheet's Settings tab: start and end time in B18–B19, and warm-up, tiered-block and cooldown minutes in B20–B22.

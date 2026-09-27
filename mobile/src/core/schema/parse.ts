@@ -3,8 +3,8 @@
 
 import { cellToISO } from "../logic/dates";
 import { DEFAULT_PRACTICE, parseTimeOfDay } from "../logic/timeline";
-import { ATH, CO, LIB, LOG, PROG, RANGES, RANGE_KEYS, SETTINGS, type RangeKey } from "./layout";
-import type { Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, SeasonSettings, Status, TeamData, WorkoutBlock } from "./model";
+import { ASSIGN, ATH, CO, LIB, LOG, PROG, RANGES, RANGE_KEYS, SETTINGS, type RangeKey } from "./layout";
+import type { Assignment, Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, SeasonSettings, Status, TeamData, WorkoutBlock } from "./model";
 
 export type Cell = string | number | boolean;
 export type Rows = Cell[][];
@@ -148,12 +148,20 @@ export function parseTeamData(raw: RawRanges): TeamData {
       loggedBy: str(v[PROG.loggedBy]),
     }));
 
-  return { settings: parseSettings(raw.settings ?? []), athletes, coaches, library, log, progress };
+  const assignments: Assignment[] = [];
+  for (const { row, v } of dataRows(raw, "assignments")) {
+    const date = cellToISO(v[ASSIGN.date]);
+    if (date && str(v[ASSIGN.group]) && str(v[ASSIGN.coach])) assignments.push({ row, date, group: str(v[ASSIGN.group]), coach: str(v[ASSIGN.coach]) });
+  }
+
+  return { settings: parseSettings(raw.settings ?? []), athletes, coaches, library, log, progress, assignments };
 }
 
 /** Sheets API batchGet valueRanges (in RANGE_KEYS order) -> RawRanges. */
-export function rawFromValueRanges(valueRanges: { values?: Rows }[]): RawRanges {
+/** Sheets API batchGet valueRanges, fetched for `keys` in that order → RawRanges (missing tabs → no rows). */
+export function rawFromValueRanges(valueRanges: { values?: Rows }[], keys: RangeKey[] = RANGE_KEYS): RawRanges {
   const out = {} as RawRanges;
-  RANGE_KEYS.forEach((k, i) => { out[k] = valueRanges[i]?.values ?? []; });
+  RANGE_KEYS.forEach((k) => { out[k] = []; });
+  keys.forEach((k, i) => { out[k] = valueRanges[i]?.values ?? []; });
   return out;
 }

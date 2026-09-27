@@ -77,6 +77,14 @@ export interface ProgressEntry {
   loggedBy: string;
 }
 
+/** Who has which group on one practice day ("Coach Assignments" tab). Group "All Team" = the day's lead. */
+export interface Assignment {
+  row: number;
+  date: ISODate;
+  group: string;
+  coach: string; // full name
+}
+
 export interface SeasonSettings {
   tierNames: string[]; // Settings!B5:B7, in order — order drives the rotation
   seasonStartDate: ISODate | null;
@@ -101,4 +109,5 @@ export interface TeamData {
   library: ExerciseLibraryEntry[];
   log: WorkoutBlock[];
   progress: ProgressEntry[];
+  assignments: Assignment[];
 }

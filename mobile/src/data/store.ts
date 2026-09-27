@@ -18,7 +18,8 @@ import { missingTabs, validateSheet } from "@/core/schema/validate";
 import type { TeamData, WorkoutBlock } from "@/core/schema/model";
 import { recording, SaveError, saveChange, saveOrder, type Change, type SheetWriter } from "@/core/writes";
 import { reorder, standardOutline } from "@/core/logic/timeline";
-import { ALL_TEAM } from "@/core/schema/layout";
+import { saveAssignment } from "@/core/logic/assignments";
+import { ALL_TEAM, rangeKeysFor } from "@/core/schema/layout";
 import type { ISODate } from "@/core/logic/dates";
 
 export type Source = { kind: "sheet"; spreadsheetId: string; title: string } | { kind: "demo" };
@@ -86,7 +87,8 @@ async function loadSheet(spreadsheetId: string, token: string) {
   const savesAtStart = saveCount;
   const info = await fetchSheetInfo(spreadsheetId, token);
   if (missingTabs(info.sheetTitles).length) throw new SheetsError(validateSheet(info.sheetTitles).join(" "), "layout");
-  const r = rawFromValueRanges(await fetchAllRanges(spreadsheetId, token));
+  const keys = rangeKeysFor(info.sheetTitles);
+  const r = rawFromValueRanges(await fetchAllRanges(spreadsheetId, token, keys), keys);
   const problems = validateSheet(info.sheetTitles, r);
   if (problems.length) throw new SheetsError(problems.join(" "), "layout");
   const source: Source = { kind: "sheet", spreadsheetId, title: info.title };
@@ -350,6 +352,18 @@ export function save(change: Change): Promise<void> {
 export function moveBlock(dayBlocks: WorkoutBlock[], row: number, direction: -1 | 1): Promise<void> {
   const moves = reorder(dayBlocks, row, direction);
   return moves.length ? runSave((sheet) => saveOrder(sheet, moves)) : Promise.resolve();
+}
+
+/** Gives `group` on `date` to `coach` (a full name), or clears it with null. "All Team" = the day's lead. */
+export function assignCoach(date: ISODate, group: string, coach: string | null): Promise<void> {
+  const tabExists = (raw?.assignments.length ?? 0) > 0;
+  return runSave((sheet) => saveAssignment(sheet, date, group, coach, tabExists));
+}
+
+/** The Coach Profiles entry for whoever is signed in (matched by email), if there is one. */
+export function signedInCoach(): string | null {
+  const email = state.source?.kind === "sheet" ? auth.signedInEmail()?.toLowerCase() : null;
+  return (email && state.data?.coaches.find((c) => c.email.toLowerCase() === email)?.fullName) || null;
 }
 
 /** Fills an empty day with the standard outline from Settings: team warm-up, then team stretch. */

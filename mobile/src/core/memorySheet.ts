@@ -2,7 +2,7 @@
 // through it, and the tests use it as a stand-in Sheet, so both exercise the exact same
 // ranges and values the real Sheets API receives.
 
-import { RANGES, RANGE_KEYS, TAB, type RangeKey } from "./schema/layout";
+import { RANGES, RANGE_KEYS, TAB_NAME, type RangeKey } from "./schema/layout";
 import type { Cell, RawRanges, Rows } from "./schema/parse";
 import type { SheetWriter, ValueRange } from "./writes";
 
@@ -11,7 +11,7 @@ const colIndex = (letters: string) => [...letters].reduce((n, ch) => n * 26 + ch
 function locate(range: string): { key: RangeKey; r1: number; c1: number; r2: number; c2: number } {
   const m = range.match(/^'(.+)'!([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
   if (!m) throw new Error("memorySheet: unsupported range " + range);
-  const key = RANGE_KEYS.find((k) => TAB[k] === m[1]);
+  const key = RANGE_KEYS.find((k) => TAB_NAME[k] === m[1]);
   if (!key) throw new Error("memorySheet: unknown tab " + m[1]);
   return { key, c1: colIndex(m[2]), r1: Number(m[3]), c2: colIndex(m[4]), r2: Number(m[5]) };
 }
@@ -50,6 +50,7 @@ export function memorySheet(raw: RawRanges): SheetWriter {
   };
 
   const self: SheetWriter = {
+    async addTab() { /* every tab the app knows already has a place in RawRanges */ },
     async readMany(ranges) {
       return Promise.all(ranges.map((r) => self.read(r)));
     },

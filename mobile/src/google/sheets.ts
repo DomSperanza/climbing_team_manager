@@ -1,6 +1,6 @@
 // Minimal Google Sheets API client — just fetch, no SDK. Works the same on Android, iOS and web.
 
-import { RANGE_KEYS, RANGES } from "@/core/schema/layout";
+import { RANGES, type RangeKey } from "@/core/schema/layout";
 import type { Rows } from "@/core/schema/parse";
 import type { SheetWriter, ValueRange } from "@/core/writes";
 
@@ -47,10 +47,10 @@ export async function fetchSheetInfo(spreadsheetId: string, token: string): Prom
 
 const READ_OPTIONS = { valueRenderOption: "UNFORMATTED_VALUE", dateTimeRenderOption: "SERIAL_NUMBER", majorDimension: "ROWS" };
 
-/** One request for every tab the app reads, in RANGE_KEYS order. */
-export async function fetchAllRanges(spreadsheetId: string, token: string): Promise<{ values?: Rows }[]> {
+/** One request for every tab the app reads, in the order of `keys`. */
+export async function fetchAllRanges(spreadsheetId: string, token: string, keys: RangeKey[]): Promise<{ values?: Rows }[]> {
   const params = new URLSearchParams(READ_OPTIONS);
-  RANGE_KEYS.forEach((k) => params.append("ranges", RANGES[k]));
+  keys.forEach((k) => params.append("ranges", RANGES[k]));
   const data = await call<{ valueRanges: { values?: Rows }[] }>(sheetUrl(spreadsheetId) + "/values:batchGet?" + params, token);
   return data.valueRanges;
 }
@@ -74,6 +74,14 @@ export function sheetWriter(spreadsheetId: string, token: string): SheetWriter {
       // dates arrive as serial numbers, which the Sheet's date columns display as dates.
       await call(sheetUrl(spreadsheetId) + "/values:batchUpdate", token,
         { method: "POST", body: { valueInputOption: "RAW", data } });
+    },
+    async addTab(title: string) {
+      // Creating a tab that someone else just created is fine — the goal is only that it exists.
+      try {
+        await call(sheetUrl(spreadsheetId) + ":batchUpdate", token, { method: "POST", body: { requests: [{ addSheet: { properties: { title } } }] } });
+      } catch (e) {
+        if (!(e instanceof SheetsError && e.kind === "layout")) throw e; // 400 = it already exists
+      }
     },
     async clear(ranges: string[]) {
       await call(sheetUrl(spreadsheetId) + "/values:batchClear", token, { method: "POST", body: { ranges } });

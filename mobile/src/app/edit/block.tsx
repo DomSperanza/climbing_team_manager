@@ -10,6 +10,7 @@ import { autofillFromLibrary } from "@/core/logic/library";
 import { formatClock, dayTimeline, minutesFromText, orderForNew } from "@/core/logic/timeline";
 import { nextPracticeDay, todayISO, type ISODate } from "@/core/logic/dates";
 import { practiceInfo } from "@/core/logic/rotation";
+import { coachForGroup } from "@/core/logic/assignments";
 import type { BlockInput } from "@/core/writes";
 import { DateField } from "@/ui/DateField";
 import { ExercisePicker } from "@/ui/ExercisePicker";
@@ -25,11 +26,13 @@ export default function EditBlock() {
     if (was) { const { row: _row, ...rest } = was; return rest; }
     const date: ISODate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : nextPracticeDay(todayISO());
     const info = data ? practiceInfo(data.settings, data.coaches, date) : null;
+    const group = params.group || info?.featuredTier || ALL_TEAM;
     return {
       date,
-      group: params.group || info?.featuredTier || ALL_TEAM,
+      group,
       libraryItem: "", blockType: "", description: "", setsRepsDuration: "",
-      coach: info?.lead && info.lead !== ALL_COACHES ? info.lead : "",
+      // Whoever has this group that day, else the day's lead.
+      coach: (data && (coachForGroup(data, date, group) ?? coachForGroup(data, date, ALL_TEAM))) ?? (info?.lead && info.lead !== ALL_COACHES ? info.lead : ""),
       notes: "", minutes: null, order: null, // order is chosen when saving (see below)
     };
   });
@@ -59,7 +62,11 @@ export default function EditBlock() {
       onDelete={was ? { change: () => ({ table: "log", row: was.row, was, value: null }), title: "Delete this block?", message: `"${was.libraryItem || was.blockType || "This block"}" will be removed from the plan in the Sheet.` } : undefined}
       deleteLabel="Delete block">
       <Stack.Screen options={{ title: was ? "Edit block" : "Add a block" }} />
-      <SelectField label="Group" value={v.group} onChange={(group) => set({ group })}
+      <SelectField label="Group" value={v.group} onChange={(group) => {
+        // The coach follows the group, unless someone picked a coach by hand.
+        const previousDefault = coachForGroup(data, v.date, v.group) ?? "";
+        set(!v.coach || v.coach === previousDefault ? { group, coach: coachForGroup(data, v.date, group) ?? v.coach } : { group });
+      }}
         options={[...settings.tierNames.filter(Boolean), ALL_TEAM].map((g) => ({ value: g, sub: g === ALL_TEAM ? "Everyone together" : undefined }))} />
       <ExercisePicker data={data} value={v.libraryItem} onChange={pickExercise} tier={v.group} />
       <MinutesField value={v.minutes} onChange={(minutes) => set({ minutes })} hint={timing} />
