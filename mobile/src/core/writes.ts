@@ -17,7 +17,7 @@
 // Everything here is pure (no network) so it can be tested against a simulated Sheet.
 
 import { cellToISO, isoToSerial, type ISODate } from "./logic/dates";
-import { LOG_TIME_HEADERS, ROW_LIMITS, TAB } from "./schema/layout";
+import { LIB_ADDED_BY_HEADER, LOG_TIME_HEADERS, ROW_LIMITS, TAB } from "./schema/layout";
 import type { Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, Status, WorkoutBlock } from "./schema/model";
 import type { Cell, Rows } from "./schema/parse";
 
@@ -130,7 +130,7 @@ export function rangesFor(c: Change, row: number): { write: ValueRange[] } | { c
   if (c.value === null) {
     switch (c.table) {
       case "athletes": case "coaches": return { clear: [r("B", "C"), r("E", "N")] }; // same cells as the Sheet's own delete
-      case "library": return { clear: [r("B", "H")] };
+      case "library": return { clear: [r("B", "H"), r("K", "K")] }; // not I (Times Used) or J (delete checkbox)
       case "log": return { clear: [r("A", "H"), r("J", "K")] }; // not I: the hidden Day Rk formula
       case "progress": return { clear: [r("A", "F")] };
     }
@@ -169,12 +169,17 @@ export function rangesFor(c: Change, row: number): { write: ValueRange[] } | { c
     }
     case "library": {
       const v = c.value;
-      return { write: [{ range: r("B", "H"), values: [[v.blockType, v.tier, v.name, v.description, v.setsRepsDuration, v.equipment, v.notesSource]] }] };
+      return { write: [
+        { range: r("B", "H"), values: [[v.blockType, v.tier, v.name, v.description, v.setsRepsDuration, v.equipment, v.notesSource]] },
+        { range: r("K", "K"), values: [[v.addedBy]] }, // I (Times Used) and J (delete checkbox) are the Sheet's
+        LIB_ADDED_BY_HEADER_WRITE,
+      ] };
     }
   }
 }
 
 const LOG_TIME_HEADER_WRITE: ValueRange = { range: `${q(TAB.log)}!J4:K4`, values: [[...LOG_TIME_HEADERS]] };
+const LIB_ADDED_BY_HEADER_WRITE: ValueRange = { range: `${q(TAB.library)}!K5:K5`, values: [[LIB_ADDED_BY_HEADER]] };
 
 /** A problem with the input that should stop the save, in words for the coach. */
 export function validateChange(c: Change): string | null {
@@ -251,14 +256,15 @@ const FIELDS: Record<Table, Field[]> = {
     f("otherDays", "I", "Other days"), f("email", "J", "Email"), f("phone", "K", "Phone"), f("specialties", "L", "Specialties"),
     f("bio", "M", "Bio"), f("status", "N", "Status", "status")],
   library: [f("blockType", "B", "Block type"), f("tier", "C", "Tier"), f("name", "D", "Name"), f("description", "E", "Description"),
-    f("setsRepsDuration", "F", "Sets × reps"), f("equipment", "G", "Equipment"), f("notesSource", "H", "Notes / source")],
+    f("setsRepsDuration", "F", "Sets × reps"), f("equipment", "G", "Equipment"), f("notesSource", "H", "Notes / source"),
+    f("addedBy", "K", "Added by")],
   log: [f("date", "A", "Date", "date"), f("group", "B", "Group"), f("libraryItem", "C", "Exercise"), f("blockType", "D", "Block type"),
     f("description", "E", "Description"), f("setsRepsDuration", "F", "Sets × reps"), f("coach", "G", "Coach"), f("notes", "H", "Notes"),
     f("minutes", "J", "Minutes", "number"), f("order", "K", "Order", "number")],
   progress: [f("date", "A", "Date", "date"), f("athleteFullName", "B", "Athlete"), f("metricType", "C", "Metric"),
     f("value", "D", "Value"), f("notes", "E", "Notes"), f("loggedBy", "F", "Logged by")],
 };
-const LAST_COL: Record<Table, string> = { athletes: "N", coaches: "N", library: "H", log: "K", progress: "F" };
+const LAST_COL: Record<Table, string> = { athletes: "N", coaches: "N", library: "K", log: "K", progress: "F" };
 const colIdx = (letters: string) => [...letters].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
 const cellStr = (v: unknown) => (v === undefined || v === null ? "" : String(v).trim());
 
@@ -312,6 +318,7 @@ export function editPlan(c: Extract<Change, { was: unknown }>, fresh: Cell[], re
     write.push({ range: `${q(TAB_OF[c.table])}!${field.col}${c.row}:${field.col}${c.row}`, values: [[toCell(field, mine[field.key])]] });
   }
   if (c.table === "log" && write.some((w) => /![JK]\d/.test(w.range))) write.push(LOG_TIME_HEADER_WRITE);
+  if (c.table === "library" && write.some((w) => /!K\d/.test(w.range))) write.push(LIB_ADDED_BY_HEADER_WRITE);
   return { write, conflicts };
 }
 

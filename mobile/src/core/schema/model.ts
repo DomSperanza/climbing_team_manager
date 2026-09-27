@@ -51,6 +51,7 @@ export interface ExerciseLibraryEntry {
   setsRepsDuration: string;
   equipment: string;
   notesSource: string;
+  addedBy: string; // the coach who put it in the library (column K) — who to ask about it
 }
 
 export interface WorkoutBlock {

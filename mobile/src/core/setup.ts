@@ -4,7 +4,7 @@
 // and clears the example rows, using the same "clear the editable cells, keep the formulas"
 // rule as deleting. Pure functions only, so it's tested against the example workbook.
 
-import { LOG_TIME_HEADERS } from "./schema/layout";
+import { LIB_ADDED_BY_HEADER, LOG_TIME_HEADERS } from "./schema/layout";
 import type { ValueRange } from "./writes";
 
 export interface NewSheetOptions {
@@ -35,11 +35,12 @@ export function setupPlan(o: NewSheetOptions): { clear: string[]; write: ValueRa
     // Log: not D:F, whose library-autofill formulas blank themselves once C is empty.
     "'Log a Workout'!A5:C200", "'Log a Workout'!G5:H200", "'Log a Workout'!J5:K200",
     "'Progress Log'!A5:F260",
-    ...(o.keepLibrary ? [] : ["'Exercise Library'!B6:H120"]),
+    ...(o.keepLibrary ? [] : ["'Exercise Library'!B6:H120", "'Exercise Library'!K6:K120"]),
   ];
   const write: ValueRange[] = [
     { range: "'Settings'!B5:B7", values: o.tierNames.map((t) => [t.trim()]) },
     { range: "'Log a Workout'!J4:K4", values: [[...LOG_TIME_HEADERS]] }, // the app's Minutes / Order columns
+    { range: "'Exercise Library'!K5:K5", values: [[LIB_ADDED_BY_HEADER]] }, // and who added each exercise
   ];
   if (o.me) {
     const m = o.me;

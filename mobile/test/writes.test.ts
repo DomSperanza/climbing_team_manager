@@ -122,10 +122,12 @@ describe("coaches, library and progress", () => {
   });
 
   it("adds, renames and deletes a library exercise", async () => {
-    const value = { blockType: "Core", tier: "All Levels", name: "Hollow hold", description: "", setsRepsDuration: "3 x 30s", equipment: "", notesSource: "" };
+    const value = { blockType: "Core", tier: "All Levels", name: "Hollow hold", description: "", setsRepsDuration: "3 x 30s", equipment: "", notesSource: "", addedBy: "Jordan Lee" };
     const row = await saveChange(sheet, { table: "library", row: null, value });
     let e = team().library.find((x) => x.row === row)!;
-    expect(e.name).toBe("Hollow hold");
+    expect(e).toMatchObject({ name: "Hollow hold", addedBy: "Jordan Lee" });
+    // Times Used (I) and the delete checkbox (J) are left to the Sheet; Added by goes in K, with its header.
+    expect(writes.at(-1)!.map((w) => w.range)).toEqual([`'Exercise Library'!B${row}:H${row}`, `'Exercise Library'!K${row}:K${row}`, "'Exercise Library'!K5:K5"]);
     await saveChange(sheet, { table: "library", row, was: e, value: { ...value, name: "Hollow body hold" } });
     e = team().library.find((x) => x.row === row)!;
     expect(e.name).toBe("Hollow body hold");

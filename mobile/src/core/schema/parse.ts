@@ -113,6 +113,7 @@ export function parseTeamData(raw: RawRanges): TeamData {
       setsRepsDuration: str(v[LIB.setsReps]),
       equipment: str(v[LIB.equipment]),
       notesSource: str(v[LIB.notes]),
+      addedBy: str(v[LIB.addedBy]),
     }));
 
   const log: WorkoutBlock[] = [];

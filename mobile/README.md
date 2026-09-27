@@ -181,6 +181,10 @@ Today lists everyone on that day: every Active coach with that weekday ticked in
 
 **In the Sheet** claims live in a small tab, **Coach Assignments** (Date | Group | Coach, where Group "All Team" is the lead). The app adds the tab the first time someone claims a group, and you can edit it in Google Sheets too.
 
+## Exercise library
+
+**Add an exercise** is at the top of the Library tab. Each exercise records **Added by**, the coach who put it in (filled in with you when you're signed in). The exercise page shows that coach's email and phone, so questions go to the right person. In the Sheet this is column **K** on *Exercise Library*, which the app labels the first time it's used. The starter exercises have it blank until someone fills it in.
+
 ## Saving a workout for the athletes
 
 After practice, tap **Save workout** at the bottom of Today. Every active athlete gets that day in their profile: their group's blocks plus the All Team ones. The **Who was there** list then opens:

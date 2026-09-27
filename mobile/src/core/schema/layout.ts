@@ -22,7 +22,9 @@ export const ATH = { id: 0, first: 1, last: 2, full: 3, age: 4, group: 5, flash:
 export const CO = { id: 0, first: 1, last: 2, full: 3, role: 4, mon: 5, tue: 6, thu: 7, other: 8,
   email: 9, phone: 10, specialties: 11, bio: 12, status: 13 } as const;
 export const LIB = { id: 0, blockType: 1, tier: 2, name: 3, description: 4, setsReps: 5,
-  equipment: 6, notes: 7 } as const;
+  equipment: 6, notes: 7, /* 8 = Times Used formula, 9 = delete checkbox */ addedBy: 10 } as const;
+// Header of the column the app adds to Exercise Library (K) — written on first use.
+export const LIB_ADDED_BY_HEADER = "Added by";
 export const LOG = { date: 0, group: 1, libraryItem: 2, blockType: 3, description: 4, setsReps: 5,
   coach: 6, notes: 7, /* 8 = hidden "Day Rk" formula */ minutes: 9, order: 10 } as const;
 // Headers of the two columns the app adds to Log a Workout (J, K) — written on first use.
@@ -39,7 +41,7 @@ export const RANGES = {
   settings: `'${TAB.settings}'!A1:C60`,
   athletes: `'${TAB.athletes}'!A5:N`,
   coaches: `'${TAB.coaches}'!A5:N`,
-  library: `'${TAB.library}'!A5:H`,
+  library: `'${TAB.library}'!A5:K`,
   log: `'${TAB.log}'!A4:K`,
   progress: `'${TAB.progress}'!A4:F`,
   assignments: `'${OPTIONAL_TAB.assignments}'!A1:C`,

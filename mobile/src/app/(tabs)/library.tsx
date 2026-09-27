@@ -1,4 +1,4 @@
-// Library — browse the Exercise Library by block type and tier, and add exercises.
+// Library — add exercises (button at the top), and browse the Exercise Library by block type and tier.
 
 import { router } from "expo-router";
 import { useState } from "react";
@@ -19,6 +19,7 @@ export default function LibraryList() {
 
   return (
     <Screen>
+      <Button label="Add an exercise" icon="plus" kind="primary" style={{ marginBottom: 12 }} onPress={() => router.push("/edit/exercise")} />
       <SearchBox value={query} onChange={setQuery} placeholder="Search exercises" />
       <FilterChips label="Block type" value={blockType} onChange={setBlockType}
         options={[{ value: "", label: "All types" }, ...typesInUse.map((t) => ({ value: t, label: t }))]} />
@@ -33,7 +34,6 @@ export default function LibraryList() {
             right={<TierChip tier={e.tier} tierNames={settings.tierNames} />} onPress={() => router.push(`/exercise/${e.row}`)} />
         );
       })}
-      <Button label="Add an exercise" icon="plus" style={{ marginTop: 12 }} onPress={() => router.push("/edit/exercise")} />
     </Screen>
   );
 }

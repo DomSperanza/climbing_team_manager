@@ -2,7 +2,7 @@
 
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { useAppState } from "@/data/store";
+import { signedInCoach, useAppState } from "@/data/store";
 import { ALL_LEVELS } from "@/core/schema/layout";
 import { timesUsed } from "@/core/logic/library";
 import type { ExerciseInput } from "@/core/writes";
@@ -18,7 +18,7 @@ export default function EditExercise() {
 
   const [v, setV] = useState<ExerciseInput>(() => {
     if (was) { const { row: _r, id: _i, ...rest } = was; return rest; }
-    return { blockType: "", tier: ALL_LEVELS, name: "", description: "", setsRepsDuration: "", equipment: "", notesSource: "" };
+    return { blockType: "", tier: ALL_LEVELS, name: "", description: "", setsRepsDuration: "", equipment: "", notesSource: "", addedBy: signedInCoach() ?? "" };
   });
   if (!data) return null;
   if (params.row && !was) return <Screen><Empty>That exercise isn't in the library anymore.</Empty></Screen>;
@@ -49,6 +49,8 @@ export default function EditExercise() {
       <TextField label="Suggested sets × reps / duration" value={v.setsRepsDuration} onChange={(setsRepsDuration) => set({ setsRepsDuration })} />
       <TextField label="Equipment" value={v.equipment} onChange={(equipment) => set({ equipment })} />
       <TextField label="Notes / source" value={v.notesSource} onChange={(notesSource) => set({ notesSource })} multiline />
+      <SelectField label="Added by" hint="Who to ask if there are questions about this exercise." value={v.addedBy} allowBlank="—"
+        onChange={(addedBy) => set({ addedBy })} options={data.coaches.filter((c) => c.status === "Active" || c.fullName === v.addedBy).map((c) => ({ value: c.fullName, sub: c.role }))} />
     </FormScreen>
   );
 }
