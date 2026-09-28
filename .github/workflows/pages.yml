@@ -39,6 +39,8 @@ jobs:
         env:
           WEB_BASE_URL: /${{ github.event.repository.name }}
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+          # Put in coaches' invite emails, so the link opens the app with the Sheet ready.
+          EXPO_PUBLIC_APP_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: mobile/dist

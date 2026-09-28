@@ -48,6 +48,21 @@ export async function createSheetFromWorkbook(token: string, name: string, workb
   return file.id;
 }
 
+/**
+ * Team Sheets this app created (marked when created). With the narrow "drive.file" permission
+ * Google only returns files the app itself made or opened, so this finds your own team Sheets,
+ * not every spreadsheet in your Drive.
+ */
+export async function listTeamSheets(token: string): Promise<{ id: string; title: string }[]> {
+  const params = new URLSearchParams({
+    q: "appProperties has { key='rockTeam' and value='1' } and trashed = false",
+    orderBy: "modifiedTime desc", pageSize: "20", fields: "files(id,name)",
+    includeItemsFromAllDrives: "true", supportsAllDrives: "true",
+  });
+  const data = await call<{ files?: { id: string; name: string }[] }>(DRIVE.replace(/\/$/, "") + "?" + params, token);
+  return (data.files ?? []).map((f) => ({ id: f.id, title: f.name }));
+}
+
 export type Role = "writer" | "reader";
 export interface Person { id: string; email: string; name: string; role: "owner" | "writer" | "commenter" | "reader" | string; type: string }
 
@@ -59,9 +74,13 @@ export async function listPeople(token: string, fileId: string): Promise<Person[
 
 /** Shares the Sheet with one person; Google emails them a link. */
 export async function addPerson(token: string, fileId: string, email: string, role: Role): Promise<void> {
+  // With the app's web address known, the email links straight to it with this Sheet ready.
+  const app = process.env.EXPO_PUBLIC_APP_URL;
   const params = new URLSearchParams({
     sendNotificationEmail: "true",
-    emailMessage: "You've been added to the Rock Team Sheet. Open the Rock Team app, choose \"Connect an existing Sheet\", and paste this link.",
+    emailMessage: app
+      ? `You've been added to the Rock Team Sheet. Open the team app here — it's ready to connect: ${app.replace(/\/?$/, "/")}?sheet=${fileId}`
+      : "You've been added to the Rock Team Sheet. Open the Rock Team app, choose \"Connect an existing Sheet\", and paste this link.",
   });
   await call(DRIVE + encodeURIComponent(fileId) + "/permissions?" + params, token, {
     method: "POST", contentType: "application/json", body: JSON.stringify({ type: "user", role, emailAddress: email }),

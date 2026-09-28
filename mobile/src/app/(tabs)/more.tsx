@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Linking, Platform, View } from "react-native";
 import type { Coach } from "@/core/schema/model";
-import { disconnect, refresh, useAppState } from "@/data/store";
+import { connectSheet, disconnect, refresh, useAppState } from "@/data/store";
 import { signedInEmail } from "@/platform/auth";
 import { LOCK_SUPPORTED } from "@/platform/lock";
 import { confirmAction } from "@/ui/form";
@@ -63,12 +63,24 @@ export default function More() {
               <Button label={s.source?.kind === "demo" ? "Leave demo" : "Sign out & clear data"} kind="danger" style={{ flexGrow: 1 }}
                 onPress={() => confirmAction(
                   s.source?.kind === "demo" ? "Leave the demo?" : "Sign out?",
-                  s.source?.kind === "demo" ? "Demo changes will be discarded." : "This removes all team data saved on this phone. The Sheet itself isn't changed.",
+                  s.source?.kind === "demo" ? "Demo changes will be discarded." : "This removes all team data saved on this device. The Sheet itself isn't changed, and it stays in your list of Sheets for one-tap reconnecting.",
                   s.source?.kind === "demo" ? "Leave demo" : "Sign out",
                   () => { disconnect(); })} />
             </Row>
           </View>
         </Card>
+        {s.knownSheets.filter((k) => s.source?.kind !== "sheet" || k.id !== s.source.spreadsheetId).length > 0 && (
+          <Card>
+            <T bold>Switch to another Sheet</T>
+            {s.knownSheets.filter((k) => s.source?.kind !== "sheet" || k.id !== s.source.spreadsheetId).map((k) => (
+              <Row key={k.id} style={{ justifyContent: "space-between", flexWrap: "nowrap", borderTopWidth: 1, borderTopColor: "transparent", paddingTop: 8 }}>
+                <T style={{ flex: 1 }} numberOfLines={1}>{k.title}</T>
+                <Button label="Switch" disabled={s.loading} busy={s.loading && s.connectingTo === k.id} style={{ minHeight: 40 }}
+                  onPress={() => confirmAction(`Switch to ${k.title}?`, "The app will show that Sheet instead. You can switch back here any time.", "Switch", () => { connectSheet(k.id); })} />
+              </Row>
+            ))}
+          </Card>
+        )}
         {LOCK_SUPPORTED && s.source?.kind === "sheet" && !s.lockAvailable && (
           <View style={{ marginHorizontal: -16, marginTop: 4 }}>
             <Banner>This phone has no screen lock, so Rock Team can't lock itself. Set a PIN or fingerprint in the phone's settings to protect the team data.</Banner>

@@ -1,4 +1,5 @@
-// First-run screen: create a new team Sheet, connect an existing one, or try the demo.
+// Connect screen: the team Sheets this device already knows (one tap), a Sheet from an invite
+// link, "Find my Sheets", or create a new team Sheet / paste a link / try the demo.
 
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -6,9 +7,9 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spreadsheetIdFrom } from "@/core/config";
-import { connectSheet, startDemo, useAppState } from "@/data/store";
+import { connectSheet, findTeamSheets, forgetKnownSheet, startDemo, useAppState } from "@/data/store";
 import { isAuthConfigured } from "@/platform/auth";
-import { Button, Card, H2, T } from "@/ui/kit";
+import { Button, Card, H2, LinkButton, Row, T } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 
 export default function Connect() {
@@ -16,10 +17,12 @@ export default function Connect() {
   const s = useAppState();
   const insets = useSafeAreaInsets();
   // Keep the link filled in after a round trip to Google sign-in, so a failed connect can be retried.
-  const [link, setLink] = useState(s.connectingTo ? `https://docs.google.com/spreadsheets/d/${s.connectingTo}/edit` : "");
+  const [link, setLink] = useState(s.connectingTo && !s.invited ? `https://docs.google.com/spreadsheets/d/${s.connectingTo}/edit` : "");
   const [localError, setLocalError] = useState("");
   const configured = isAuthConfigured();
-  const connectError = s.connectingTo || localError ? localError || s.error : null;
+  // Errors for the paste-a-link card only (the other cards show their own).
+  const fromList = !!s.connectingTo && (s.connectingTo === s.invited || s.knownSheets.some((k) => k.id === s.connectingTo) || !!s.found?.some((f) => f.id === s.connectingTo));
+  const connectError = localError || (s.connectingTo && !fromList ? s.error : null);
 
   const submit = () => {
     const id = spreadsheetIdFrom(link);
@@ -41,6 +44,52 @@ export default function Connect() {
           <T small style={{ color: t.warnText, marginBottom: 12, textAlign: "center" }}>Google sign-in isn't set up in this build yet (see mobile/README.md). The demo works without it.</T>
         )}
 
+        {s.invited && (
+          <Card style={{ padding: 16, borderColor: t.accent, borderWidth: 2 }}>
+            <T bold>You've been invited to a team Sheet</T>
+            <T small muted style={{ marginTop: 4, marginBottom: 12 }}>Sign in with the Google account the invite was sent to.</T>
+            <Button label={s.loading ? "Connecting…" : "Sign in with Google & connect"} kind="primary" busy={s.loading}
+              disabled={!configured || s.loading} onPress={() => connectSheet(s.invited!)} />
+            {s.error && s.connectingTo === s.invited ? <T small style={{ color: t.danger, marginTop: 10 }}>{s.error}</T> : null}
+          </Card>
+        )}
+
+        {s.knownSheets.length > 0 && (
+          <Card style={{ padding: 16 }}>
+            <T bold>Your team Sheets</T>
+            <T small muted style={{ marginTop: 4, marginBottom: 8 }}>Sheets you've used on this {Platform.OS === "web" ? "device" : "phone"}. One tap to reconnect.</T>
+            {s.knownSheets.map((k) => (
+              <View key={k.id} style={{ borderTopWidth: 1, borderTopColor: t.line, paddingVertical: 10, gap: 6 }}>
+                <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+                  <T bold style={{ flex: 1 }} numberOfLines={1}>{k.title}</T>
+                  <LinkButton label="Forget" onPress={() => forgetKnownSheet(k.id)} />
+                </Row>
+                <Button label={s.loading && s.connectingTo === k.id ? "Connecting…" : "Connect"} kind="primary" busy={s.loading && s.connectingTo === k.id}
+                  disabled={!configured || s.loading} onPress={() => connectSheet(k.id)} />
+              </View>
+            ))}
+            {s.error && s.connectingTo && s.knownSheets.some((k) => k.id === s.connectingTo) ? <T small style={{ color: t.danger, marginTop: 6 }}>{s.error}</T> : null}
+          </Card>
+        )}
+
+        <Card style={{ padding: 16 }}>
+          <T bold>Find my Sheets</T>
+          <T small muted style={{ marginTop: 4, marginBottom: 12 }}>Sign in and see the team Sheets you've created with this app.</T>
+          {s.found === null ? (
+            <>
+              <Button label="Sign in & find my Sheets" icon="search" disabled={!configured || s.loading} busy={s.loading && !s.connectingTo} onPress={findTeamSheets} />
+              {s.error && !s.connectingTo && !s.setupDraft ? <T small style={{ color: t.danger, marginTop: 10 }}>{s.error}</T> : null}
+            </>
+          ) : s.found.length === 0 ? (
+            <T small muted>None found. Sheets you were invited to won't show here — use the invite email's link, or paste the Sheet's link below.</T>
+          ) : s.found.map((f) => (
+            <Row key={f.id} style={{ justifyContent: "space-between", flexWrap: "nowrap", borderTopWidth: 1, borderTopColor: t.line, paddingVertical: 8 }}>
+              <T bold style={{ flex: 1 }} numberOfLines={1}>{f.title}</T>
+              <Button label="Connect" kind="primary" disabled={s.loading} busy={s.loading && s.connectingTo === f.id} onPress={() => connectSheet(f.id)} style={{ minHeight: 40 }} />
+            </Row>
+          ))}
+        </Card>
+
         <Card style={{ padding: 16 }}>
           <T bold>Starting fresh?</T>
           <T small muted style={{ marginTop: 4, marginBottom: 12 }}>
@@ -50,7 +99,7 @@ export default function Connect() {
         </Card>
 
         <Card style={{ padding: 16 }}>
-          <T bold>Connect an existing Sheet</T>
+          <T bold>{s.knownSheets.length ? "Connect another Sheet by link" : "Connect an existing Sheet"}</T>
           <T small muted style={{ marginTop: 4, marginBottom: 12 }}>
             Were you invited? Paste the Sheet's link from the invite email (or from Google Sheets). You'll sign in with the Google account it was shared with.
           </T>

@@ -7,12 +7,15 @@
 // showing saved data and asks the coach to sign in again before the next refresh or save.
 
 import { GOOGLE_SCOPES } from "@/core/config";
+import { sheetFromAppLink } from "@/core/recentSheets";
 
 const CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
 const TOKEN_KEY = "rt.token";
 const STATE_KEY = "rt.oauthState";
 const RETURN_KEY = "rt.returnTo";
 const PENDING_KEY = "rt.pending";
+const SILENT_TRIED_KEY = "rt.silentTried"; // one quiet renewal per visit, so it can never loop
+const SILENT_PENDING_KEY = "rt.silentPending";
 
 export type SignInResult = { status: "ok" } | { status: "cancelled" } | { status: "error"; message: string } | { status: "redirecting" };
 
@@ -35,6 +38,38 @@ function redirectUri(): string {
 /** Leaves the app for Google's sign-in page; the page reloads on return. */
 export async function signIn(): Promise<SignInResult> {
   if (!isAuthConfigured()) return { status: "error", message: "Google sign-in isn't set up for this copy of the app (see mobile/README.md)." };
+  redirectToGoogle();
+  return { status: "redirecting" };
+}
+
+/**
+ * Renews an expired sign-in without showing anything: a quick round trip to Google with
+ * prompt=none, which comes straight back with a new token when the coach is still signed in
+ * to Google and has approved the app before. Tried once per visit. Returns true if leaving.
+ */
+export function trySilentSignIn(): boolean {
+  if (!isAuthConfigured() || typeof navigator === "undefined" || !navigator.onLine) return false;
+  if (session()?.getItem(SILENT_TRIED_KEY)) return false;
+  session()?.setItem(SILENT_TRIED_KEY, "1");
+  session()?.setItem(SILENT_PENDING_KEY, "1");
+  redirectToGoogle({ prompt: "none" });
+  return true;
+}
+
+/** The Sheet an invite link points at (…/?sheet=ID), taken out of the address bar. */
+export function takeLinkedSheet(): string | null {
+  if (typeof window === "undefined") return null;
+  const id = sheetFromAppLink(window.location.search);
+  if (id) {
+    const params = new URLSearchParams(window.location.search);
+    params.delete("sheet");
+    const rest = params.toString();
+    history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+  }
+  return id;
+}
+
+function redirectToGoogle(extra: Record<string, string> = {}) {
   const state = Array.from(crypto.getRandomValues(new Uint32Array(4))).join("-");
   session()?.setItem(STATE_KEY, state);
   session()?.setItem(RETURN_KEY, window.location.pathname + window.location.search);
@@ -45,9 +80,9 @@ export async function signIn(): Promise<SignInResult> {
     scope: GOOGLE_SCOPES.join(" "),
     include_granted_scopes: "true",
     state,
+    ...extra,
   });
   window.location.assign("https://accounts.google.com/o/oauth2/v2/auth?" + params);
-  return { status: "redirecting" };
 }
 
 /** What to carry on with after the round trip to Google (e.g. connecting or creating a Sheet). */
@@ -65,6 +100,8 @@ export function completeRedirect(): { error?: string; pending?: string } {
   const pending = session()?.getItem(PENDING_KEY) ?? undefined;
   session()?.removeItem(PENDING_KEY);
 
+  const silent = !!session()?.getItem(SILENT_PENDING_KEY);
+  session()?.removeItem(SILENT_PENDING_KEY);
   const hash = window.location.hash.slice(1);
   if (!/(^|&)(access_token|error)=/.test(hash)) return { pending };
   const p = new URLSearchParams(hash);
@@ -74,6 +111,9 @@ export function completeRedirect(): { error?: string; pending?: string } {
   session()?.removeItem(RETURN_KEY);
   history.replaceState(null, "", returnTo);
 
+  // A quiet renewal that needs the coach to click something just ends quietly: the app shows
+  // its usual "Sign in" button instead of an error.
+  if (silent && p.get("error")) return { pending };
   if (p.get("error")) {
     return { pending, error: p.get("error") === "access_denied" ? "Sign-in was cancelled." : "Google sign-in failed: " + p.get("error") };
   }

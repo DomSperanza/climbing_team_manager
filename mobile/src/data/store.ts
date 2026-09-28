@@ -10,7 +10,9 @@ import { cacheClearAll, cacheGet, cacheSet } from "@/platform/cache";
 import * as lock from "@/platform/lock";
 import { watchOnline } from "@/platform/network";
 import { fetchAllRanges, fetchSheetInfo, sheetWriter, SheetsError } from "@/google/sheets";
-import { addPerson, createSheetFromWorkbook, listPeople, removePerson, type Person, type Role } from "@/google/drive";
+import { addPerson, createSheetFromWorkbook, listPeople, listTeamSheets, removePerson, type Person, type Role } from "@/google/drive";
+import { forget, parseKnown, remember, type KnownSheet } from "@/core/recentSheets";
+import { readPref, writePref } from "@/platform/prefs";
 import { memorySheet } from "@/core/memorySheet";
 import { base64ToBytes, setupPlan, validateNewSheet, type NewSheetOptions } from "@/core/setup";
 import { parseTeamData, rawFromValueRanges, type RawRanges, type Rows } from "@/core/schema/parse";
@@ -39,10 +41,13 @@ export interface AppState {
   lockAvailable: boolean; // false when the phone has no screen lock to check against
   setupStep: string | null; // progress while a new team Sheet is being created
   setupDraft: NewSheetOptions | null; // the create form, kept across a web sign-in round trip
+  knownSheets: KnownSheet[]; // team Sheets this device has connected to, most recent first
+  invited: string | null; // a Sheet from an invite link, waiting for "Connect"
+  found: { id: string; title: string }[] | null; // "Find my Sheets" results
 }
 
 /** What to carry on with after leaving the page for Google sign-in (web only). */
-type Pending = { kind: "connect"; id: string } | { kind: "create"; options: NewSheetOptions };
+type Pending = { kind: "connect"; id: string } | { kind: "create"; options: NewSheetOptions } | { kind: "find" };
 
 // Stored raw (not parsed) so an app update with a smarter parser applies to cached data too.
 interface Cached { source: Source; raw: RawRanges; fetchedAt: number }
@@ -51,6 +56,7 @@ const CACHE_KEY = "rt.cache.v1";
 let state: AppState = {
   source: null, data: null, fetchedAt: null, loading: false, error: null, needsSignIn: false,
   connectingTo: null, online: true, ready: false, locked: false, lockAvailable: false, setupStep: null, setupDraft: null,
+  knownSheets: [], invited: null, found: null,
 };
 let raw: RawRanges | null = null; // the cells behind state.data — demo saves edit these directly
 const listeners = new Set<() => void>();
@@ -66,9 +72,26 @@ export function useAppState(): AppState {
 }
 export const getState = () => state;
 
+/** Adds the connected Sheet to this device's remembered list (kept even after signing out). */
+function noteKnown(source: Source) {
+  if (source.kind !== "sheet") return;
+  const top = state.knownSheets[0];
+  if (top?.id === source.spreadsheetId && top.title === source.title) return;
+  const knownSheets = remember(state.knownSheets, { id: source.spreadsheetId, title: source.title });
+  update({ knownSheets });
+  writePref(JSON.stringify(knownSheets));
+}
+
+export function forgetKnownSheet(id: string) {
+  const knownSheets = forget(state.knownSheets, id);
+  update({ knownSheets });
+  writePref(JSON.stringify(knownSheets));
+}
+
 function apply(source: Source, r: RawRanges, fetchedAt: number) {
   raw = r;
-  update({ source, data: parseTeamData(r), fetchedAt, error: null, needsSignIn: false, connectingTo: null });
+  update({ source, data: parseTeamData(r), fetchedAt, error: null, needsSignIn: false, connectingTo: null, invited: null });
+  noteKnown(source);
 }
 
 async function loadDemo() {
@@ -128,6 +151,8 @@ async function lockIfNeeded() {
 /** Startup: show whatever is cached, then refresh if we can do so without bothering anyone. */
 export async function init() {
   const redirect = auth.completeRedirect();
+  const linked = auth.takeLinkedSheet(); // opened from an invite link
+  update({ knownSheets: parseKnown(await readPref()) });
   watchOnline((online) => { if (online !== state.online) update({ online }); });
   RNAppState.addEventListener("change", (s) => {
     if (s === "background") backgroundedAt = Date.now();
@@ -160,9 +185,31 @@ export async function init() {
   }
   if (pending?.kind === "connect") return connectSheet(pending.id);
   if (pending?.kind === "create") return createTeamSheet(pending.options);
+  if (pending?.kind === "find") return findTeamSheets();
+  if (linked && !(state.source?.kind === "sheet" && state.source.spreadsheetId === linked)) {
+    // They tapped an invite: switch to that Sheet, or have it ready on the Connect screen.
+    if (state.source?.kind === "sheet") return connectSheet(linked);
+    return update({ invited: linked, connectingTo: linked });
+  }
   if (state.source?.kind === "sheet") {
     if (await auth.accessToken()) return refresh();
+    if (auth.trySilentSignIn()) return; // web: a quick, invisible trip to Google to renew the sign-in
     update({ needsSignIn: true });
+  }
+}
+
+/** "Find my Sheets": the team Sheets this app created in the signed-in coach's Drive. */
+export async function findTeamSheets() {
+  update({ error: null, found: null });
+  if (!state.online) return update({ error: "You're offline — finding Sheets needs a connection." });
+  if (!(await ensureSignedIn({ kind: "find" }))) return;
+  update({ loading: true });
+  try {
+    update({ found: await withToken(listTeamSheets) });
+  } catch (e) {
+    update({ error: e instanceof Error ? e.message : String(e) });
+  } finally {
+    update({ loading: false });
   }
 }
 

@@ -85,6 +85,13 @@ EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=            # only for the iPhone build
 
 If Android sign-in says *"Google rejected this copy of the app"*, the package name or SHA-1 in the Android client doesn't match the build.
 
+## Getting back into the Sheet
+
+- **Your team Sheets:** every Sheet a phone or browser connects to is remembered, by name only, even after "Sign out & clear data". The Connect screen lists them with a one-tap **Connect**, and **More → Switch to another Sheet** moves between them. "Forget" removes one.
+- **Invite links:** a coach shared from the app gets an email with a link to the web app that has the Sheet ready. They tap it, sign in, and they're in, with no copying.
+- **Find my Sheets:** after signing in, lists the team Sheets you created with the app. (Google's narrow "files this app made" permission can't see Sheets other people shared with you. Use the invite link for those.)
+- **Quiet sign-in on the web:** when the web version's hourly sign-in has run out, opening the app first renews it silently through Google, with no screen, as long as you're still signed in to Google in that browser. Otherwise you get the usual "Sign in" button. It tries once per visit. The phone apps renew their sign-in on their own.
+
 ## Creating and sharing the team Sheet
 
 **Create:** on the first screen, tap **Create a new team Sheet**, then choose:

@@ -93,6 +93,15 @@ export async function signOut(): Promise<void> {
   await GoogleOneTapSignIn.signOut().catch(() => {});
 }
 
+// Web-only: the phone apps renew the sign-in silently on their own (see accessToken), and
+// invite links open the web version.
+export function trySilentSignIn(): boolean {
+  return false;
+}
+export function takeLinkedSheet(): string | null {
+  return null;
+}
+
 // Web-only redirect bookkeeping; native sign-in never leaves the app.
 export function rememberPending(_action: string): void {}
 export function completeRedirect(): { error?: string; pending?: string } {
