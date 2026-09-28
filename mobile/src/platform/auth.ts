@@ -64,6 +64,19 @@ export async function signIn(): Promise<SignInResult> {
   }
 }
 
+/** Asks Google for any permission this sign-in hasn't granted yet (e.g. one added in an app update). */
+export async function grantMoreAccess(): Promise<SignInResult> {
+  if (!isAuthConfigured()) return { status: "error", message: "Google sign-in isn't set up in this build of the app." };
+  configure();
+  try {
+    await GoogleOneTapSignIn.requestScopes(GOOGLE_SCOPES);
+    return { status: "ok" };
+  } catch (e) {
+    if (isErrorWithCode(e) && e.code === statusCodes.SIGN_IN_CANCELLED) return { status: "cancelled" };
+    return { status: "error", message: describe(e) };
+  }
+}
+
 /** A current access token, or null when the coach needs to sign in (again). Never shows UI. */
 export async function accessToken(): Promise<string | null> {
   if (!isAuthConfigured()) return null;

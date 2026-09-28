@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Linking, Platform, View } from "react-native";
 import type { Coach } from "@/core/schema/model";
-import { connectSheet, disconnect, refresh, useAppState } from "@/data/store";
+import { approveAccountAccess, connectSheet, disconnect, refresh, useAppState } from "@/data/store";
 import { signedInEmail } from "@/platform/auth";
 import { LOCK_SUPPORTED } from "@/platform/lock";
 import { confirmAction } from "@/ui/form";
@@ -69,6 +69,13 @@ export default function More() {
             </Row>
           </View>
         </Card>
+        {s.accountNeedsApproval && s.source?.kind === "sheet" && (
+          <Card>
+            <T bold>Save this Sheet to your Google account</T>
+            <T small muted style={{ marginVertical: 6 }}>Then signing in on any phone or computer opens it — no link needed. Google asks for your OK once.</T>
+            <Button label="Allow" kind="primary" onPress={approveAccountAccess} />
+          </Card>
+        )}
         {s.knownSheets.filter((k) => s.source?.kind !== "sheet" || k.id !== s.source.spreadsheetId).length > 0 && (
           <Card>
             <T bold>Switch to another Sheet</T>

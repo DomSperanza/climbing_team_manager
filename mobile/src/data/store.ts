@@ -10,8 +10,8 @@ import { cacheClearAll, cacheGet, cacheSet } from "@/platform/cache";
 import * as lock from "@/platform/lock";
 import { watchOnline } from "@/platform/network";
 import { fetchAllRanges, fetchSheetInfo, sheetWriter, SheetsError } from "@/google/sheets";
-import { addPerson, createSheetFromWorkbook, listPeople, listTeamSheets, removePerson, type Person, type Role } from "@/google/drive";
-import { forget, parseKnown, remember, type KnownSheet } from "@/core/recentSheets";
+import { addPerson, createSheetFromWorkbook, listPeople, listTeamSheets, readAccountSheets, removePerson, writeAccountSheets, type Person, type Role } from "@/google/drive";
+import { forget, mergeKnown, parseKnown, remember, type KnownSheet } from "@/core/recentSheets";
 import { readPref, writePref } from "@/platform/prefs";
 import { memorySheet } from "@/core/memorySheet";
 import { base64ToBytes, setupPlan, validateNewSheet, type NewSheetOptions } from "@/core/setup";
@@ -43,11 +43,12 @@ export interface AppState {
   setupDraft: NewSheetOptions | null; // the create form, kept across a web sign-in round trip
   knownSheets: KnownSheet[]; // team Sheets this device has connected to, most recent first
   invited: string | null; // a Sheet from an invite link, waiting for "Connect"
-  found: { id: string; title: string }[] | null; // "Find my Sheets" results
+  found: KnownSheet[] | null; // "Sign in with Google" results: Sheets saved to the account, plus ones created with the app
+  accountNeedsApproval: boolean; // signed in before the app asked to save Sheets to the account
 }
 
 /** What to carry on with after leaving the page for Google sign-in (web only). */
-type Pending = { kind: "connect"; id: string } | { kind: "create"; options: NewSheetOptions } | { kind: "find" };
+type Pending = { kind: "connect"; id: string } | { kind: "create"; options: NewSheetOptions } | { kind: "account" } | { kind: "approve" };
 
 // Stored raw (not parsed) so an app update with a smarter parser applies to cached data too.
 interface Cached { source: Source; raw: RawRanges; fetchedAt: number }
@@ -56,7 +57,7 @@ const CACHE_KEY = "rt.cache.v1";
 let state: AppState = {
   source: null, data: null, fetchedAt: null, loading: false, error: null, needsSignIn: false,
   connectingTo: null, online: true, ready: false, locked: false, lockAvailable: false, setupStep: null, setupDraft: null,
-  knownSheets: [], invited: null, found: null,
+  knownSheets: [], invited: null, found: null, accountNeedsApproval: false,
 };
 let raw: RawRanges | null = null; // the cells behind state.data — demo saves edit these directly
 const listeners = new Set<() => void>();
@@ -82,10 +83,81 @@ function noteKnown(source: Source) {
   writePref(JSON.stringify(knownSheets));
 }
 
+/** Forgets a Sheet on this device, and in the Google account when signed in. The Sheet itself isn't touched. */
 export function forgetKnownSheet(id: string) {
   const knownSheets = forget(state.knownSheets, id);
-  update({ knownSheets });
+  update({ knownSheets, found: state.found && forget(state.found, id) });
   writePref(JSON.stringify(knownSheets));
+  auth.accessToken().then(async (token) => {
+    if (!token) return;
+    const saved = await readAccountSheets(token);
+    if (saved.some((x) => x.id === id)) await writeAccountSheets(token, forget(saved, id));
+  }).catch(() => { /* not critical */ });
+}
+
+// ---- the team Sheets saved to the coach's Google account ----------------------------------------
+// So signing in on any device finds their Sheet (see google/drive.ts, APPDATA_SCOPE).
+
+let accountSavedFor: string | null = null; // this session's Sheet already saved to the account
+
+/** Saves the connected Sheet to the Google account's list, in the background. */
+async function saveToAccount(source: Source) {
+  if (source.kind !== "sheet" || accountSavedFor === source.spreadsheetId) return;
+  try {
+    await withToken(async (token) => {
+      const saved = await readAccountSheets(token);
+      if (saved[0]?.id !== source.spreadsheetId || saved[0].title !== source.title) {
+        await writeAccountSheets(token, remember(saved, { id: source.spreadsheetId, title: source.title }, Date.now(), 10));
+      }
+    });
+    accountSavedFor = source.spreadsheetId;
+    if (state.accountNeedsApproval) update({ accountNeedsApproval: false });
+  } catch (e) {
+    if (e instanceof SheetsError && e.kind === "scope") update({ accountNeedsApproval: true });
+    // Anything else: not critical — the device still remembers the Sheet; it's tried again next connect.
+  }
+}
+
+/**
+ * "Sign in with Google": signs in, then finds the coach's team Sheets — the ones saved to
+ * their Google account from any device, plus ones they created with the app. With exactly one,
+ * it connects straight away; with several, the Connect screen lists them.
+ */
+export async function signInWithGoogle() {
+  update({ error: null, found: null });
+  if (!state.online) return update({ error: "You're offline — signing in needs a connection." });
+  if (!(await ensureSignedIn({ kind: "account" }))) return;
+  update({ loading: true });
+  let all: KnownSheet[] = [];
+  try {
+    const [saved, created] = await withToken(async (token) => Promise.all([
+      readAccountSheets(token).catch((e) => {
+        if (e instanceof SheetsError && e.kind === "scope") { update({ accountNeedsApproval: true }); return []; }
+        throw e;
+      }),
+      listTeamSheets(token).catch(() => []),
+    ]));
+    all = mergeKnown([saved, created, state.knownSheets]);
+    update({ found: all });
+  } catch (e) {
+    update({ error: e instanceof Error ? e.message : String(e) });
+  } finally {
+    update({ loading: false });
+  }
+  if (all.length === 1) return connectSheet(all[0].id);
+}
+
+/** Grants the permission to save Sheets to the account (for sign-ins from before it was asked). */
+export async function approveAccountAccess() {
+  auth.rememberPending(JSON.stringify({ kind: "approve" } satisfies Pending));
+  const res = await auth.grantMoreAccess();
+  if (res.status === "ok") {
+    update({ accountNeedsApproval: false });
+    accountSavedFor = null;
+    if (state.source) await saveToAccount(state.source);
+  } else if (res.status === "error") {
+    update({ error: res.message });
+  }
 }
 
 function apply(source: Source, r: RawRanges, fetchedAt: number) {
@@ -119,6 +191,7 @@ async function loadSheet(spreadsheetId: string, token: string) {
   const fetchedAt = Date.now();
   if (saveCount !== savesAtStart) { staleRefresh = true; return; }
   apply(source, r, fetchedAt);
+  saveToAccount(source); // background: so signing in on another device finds this Sheet
   await cacheSet(CACHE_KEY, { source, raw: r, fetchedAt } satisfies Cached);
 }
 
@@ -185,7 +258,8 @@ export async function init() {
   }
   if (pending?.kind === "connect") return connectSheet(pending.id);
   if (pending?.kind === "create") return createTeamSheet(pending.options);
-  if (pending?.kind === "find") return findTeamSheets();
+  if (pending?.kind === "account") return signInWithGoogle();
+  if (pending?.kind === "approve") { update({ accountNeedsApproval: false }); accountSavedFor = null; }
   if (linked && !(state.source?.kind === "sheet" && state.source.spreadsheetId === linked)) {
     // They tapped an invite: switch to that Sheet, or have it ready on the Connect screen.
     if (state.source?.kind === "sheet") return connectSheet(linked);
@@ -195,21 +269,6 @@ export async function init() {
     if (await auth.accessToken()) return refresh();
     if (auth.trySilentSignIn()) return; // web: a quick, invisible trip to Google to renew the sign-in
     update({ needsSignIn: true });
-  }
-}
-
-/** "Find my Sheets": the team Sheets this app created in the signed-in coach's Drive. */
-export async function findTeamSheets() {
-  update({ error: null, found: null });
-  if (!state.online) return update({ error: "You're offline — finding Sheets needs a connection." });
-  if (!(await ensureSignedIn({ kind: "find" }))) return;
-  update({ loading: true });
-  try {
-    update({ found: await withToken(listTeamSheets) });
-  } catch (e) {
-    update({ error: e instanceof Error ? e.message : String(e) });
-  } finally {
-    update({ loading: false });
   }
 }
 

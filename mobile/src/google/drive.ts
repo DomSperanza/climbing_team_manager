@@ -28,6 +28,7 @@ async function call<T>(url: string, token: string, init: { method?: string; body
   if (res.status === 404) {
     throw new SheetsError("This app can only manage sharing for Sheets it created. Share this one from Google Sheets instead.", "notFound");
   }
+  if (res.status === 403 && /insufficient|scope/i.test(reason)) throw new SheetsError("Rock Team needs one more permission from Google.", "scope");
   if (res.status === 403) throw new SheetsError(reason || "Google didn't allow that. Only people who can edit the Sheet can share it.", "access");
   if (res.status === 400) throw new SheetsError(reason || "Google rejected that request.", "other");
   throw new SheetsError(`Google Drive returned an error (${res.status}). Try again in a moment.`, "other");
@@ -61,6 +62,40 @@ export async function listTeamSheets(token: string): Promise<{ id: string; title
   });
   const data = await call<{ files?: { id: string; name: string }[] }>(DRIVE.replace(/\/$/, "") + "?" + params, token);
   return (data.files ?? []).map((f) => ({ id: f.id, title: f.name }));
+}
+
+// ---- the team Sheets saved to the coach's Google account ------------------------------------
+// A small JSON file in the app's hidden settings folder (appDataFolder) of the coach's Drive.
+
+const ACCOUNT_FILE = "rock-team-sheets.json";
+export interface SavedSheet { id: string; title: string; lastUsed: number }
+
+async function accountFileId(token: string): Promise<string | null> {
+  const params = new URLSearchParams({ spaces: "appDataFolder", q: `name = '${ACCOUNT_FILE}'`, fields: "files(id)", pageSize: "1" });
+  const data = await call<{ files?: { id: string }[] }>(DRIVE.replace(/\/$/, "") + "?" + params, token);
+  return data.files?.[0]?.id ?? null;
+}
+
+/** The team Sheets saved to this Google account (empty if none yet). */
+export async function readAccountSheets(token: string): Promise<SavedSheet[]> {
+  const id = await accountFileId(token);
+  if (!id) return [];
+  const data = await call<{ sheets?: SavedSheet[] }>(DRIVE + encodeURIComponent(id) + "?alt=media", token);
+  return Array.isArray(data.sheets) ? data.sheets : [];
+}
+
+/** Replaces the saved list (callers read, merge, then write). */
+export async function writeAccountSheets(token: string, sheets: SavedSheet[]): Promise<void> {
+  const body = JSON.stringify({ sheets });
+  const id = await accountFileId(token);
+  if (id) {
+    await call(UPLOAD + "/" + encodeURIComponent(id) + "?uploadType=media", token, { method: "PATCH", body, contentType: "application/json" });
+    return;
+  }
+  const boundary = "rock-team-" + Math.random().toString(36).slice(2);
+  const text = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: ACCOUNT_FILE, parents: ["appDataFolder"] })}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--\r\n`;
+  await call(UPLOAD + "?uploadType=multipart&fields=id", token, { method: "POST", body: text, contentType: `multipart/related; boundary=${boundary}` });
 }
 
 export type Role = "writer" | "reader";

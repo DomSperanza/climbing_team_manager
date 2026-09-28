@@ -15,8 +15,19 @@ export function parseKnown(json: string | null): KnownSheet[] {
 }
 
 /** Adds or moves `sheet` to the front. */
-export function remember(list: KnownSheet[], sheet: { id: string; title: string }, now = Date.now()): KnownSheet[] {
-  return [{ ...sheet, lastUsed: now }, ...list.filter((s) => s.id !== sheet.id)].slice(0, MAX);
+export function remember(list: KnownSheet[], sheet: { id: string; title: string }, now = Date.now(), max = MAX): KnownSheet[] {
+  return [{ ...sheet, lastUsed: now }, ...list.filter((s) => s.id !== sheet.id)].slice(0, max);
+}
+
+/** Several lists as one: each Sheet once (its latest name and use), most recent first. */
+export function mergeKnown(lists: { id: string; title: string; lastUsed?: number }[][], max = 10): KnownSheet[] {
+  const byId = new Map<string, KnownSheet>();
+  for (const list of lists) for (const s of list) {
+    const had = byId.get(s.id);
+    const lastUsed = s.lastUsed ?? 0;
+    if (!had || lastUsed > had.lastUsed) byId.set(s.id, { id: s.id, title: s.title, lastUsed });
+  }
+  return [...byId.values()].sort((a, b) => b.lastUsed - a.lastUsed).slice(0, max);
 }
 
 export function forget(list: KnownSheet[], id: string): KnownSheet[] {

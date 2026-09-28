@@ -6,7 +6,8 @@ import type { SheetWriter, ValueRange } from "@/core/writes";
 
 const API = "https://sheets.googleapis.com/v4/spreadsheets/";
 
-export type SheetsErrorKind = "auth" | "access" | "notFound" | "layout" | "network" | "other";
+// "scope": signed in, but this Google sign-in hasn't granted a permission the app now asks for.
+export type SheetsErrorKind = "auth" | "access" | "scope" | "notFound" | "layout" | "network" | "other";
 
 export class SheetsError extends Error {
   constructor(message: string, readonly kind: SheetsErrorKind) {

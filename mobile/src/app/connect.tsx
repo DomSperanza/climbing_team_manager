@@ -1,5 +1,6 @@
-// Connect screen: the team Sheets this device already knows (one tap), a Sheet from an invite
-// link, "Find my Sheets", or create a new team Sheet / paste a link / try the demo.
+// Connect screen: "Sign in with Google" (finds the team Sheets saved to the coach's Google
+// account, from any device), a Sheet from an invite link, the Sheets this device already
+// knows (one tap), or create a new team Sheet / paste a link / try the demo.
 
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -7,7 +8,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spreadsheetIdFrom } from "@/core/config";
-import { connectSheet, findTeamSheets, forgetKnownSheet, startDemo, useAppState } from "@/data/store";
+import { approveAccountAccess, connectSheet, forgetKnownSheet, signInWithGoogle, startDemo, useAppState } from "@/data/store";
 import { isAuthConfigured } from "@/platform/auth";
 import { Button, Card, H2, LinkButton, Row, T } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
@@ -22,6 +23,7 @@ export default function Connect() {
   const configured = isAuthConfigured();
   // Errors for the paste-a-link card only (the other cards show their own).
   const fromList = !!s.connectingTo && (s.connectingTo === s.invited || s.knownSheets.some((k) => k.id === s.connectingTo) || !!s.found?.some((f) => f.id === s.connectingTo));
+  // (Sign-in results include this device's Sheets, so that list is only shown before signing in.)
   const connectError = localError || (s.connectingTo && !fromList ? s.error : null);
 
   const submit = () => {
@@ -54,7 +56,45 @@ export default function Connect() {
           </Card>
         )}
 
-        {s.knownSheets.length > 0 && (
+        {!s.invited && (
+          <Card style={{ padding: 16, borderColor: t.accent, borderWidth: s.found === null && !s.knownSheets.length ? 2 : 1 }}>
+            <T bold>Sign in with Google</T>
+            <T small muted style={{ marginTop: 4, marginBottom: 12 }}>
+              Opens your team Sheet. The Sheets you use are saved to your Google account, so this works on any phone or computer.
+            </T>
+            {s.found === null ? (
+              <>
+                <Button label={s.loading && !s.connectingTo ? "Signing in…" : "Sign in with Google"} kind="primary" busy={s.loading && !s.connectingTo}
+                  disabled={!configured || s.loading} onPress={signInWithGoogle} />
+                {s.error && !s.connectingTo && !s.setupDraft ? <T small style={{ color: t.danger, marginTop: 10 }}>{s.error}</T> : null}
+              </>
+            ) : s.found.length === 0 ? (
+              <T small muted>
+                No team Sheets saved to this Google account yet. Were you invited? Tap the link in the invite email, or paste the Sheet's link below.
+                Setting up a new team? Use "Create a new team Sheet".
+              </T>
+            ) : (
+              <>
+                {s.found.length > 1 && <T small muted style={{ marginBottom: 4 }}>Which team Sheet?</T>}
+                {s.found.map((f) => (
+                  <Row key={f.id} style={{ justifyContent: "space-between", flexWrap: "nowrap", borderTopWidth: 1, borderTopColor: t.line, paddingVertical: 8 }}>
+                    <T bold style={{ flex: 1 }} numberOfLines={1}>{f.title}</T>
+                    <Button label="Connect" kind="primary" disabled={s.loading} busy={s.loading && s.connectingTo === f.id} onPress={() => connectSheet(f.id)} style={{ minHeight: 40 }} />
+                  </Row>
+                ))}
+                {s.error && s.connectingTo && s.found.some((f) => f.id === s.connectingTo) ? <T small style={{ color: t.danger, marginTop: 6 }}>{s.error}</T> : null}
+              </>
+            )}
+            {s.accountNeedsApproval && (
+              <View style={{ marginTop: 12, gap: 8 }}>
+                <T small>To save your Sheets to your Google account (so you're not asked for the link again), Google needs your OK once.</T>
+                <Button label="Allow" onPress={approveAccountAccess} />
+              </View>
+            )}
+          </Card>
+        )}
+
+        {s.knownSheets.length > 0 && s.found === null && (
           <Card style={{ padding: 16 }}>
             <T bold>Your team Sheets</T>
             <T small muted style={{ marginTop: 4, marginBottom: 8 }}>Sheets you've used on this {Platform.OS === "web" ? "device" : "phone"}. One tap to reconnect.</T>
@@ -71,24 +111,6 @@ export default function Connect() {
             {s.error && s.connectingTo && s.knownSheets.some((k) => k.id === s.connectingTo) ? <T small style={{ color: t.danger, marginTop: 6 }}>{s.error}</T> : null}
           </Card>
         )}
-
-        <Card style={{ padding: 16 }}>
-          <T bold>Find my Sheets</T>
-          <T small muted style={{ marginTop: 4, marginBottom: 12 }}>Sign in and see the team Sheets you've created with this app.</T>
-          {s.found === null ? (
-            <>
-              <Button label="Sign in & find my Sheets" icon="search" disabled={!configured || s.loading} busy={s.loading && !s.connectingTo} onPress={findTeamSheets} />
-              {s.error && !s.connectingTo && !s.setupDraft ? <T small style={{ color: t.danger, marginTop: 10 }}>{s.error}</T> : null}
-            </>
-          ) : s.found.length === 0 ? (
-            <T small muted>None found. Sheets you were invited to won't show here — use the invite email's link, or paste the Sheet's link below.</T>
-          ) : s.found.map((f) => (
-            <Row key={f.id} style={{ justifyContent: "space-between", flexWrap: "nowrap", borderTopWidth: 1, borderTopColor: t.line, paddingVertical: 8 }}>
-              <T bold style={{ flex: 1 }} numberOfLines={1}>{f.title}</T>
-              <Button label="Connect" kind="primary" disabled={s.loading} busy={s.loading && s.connectingTo === f.id} onPress={() => connectSheet(f.id)} style={{ minHeight: 40 }} />
-            </Row>
-          ))}
-        </Card>
 
         <Card style={{ padding: 16 }}>
           <T bold>Starting fresh?</T>

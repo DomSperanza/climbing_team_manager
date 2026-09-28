@@ -42,6 +42,11 @@ export async function signIn(): Promise<SignInResult> {
   return { status: "redirecting" };
 }
 
+/** Asks Google for any permission this sign-in hasn't granted yet: a normal sign-in, which requests them all. */
+export async function grantMoreAccess(): Promise<SignInResult> {
+  return signIn();
+}
+
 /**
  * Renews an expired sign-in without showing anything: a quick round trip to Google with
  * prompt=none, which comes straight back with a new token when the coach is still signed in

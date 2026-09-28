@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forget, parseKnown, remember, sheetFromAppLink } from "../src/core/recentSheets";
+import { forget, mergeKnown, parseKnown, remember, sheetFromAppLink } from "../src/core/recentSheets";
 
 describe("remembered Sheets", () => {
   it("keeps the most recent first, without duplicates, up to five", () => {
@@ -11,6 +11,17 @@ describe("remembered Sheets", () => {
     for (let i = 0; i < 10; i++) list = remember(list, { id: "x" + i, title: "t" }, 10 + i);
     expect(list).toHaveLength(5);
     expect(forget(list, "x9").map((s) => s.id)).not.toContain("x9");
+  });
+
+  it("merges the device's, the account's and found lists", () => {
+    const merged = mergeKnown([
+      [{ id: "a", title: "Old name", lastUsed: 1 }],
+      [{ id: "a", title: "Rock Team 2026–27", lastUsed: 5 }, { id: "b", title: "Last season", lastUsed: 2 }],
+      [{ id: "c", title: "Made with the app" }], // found in Drive, never opened here
+    ]);
+    expect(merged).toEqual([
+      { id: "a", title: "Rock Team 2026–27", lastUsed: 5 }, { id: "b", title: "Last season", lastUsed: 2 }, { id: "c", title: "Made with the app", lastUsed: 0 },
+    ]);
   });
 
   it("ignores anything unreadable", () => {

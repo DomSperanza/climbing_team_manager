@@ -66,6 +66,7 @@ This builds on the Phase 2a setup in `../app/README.md`: same Cloud project, sam
    **Data access:** remove `.../auth/spreadsheets.readonly` and add two scopes:
    - **`.../auth/spreadsheets`**: read and save Sheets the coach can already open. Coaches who can only view get a clear "you can view but not edit" message.
    - **`.../auth/drive.file`**: only the files this app creates. This lets it make the team Sheet and manage who it's shared with. It can't see anything else in anyone's Drive.
+   - **`.../auth/drive.appdata`**: the app's own hidden settings folder in each coach's Drive. It holds the list of team Sheets they use, so **Sign in with Google** finds their Sheet on any device. The folder doesn't show in Drive, and no other app can read it.
 2. **Clients → Create client → Android:**
    - Package name: `com.rockteam.coach`
    - SHA-1 certificate fingerprint: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
@@ -89,7 +90,11 @@ If Android sign-in says *"Google rejected this copy of the app"*, the package na
 
 - **Your team Sheets:** every Sheet a phone or browser connects to is remembered, by name only, even after "Sign out & clear data". The Connect screen lists them with a one-tap **Connect**, and **More → Switch to another Sheet** moves between them. "Forget" removes one.
 - **Invite links:** a coach shared from the app gets an email with a link to the web app that has the Sheet ready. They tap it, sign in, and they're in, with no copying.
-- **Find my Sheets:** after signing in, lists the team Sheets you created with the app. (Google's narrow "files this app made" permission can't see Sheets other people shared with you. Use the invite link for those.)
+- **Sign in with Google (any device):** every Sheet you connect to is also saved to your Google account, in the app's hidden settings folder. On a new phone or computer, tap **Sign in with Google**:
+  - with one saved Sheet, it opens straight away;
+  - with several, you pick one;
+  - it also lists team Sheets you created with the app.
+- **"Allow":** coaches who signed in before this feature existed see an **Allow** button (on the Connect screen or under More). Google asks for their OK once.
 - **Quiet sign-in on the web:** when the web version's hourly sign-in has run out, opening the app first renews it silently through Google, with no screen, as long as you're still signed in to Google in that browser. Otherwise you get the usual "Sign in" button. It tries once per visit. The phone apps renew their sign-in on their own.
 
 ## Creating and sharing the team Sheet
