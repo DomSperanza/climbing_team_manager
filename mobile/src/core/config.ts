@@ -18,3 +18,7 @@ export function spreadsheetIdFrom(input: string): string | null {
   if (m) return m[1];
   return /^[a-zA-Z0-9_-]{20,}$/.test(s) ? s : null;
 }
+
+/** The web version's address; its privacy policy is linked from the app and both store listings. */
+export const APP_URL = (process.env.EXPO_PUBLIC_APP_URL || "https://domsperanza.github.io/climbing_team_manager/").replace(/\/?$/, "/");
+export const PRIVACY_URL = APP_URL + "privacy.html";

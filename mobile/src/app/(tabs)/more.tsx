@@ -6,6 +6,7 @@ import { Linking, Platform, View } from "react-native";
 import type { Coach } from "@/core/schema/model";
 import { approveAccountAccess, connectSheet, disconnect, refresh, useAppState } from "@/data/store";
 import { signedInEmail } from "@/platform/auth";
+import { PRIVACY_URL } from "@/core/config";
 import { LOCK_SUPPORTED } from "@/platform/lock";
 import { confirmAction } from "@/ui/form";
 import { Banner, Button, Card, LinkButton, ListRow, Row, Screen, Section, T } from "@/ui/kit";
@@ -101,6 +102,7 @@ export default function More() {
           This app keeps a copy on this {Platform.OS === "web" ? "device" : "phone (encrypted)"} so it opens instantly and works without signal; saving needs a connection.
         </T>
         <T small muted style={{ marginTop: 8 }}>Athletes are minors: keep notes climbing-specific — no medical or family details, no photos.</T>
+        <View style={{ marginTop: 10 }}><LinkButton label="Privacy policy" onPress={() => Linking.openURL(PRIVACY_URL)} /></View>
       </Section>
     </Screen>
   );

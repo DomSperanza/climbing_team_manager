@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rock Team Privacy Policy</title>
+<meta name="description" content="How the Rock Team coaching app handles data.">
+<style>
+  :root { --bg: #f6f5f2; --text: #1c1d1f; --muted: #6a6b6e; --accent: #2f6f5e; --line: #e1ded7; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #16181b; --text: #eceae6; --muted: #a3a5a8; --accent: #5fb39b; --line: #33373d; } }
+  :root[data-theme="dark"] { --bg: #16181b; --text: #eceae6; --muted: #a3a5a8; --accent: #5fb39b; --line: #33373d; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 28px 0 6px; }
+  p, li { margin: 6px 0; }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rock Team Privacy Policy</h1>
+  <p class="muted">Effective September 30, 2026</p>
+
+  <p>Rock Team is a free app that helps the volunteer coaches of a youth climbing team plan practices, keep their roster and exercise library, and record who attended. It is made by a volunteer coach for the team's coaches. This policy covers the Android and iPhone apps and the web version.</p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li>Rock Team has <strong>no server</strong>. The team's information lives in a Google Sheet in the coaches' own Google accounts.</li>
+    <li>The app has <strong>no ads, no analytics and no tracking</strong>, and it doesn't sell or share anyone's information.</li>
+    <li>Nothing is sent to the app's developer.</li>
+  </ul>
+
+  <h2>Who uses the app</h2>
+  <p>Rock Team is for <strong>coaches</strong>, who are adults. The team's athletes are minors, but they don't use the app, sign in, or have accounts. Coaches enter a small amount of information about athletes, described below. The app is not directed at children.</p>
+
+  <h2>What information the app handles</h2>
+  <ul>
+    <li><strong>Team information coaches enter:</strong> athlete names, group, climbing grades and goals, join date, status, brief climbing-related notes, progress entries and practice attendance; coach names, roles, the days they coach, and (optionally) email and phone; practice plans and the exercise library. The app doesn't ask for athletes' ages, birthdates or photos, and it reminds coaches to keep notes climbing-specific, not medical or personal.</li>
+    <li><strong>Your Google account:</strong> you sign in with Google. The app receives a short-lived access token from Google to read and write the team's Sheet. On phones it also sees your account's email address, which it uses only to fill in your name as a coach on this device.</li>
+  </ul>
+
+  <h2>Where it's stored</h2>
+  <ul>
+    <li><strong>The team's Google Sheet</strong>, in Google Drive, owned by the coach who created it and shared by them with other coaches. Google stores it under <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>. Who can see it is controlled entirely by the Sheet's own Google sharing settings.</li>
+    <li><strong>A copy on your device</strong>, so the app opens instantly and works without signal. On Android and iPhone this copy is encrypted, with its key kept in the phone's secure keystore, and it's excluded from device backups. In the web version it's kept in the browser's storage. "Sign out &amp; clear data" in the app, or uninstalling it, removes it.</li>
+    <li><strong>A list of the team Sheets you use</strong> (their names and locations only), kept on your device and in a private app-settings folder in your Google Drive that only Rock Team can read, so signing in on another device finds your Sheet.</li>
+  </ul>
+
+  <h2>Google permissions and how they're used</h2>
+  <p>When you sign in, Google asks you to allow:</p>
+  <ul>
+    <li><strong>Google Sheets:</strong> to read and update the team's Sheet. The app only opens Sheets you choose or were invited to.</li>
+    <li><strong>Google Drive, files used with this app:</strong> to create a new team Sheet in your Drive when you ask it to, and to share it with coaches you name. It can't see other files in your Drive.</li>
+    <li><strong>Google Drive, app settings:</strong> to keep the list of team Sheets you use in the app's private settings folder.</li>
+  </ul>
+  <p>Rock Team's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Information from Google is used only to show and update the team's Sheet in the app, and is not used for advertising or transferred to anyone.</p>
+
+  <h2>Sharing</h2>
+  <p>The app doesn't share information with anyone. When a coach uses the app's Share screen, Google shares the Sheet with the people that coach names and emails them an invitation.</p>
+
+  <h2>Keeping, changing and deleting information</h2>
+  <ul>
+    <li>Team information stays in the Sheet until coaches change or delete it, in the app or in Google Sheets.</li>
+    <li>To remove the copy on a device, use "Sign out &amp; clear data" or uninstall the app.</li>
+    <li>To stop Rock Team using your Google account, remove it at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+    <li>Parents or athletes who want information changed or removed can ask the team's coaches.</li>
+  </ul>
+
+  <h2>Security</h2>
+  <p>All communication with Google uses encrypted connections (HTTPS). On phones, the saved copy is encrypted and the app can lock with the phone's fingerprint, face or PIN.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the new version will be posted here with a new effective date.</p>
+
+  <hr>
+  <h2>Contact</h2>
+  <p>Questions about this policy: ask the team's head coach, or open an issue at <a href="https://github.com/DomSperanza/climbing_team_manager/issues">github.com/DomSperanza/climbing_team_manager/issues</a>.</p>
+</main>
+</body>
+</html>

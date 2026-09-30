@@ -71,7 +71,9 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
-  if (req.mode === "navigate") {
+  // Real pages (like privacy.html) are served as themselves; every other address is the app.
+  const path = new URL(req.url).pathname;
+  if (req.mode === "navigate" && (path === SHELL || !FILES.includes(path))) {
     // The page itself: use the network when it answers quickly (to pick up new versions),
     // otherwise the cached copy — a gym with one bar of signal shouldn't mean a blank screen.
     e.respondWith((async () => {

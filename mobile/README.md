@@ -2,7 +2,7 @@
 
 One codebase ([Expo](https://expo.dev) / React Native) that builds:
 
-- **an Android app**: an APK you install directly, with no Play Store needed;
+- **an Android app**: an APK you install directly, or the Google Play version (see [`store/README.md`](store/README.md));
 - **an iPhone app**: this needs a Mac, or Expo's cloud build service, once. See [iPhone](#iphone);
 - **a web app** that installs from the browser ("Add to Home Screen") and works offline.
 
@@ -67,11 +67,14 @@ This builds on the Phase 2a setup in `../app/README.md`: same Cloud project, sam
    - **`.../auth/spreadsheets`**: read and save Sheets the coach can already open. Coaches who can only view get a clear "you can view but not edit" message.
    - **`.../auth/drive.file`**: only the files this app creates. This lets it make the team Sheet and manage who it's shared with. It can't see anything else in anyone's Drive.
    - **`.../auth/drive.appdata`**: the app's own hidden settings folder in each coach's Drive. It holds the list of team Sheets they use, so **Sign in with Google** finds their Sheet on any device. The folder doesn't show in Drive, and no other app can read it.
-2. **Clients → Create client → Android:**
-   - Package name: `com.rockteam.coach`
-   - SHA-1 certificate fingerprint: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
+2. **Clients → Create client → Android.** Make one client per signing key. Each has the same package name and a different SHA-1:
+   - Package name: `io.github.domsperanza.rockteam`
+   - SHA-1 fingerprints:
+     - **your upload key**, which `npm run make-upload-key` prints; use it for APKs you build and install yourself;
+     - **Google Play's app-signing key**, from Play Console → *Test and release → App integrity* after the first upload; use it for copies installed from Play.
+     - The shared debug key (`5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`) is optional. You only need it if you run debug builds from Android Studio.
 
-     This is the fingerprint of the key the builds are signed with for now: React Native's standard debug key, which is fine for testing. See [Sharing the app with the other coaches](#sharing-the-app-with-the-other-coaches).
+     The package name used to be `com.rockteam.coach`. Clients made for that name no longer match, so delete them.
 3. **Test users:** every coach who'll sign in must be on the list (Audience → Test users) while the app is in Testing mode. Sharing the Sheet doesn't add them there automatically.
 4. **Web client:** keep the one from Phase 2a. Android sign-in needs its ID too. For the web version, add `http://localhost:8081` to its Authorized JavaScript origins and `http://localhost:8081/` to its redirect URIs.
 
@@ -122,18 +125,20 @@ The new Sheet is **private**: it's in your Drive, and nobody else can open it un
 
 ## Sharing the app with the other coaches
 
-For your own testing, the debug-key APK above is fine. Before giving the app to the other five coaches, sign it with a key of your own. Anyone can sign an app with the shared debug key, and Android only installs updates signed with the same key as the original.
+Release builds are signed with **your upload key**. Create it once:
 
-1. Create a key once and **back it up somewhere safe**. If it's lost, coaches have to uninstall and reinstall to get updates:
-   ```bash
-   ~/.gradle/jdks/eclipse_adoptium-17-amd64-linux.2/bin/keytool -genkeypair -v -keystore rock-team-release.jks \
-     -alias rock-team -keyalg RSA -keysize 2048 -validity 10000
-   ```
-   (`*.jks` files are git-ignored.)
-2. Add its SHA-1 (`keytool -list -v -keystore rock-team-release.jks`) to the Android OAuth client. You can list both fingerprints.
-3. Wire it into the release build. Ask Claude to add the signing config plugin, so it survives `expo prebuild`.
+```bash
+npm run make-upload-key
+```
 
-Alternatively, [EAS Build](https://docs.expo.dev/build/introduction/) (free tier) builds and signs in the cloud and keeps the key for you.
+What that does:
+- It asks for a password, creates `~/.android-keys/rock-team-upload.jks`, and saves its details in `~/.gradle/gradle.properties`, outside the repo.
+- It prints the key's SHA-1, which goes in the Android OAuth client.
+- **Back up both files and the password.** Google Play can reset a lost upload key, but that takes a support request and a couple of days.
+
+After that, `npm run build:apk` (for sideloading) and `npm run build:aab` (for Google Play) are both signed with it. Without the key, release builds fall back to the debug key, and Gradle warns about it.
+
+The easiest way to get the app to the other coaches is Google Play's **internal testing** track: invite them by email, and Play installs and updates it. The steps are in [`store/README.md`](store/README.md).
 
 ## iPhone
 
@@ -144,7 +149,7 @@ The same code runs on iPhone. Building it needs Xcode, which only runs on macOS.
 
 Either way, installing on *other people's* iPhones (TestFlight or the App Store) needs the Apple Developer Program ($99/year). In the meantime, the **web version works on iPhone**: open it in Safari, then Share → Add to Home Screen.
 
-For iPhone sign-in, create an **iOS** OAuth client in Google Cloud with bundle ID `com.rockteam.coach`, and put its ID in `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`.
+For iPhone sign-in, create an **iOS** OAuth client in Google Cloud with bundle ID `io.github.domsperanza.rockteam`, and put its ID in `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`. The full Mac walkthrough, from the free test to TestFlight and the App Store, is in [`store/README.md`](store/README.md).
 
 ## Web
 

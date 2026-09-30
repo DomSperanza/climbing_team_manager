@@ -1,7 +1,7 @@
 {
   "name": "rock-team-mobile",
   "main": "expo-router/entry",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.20",
     "@react-native-community/datetimepicker": "9.1.0",
@@ -55,9 +55,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "build:web": "expo export -p web && node scripts/finish-web.mjs",
-    "build:apk": "expo prebuild --platform android --no-install && cd android && ./gradlew assembleRelease",
+    "build:apk": "node scripts/check-release.mjs && expo prebuild --platform android --no-install && cd android && ./gradlew assembleRelease",
     "studio": "bash scripts/android-studio.sh",
-    "template": "node scripts/embed-template.mjs"
+    "template": "node scripts/embed-template.mjs",
+    "build:aab": "node scripts/check-release.mjs --play && expo prebuild --platform android --no-install && cd android && ./gradlew bundleRelease",
+    "make-upload-key": "bash scripts/make-upload-key.sh"
   },
   "private": true
 }
