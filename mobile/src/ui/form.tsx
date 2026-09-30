@@ -167,6 +167,12 @@ export function SwitchField({ label, value, onChange, hint }: { label: string; v
   );
 }
 
+/** A message with an OK button; the web has no native alert, so it uses alert(). */
+export function notify(title: string, message: string) {
+  if (Platform.OS === "web") window.alert(`${title}\n\n${message}`);
+  else Alert.alert(title, message);
+}
+
 /** Asks before something destructive; the web has no native alert buttons, so it uses confirm(). */
 export function confirmAction(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
   if (Platform.OS === "web") {

@@ -1,9 +1,10 @@
-// Add or edit a coach. The Mon/Tue/Thu switches decide which days they're listed as on.
+// Add or edit a coach. A switch per practice day (Team settings) decides which days they're listed as on.
 
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useAppState } from "@/data/store";
 import type { CoachInput } from "@/core/writes";
+import { coachesDay, withCoachDay } from "@/core/logic/coachDays";
 import { FormScreen, SwitchField, TextField } from "@/ui/form";
 import { Empty, Screen } from "@/ui/kit";
 
@@ -38,10 +39,9 @@ export default function EditCoach() {
       <TextField label="First name" value={v.firstName} onChange={(firstName) => set({ firstName })} autoCapitalize="words" />
       <TextField label="Last name" value={v.lastName} onChange={(lastName) => set({ lastName })} autoCapitalize="words" />
       <TextField label="Role" value={v.role} onChange={(role) => set({ role })} placeholder="e.g. Head Coach, Coach" autoCapitalize="words" />
-      <SwitchField label="Coaches Mondays" value={v.coachesMonday} onChange={(coachesMonday) => set({ coachesMonday })} />
-      <SwitchField label="Coaches Tuesdays" value={v.coachesTuesday} onChange={(coachesTuesday) => set({ coachesTuesday })} />
-      <SwitchField label="Coaches Thursdays" value={v.coachesThursday} onChange={(coachesThursday) => set({ coachesThursday })} />
-      <TextField label="Other days" value={v.otherDays} onChange={(otherDays) => set({ otherDays })} />
+      {data.settings.practiceDays.map((day) => (
+        <SwitchField key={day} label={`Coaches ${day}s`} value={coachesDay(v, day)} onChange={(on) => setV((cur) => withCoachDay(cur, day, on))} />
+      ))}
       <TextField label="Email" value={v.email} onChange={(email) => set({ email })} keyboardType="email-address" autoCapitalize="none"
         hint="Their Google account, if it's the same — the app uses it to fill in “Logged by”." />
       <TextField label="Phone" value={v.phone} onChange={(phone) => set({ phone })} keyboardType="phone-pad" />

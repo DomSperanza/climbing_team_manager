@@ -38,9 +38,11 @@ In the Cloud project you already use for the web version (**APIs & Services**):
    - **Android** client #1: package `io.github.domsperanza.rockteam`, SHA-1 of **your upload key** (from `npm run make-upload-key`, step 2).
    - **Android** client #2: the same package, SHA-1 of **Google Play's app-signing key**. You get this after the first upload (step 2).
    - **iOS** client: bundle ID `io.github.domsperanza.rockteam` (step 3).
-4. **Audience**: stay in **Testing** for now. That allows up to 100 test users, and each coach re-signs in every 7 days. Every coach must be listed as a test user.
-
-   Going to **Production** removes both limits, but Google then has to verify the app, because `spreadsheets` is a "sensitive" scope. Verification is free and takes a few days to weeks. It checks the privacy policy and home page, and you have to prove you own the domain: add `domsperanza.github.io/climbing_team_manager` in Google Search Console with the HTML-file method, dropping the file in `mobile/public/`. None of this blocks the store reviews, because the reviewers use demo mode.
+4. **Audience**: **In production, unverified** (done 2026-09-30).
+   - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to Rock Team*).
+   - There's a 100-user lifetime cap, and no 7-day re-sign-in.
+   - Don't upload a logo on the Branding page: it would require Google's verification.
+   - Full verification (free) removes the notice and the cap. It needs a YouTube demo video and proof that you own the website's domain.
 
 ## 2. Google Play
 

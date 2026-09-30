@@ -1,7 +1,7 @@
 // Raw Sheets API values (valueRenderOption=UNFORMATTED_VALUE, dateTimeRenderOption=SERIAL_NUMBER)
 // -> typed models. Each range starts at its tab's header row (see RANGES in layout.ts).
 
-import { cellToISO } from "../logic/dates";
+import { cellToISO, daysInText, type Weekday } from "../logic/dates";
 import { DEFAULT_PRACTICE, parseTimeOfDay } from "../logic/timeline";
 import { ASSIGN, ATTEND, ATH, CO, LIB, LOG, PROG, RANGES, RANGE_KEYS, SETTINGS, type RangeKey } from "./layout";
 import type { Assignment, AttendanceEntry, Athlete, Coach, ExerciseLibraryEntry, ProgressEntry, SeasonSettings, Status, TeamData, WorkoutBlock } from "./model";
@@ -40,12 +40,22 @@ export function parseSettings(rows: Rows): SeasonSettings {
     if (!v) break;
     blockTypes.push(v);
   }
+  const tierNames: string[] = [];
+  for (let r = SETTINGS.groupFirstRow; r <= SETTINGS.groupLastRow; r++) {
+    const v = str(at(r, SETTINGS.valueCol));
+    if (v && !tierNames.includes(v)) tierNames.push(v);
+  }
+  const days = daysInText(str(at(SETTINGS.practiceDaysRow, SETTINGS.valueCol)));
   return {
-    tierNames: SETTINGS.tierRows.map((r) => str(at(r, SETTINGS.valueCol))),
+    tierNames,
     blockTypes,
+    practiceDays: days.length ? days : ORIGINAL_PRACTICE_DAYS,
     practice: parsePractice(at),
   };
 }
+
+/** The original team's days, for Sheets from before Practice days could be set. */
+export const ORIGINAL_PRACTICE_DAYS: Weekday[] = ["Monday", "Tuesday", "Thursday"];
 
 function parsePractice(at: (row: number, col: number) => Cell | undefined) {
   const d = DEFAULT_PRACTICE;

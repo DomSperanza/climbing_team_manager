@@ -1,4 +1,4 @@
-// Who's coaching a given practice day, and who has which group. Everyone flagged for that
+// Who's coaching a given practice day, and who has which group. Everyone down for that
 // weekday in Coach Profiles (and Active) is on. Any coach can claim a group for a date, or
 // hand it to someone else; those claims live in the "Coach Assignments" tab (Date | Group |
 // Coach), which the app adds the first time someone claims a group. The day's lead is the
@@ -7,7 +7,8 @@
 import { ASSIGNMENT_HEADERS, ALL_TEAM, OPTIONAL_TAB } from "../schema/layout";
 import type { Coach, TeamData } from "../schema/model";
 import { ConflictError, type Resolve, type SheetWriter } from "../writes";
-import { cellToISO, isoToSerial, isPracticeDay, weekdayOf, type ISODate, type PracticeDay } from "./dates";
+import { coachesDay } from "./coachDays";
+import { cellToISO, isoToSerial, isPracticeDay, weekdayOf, type ISODate, type Weekday } from "./dates";
 
 const TAB = `'${OPTIONAL_TAB.assignments}'`;
 const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
@@ -19,9 +20,8 @@ export interface DayCoaching {
 }
 
 /** Active coaches who coach on `day`, in Coach Profiles order. */
-export function coachesOn(coaches: Coach[], day: PracticeDay): Coach[] {
-  const flag = day === "Monday" ? "coachesMonday" : day === "Tuesday" ? "coachesTuesday" : "coachesThursday";
-  return coaches.filter((c) => c.status === "Active" && c[flag]).sort((a, b) => a.row - b.row);
+export function coachesOn(coaches: Coach[], day: Weekday): Coach[] {
+  return coaches.filter((c) => c.status === "Active" && coachesDay(c, day)).sort((a, b) => a.row - b.row);
 }
 
 /** Claims for one date: group → coach (the last row wins if a group was entered twice). */
@@ -34,7 +34,7 @@ export function claimsOn(data: TeamData, date: ISODate): Map<string, string> {
 export function dayCoaching(data: TeamData, date: ISODate): DayCoaching {
   const claims = claimsOn(data, date);
   return {
-    onDuty: isPracticeDay(date) ? coachesOn(data.coaches, weekdayOf(date) as PracticeDay) : [],
+    onDuty: isPracticeDay(date, data.settings.practiceDays) ? coachesOn(data.coaches, weekdayOf(date)) : [],
     lead: claims.get(norm(ALL_TEAM)) ?? null,
     groups: data.settings.tierNames.filter(Boolean).map((group) => ({ group, coach: claims.get(norm(group)) ?? null })),
   };

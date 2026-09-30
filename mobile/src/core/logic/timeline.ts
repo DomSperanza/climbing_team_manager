@@ -211,11 +211,11 @@ export function reorder(dayBlocks: WorkoutBlock[], row: number, direction: -1 | 
   return moved.map((block, k) => ({ block, order: k + 1 })).filter(({ block, order }) => block.order !== order);
 }
 
-/** The standard outline for an empty day, from Settings: team warm-up first, stretch last. */
+/** The standard outline for an empty day, from Settings: team warm-up first, stretch last (either skipped at 0 minutes). */
 export function standardOutline(practice: PracticeTiming, blockTypes: string[]) {
   const pick = (re: RegExp, fallback: string) => blockTypes.find((t) => re.test(t)) ?? fallback;
   return [
     { blockType: pick(/warm/i, "Warm-up"), description: "Team warm-up", minutes: practice.warmupMinutes, order: 1 },
     { blockType: pick(/stretch|cool/i, "Stretch/Cooldown"), description: "Team stretch / cooldown", minutes: practice.cooldownMinutes, order: 2 },
-  ];
+  ].filter((o) => o.minutes > 0);
 }

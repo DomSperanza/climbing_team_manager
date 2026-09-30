@@ -27,7 +27,7 @@ export default function EditBlock() {
 
   const [v, setV] = useState<BlockInput>(() => {
     if (was) { const { row: _row, ...rest } = was; return rest; }
-    const date: ISODate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : nextPracticeDay(todayISO());
+    const date: ISODate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : nextPracticeDay(todayISO(), data?.settings.practiceDays ?? []);
     const group = params.group || ALL_TEAM;
     return {
       date,

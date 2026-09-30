@@ -13,9 +13,9 @@ Rock Team is a free app for the volunteer coaches of a youth climbing team. It r
 - Library: add an exercise
 - More: settings and the privacy policy
 
-To leave demo mode, use More → Sign out & clear data.
+To leave demo mode, use More → Leave demo.
 
-**Google sign-in** is only used to reach the coach's own Google Sheet (Google Sheets and Drive APIs). The Google Cloud project is in testing, limited to the team's coaches, so a reviewer's Google account can't sign in. Demo mode shows the same screens with sample data.
+**Google sign-in** is only used to reach the coach's own Google Sheet (Google Sheets and Drive APIs). A reviewer can sign in with any Google account and create a team Sheet in their own Drive ("Create a new team Sheet"). Google shows a one-time "unverified app" notice first, because this small volunteer app hasn't been through Google's verification. Demo mode shows the same screens with sample data, with no sign-in.
 
 **Sign in with Apple (App Store guideline 4.8):** the app offers only Google sign-in because it is a client for Google Sheets. Signing in with Google is how it reaches the user's own Sheet stored in Google Drive, the exemption for apps that are a client for a specific third-party service. It doesn't use Google sign-in to create an account, and it has no login of its own.
 

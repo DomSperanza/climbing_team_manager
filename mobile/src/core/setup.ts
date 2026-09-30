@@ -1,28 +1,27 @@
 // Creating a new team Sheet. The app uploads the team workbook to Google Drive, which
 // converts it into a Google Sheet (formulas, dropdowns, color rules and named ranges intact,
 // exactly as the original Sheet was made). Then this plan fills in the new team's Settings
-// and clears the example rows, using the same "clear the editable cells, keep the formulas"
-// rule as deleting. Pure functions only, so it's tested against the example workbook.
+// (its groups, practice days and times — see teamSettings.ts) and clears the example rows,
+// using the same "clear the editable cells, keep the formulas" rule as deleting. Pure
+// functions only, so it's tested against the example workbook.
 
-import { LIB_ADDED_BY_HEADER, LOG_TIME_HEADERS } from "./schema/layout";
-import type { ValueRange } from "./writes";
+import { withCoachDay } from "./logic/coachDays";
+import type { Weekday } from "./logic/dates";
+import { ALL_LEVELS, LIB_ADDED_BY_HEADER, LOG_TIME_HEADERS, TAB } from "./schema/layout";
+import { settingsWrites, validateTeamSetup, type TeamSetup } from "./teamSettings";
+import type { SheetWriter, ValueRange } from "./writes";
 
 export interface NewSheetOptions {
   name: string;
-  tierNames: [string, string, string];
+  team: TeamSetup; // groups, practice days and times (every group's `was` is null)
   keepLibrary: boolean; // the ~21 starter exercises from the team's real practice plans
-  me: {
-    firstName: string; lastName: string; role: string; email: string;
-    coachesMonday: boolean; coachesTuesday: boolean; coachesThursday: boolean;
-  } | null; // added as the first coach
+  me: { firstName: string; lastName: string; role: string; email: string; days: Weekday[] } | null; // added as the first coach
 }
 
 export function validateNewSheet(o: NewSheetOptions): string | null {
   if (!o.name.trim()) return "Give the Sheet a name.";
-  const tiers = o.tierNames.map((t) => t.trim());
-  if (tiers.some((t) => !t)) return "All three groups need a name.";
-  if (new Set(tiers.map((t) => t.toLowerCase())).size !== 3) return "The three groups need different names.";
-  if (tiers.some((t) => ["all team", "all levels", "all coaches"].includes(t.toLowerCase()))) return "\"All Team\", \"All Levels\" and \"All Coaches\" are already used by the Sheet — pick other group names.";
+  const team = validateTeamSetup(o.team);
+  if (team) return team;
   if (o.me && (!o.me.firstName.trim() || !o.me.lastName.trim())) return "Add your first and last name, or switch off \"Add me as a coach\".";
   return null;
 }
@@ -38,19 +37,41 @@ export function setupPlan(o: NewSheetOptions): { clear: string[]; write: ValueRa
     ...(o.keepLibrary ? [] : ["'Exercise Library'!B6:H120", "'Exercise Library'!K6:K120"]),
   ];
   const write: ValueRange[] = [
-    { range: "'Settings'!B5:B7", values: o.tierNames.map((t) => [t.trim()]) },
+    ...settingsWrites(o.team),
     { range: "'Log a Workout'!J4:K4", values: [[...LOG_TIME_HEADERS]] }, // the app's Minutes / Order columns
     { range: "'Exercise Library'!K5:K5", values: [[LIB_ADDED_BY_HEADER]] }, // and who added each exercise
   ];
   if (o.me) {
     const m = o.me;
     const yn = (b: boolean) => (b ? "Yes" : "No");
+    const d = m.days.reduce((c, day) => withCoachDay(c, day, true), { coachesMonday: false, coachesTuesday: false, coachesThursday: false, otherDays: "" });
     write.push(
       { range: "'Coach Profiles'!B6:C6", values: [[m.firstName.trim(), m.lastName.trim()]] },
-      { range: "'Coach Profiles'!E6:N6", values: [[m.role.trim(), yn(m.coachesMonday), yn(m.coachesTuesday), yn(m.coachesThursday), "", m.email.trim(), "", "", "", "Active"]] },
+      { range: "'Coach Profiles'!E6:N6", values: [[m.role.trim(), yn(d.coachesMonday), yn(d.coachesTuesday), yn(d.coachesThursday), d.otherDays, m.email.trim(), "", "", "", "Active"]] },
     );
   }
   return { clear, write };
+}
+
+/** The workbook's own groups, which its starter exercises are tagged with. */
+export const TEMPLATE_GROUPS = ["Advanced", "Intermediate", "Developing"];
+
+/**
+ * Re-tags the starter exercises for the new team's groups, top to bottom: the workbook's
+ * Advanced exercises go to the first group, Intermediate to the second, Developing to the
+ * third. With fewer groups, the rest become "All Levels". Resolves to how many changed.
+ */
+export async function retagStarterLibrary(sheet: SheetWriter, team: TeamSetup): Promise<number> {
+  const to = new Map(TEMPLATE_GROUPS.map((g, i) => [g.toLowerCase(), team.groups[i]?.name.trim() || ALL_LEVELS]));
+  const tab = `'${TAB.library}'`;
+  const rows = await sheet.read(`${tab}!C6:C`);
+  const writes: ValueRange[] = [];
+  rows.forEach((r, i) => {
+    const next = to.get(String(r[0] ?? "").trim().toLowerCase());
+    if (next !== undefined && next !== String(r[0]).trim()) writes.push({ range: `${tab}!C${6 + i}:C${6 + i}`, values: [[next]] });
+  });
+  if (writes.length) await sheet.write(writes);
+  return writes.length;
 }
 
 // ---- the Drive upload body ------------------------------------------------------------------

@@ -38,13 +38,18 @@ export default function Today() {
   if (!data) return null;
 
   const today = todayISO();
-  const date = d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : nextPracticeDay(today);
+  const { settings, log } = data;
+  const days = settings.practiceDays;
+  const date = d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : nextPracticeDay(today, days);
   const show = (next: ISODate) => { setRearrange(false); setError(null); router.setParams({ d: next }); };
 
-  const { settings, log } = data;
   const dayBlocks = log.filter((b) => b.date === date);
   const timeline = dayTimeline(dayBlocks, settings.practice, settings.tierNames);
   const nearest = dayBlocks.length ? null : nearestPlannedDay(log, date);
+  const outline = [
+    { minutes: settings.practice.warmupMinutes, label: "warm-up" },
+    { minutes: settings.practice.cooldownMinutes, label: "stretch" },
+  ].filter((o) => o.minutes > 0);
   const blocked = cannotSaveReason(s);
 
   /** Runs one quick change, showing a spinner on that block until the Sheet has it. */
@@ -63,12 +68,12 @@ export default function Today() {
   return (
     <Screen>
       <Row style={{ flexWrap: "nowrap", gap: 4 }}>
-        <IconButton icon="prev" label="Previous practice" onPress={() => show(stepPracticeDay(date, -1))} />
+        <IconButton icon="prev" label="Previous practice" onPress={() => show(stepPracticeDay(date, -1, days))} />
         <DateField compact label="Practice date" value={date} onChange={show} />
-        <IconButton icon="next" label="Next practice" onPress={() => show(stepPracticeDay(date, 1))} />
+        <IconButton icon="next" label="Next practice" onPress={() => show(stepPracticeDay(date, 1, days))} />
       </Row>
-      {date !== nextPracticeDay(today) && (
-        <View style={{ alignItems: "center", marginBottom: 8 }}><LinkButton label="Jump to the next practice" onPress={() => show(nextPracticeDay(today))} /></View>
+      {date !== nextPracticeDay(today, days) && (
+        <View style={{ alignItems: "center", marginBottom: 8 }}><LinkButton label="Jump to the next practice" onPress={() => show(nextPracticeDay(today, days))} /></View>
       )}
 
       <DayCoaches data={data} date={date} />
@@ -86,9 +91,11 @@ export default function Today() {
       {dayBlocks.length === 0 ? (
         <Empty>
           <T muted>Nothing planned for this day yet.</T>
-          <Button label={`Start with the standard outline (${settings.practice.warmupMinutes} min warm-up, ${settings.practice.cooldownMinutes} min stretch)`}
-            kind="primary" busy={busyRow === -1} disabled={!!blocked || busyRow !== null}
-            onPress={() => quick(-1, () => addStandardOutline(date))} />
+          {outline.length > 0 && (
+            <Button label={`Start with the standard outline (${outline.map((o) => `${o.minutes} min ${o.label}`).join(", ")})`}
+              kind="primary" busy={busyRow === -1} disabled={!!blocked || busyRow !== null}
+              onPress={() => quick(-1, () => addStandardOutline(date))} />
+          )}
           {nearest && <LinkButton label={`Or go to the nearest planned day (${formatLong(nearest)})`} onPress={() => show(nearest)} />}
         </Empty>
       ) : (

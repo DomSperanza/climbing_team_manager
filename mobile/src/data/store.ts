@@ -9,12 +9,13 @@ import * as auth from "@/platform/auth";
 import { cacheClearAll, cacheGet, cacheSet } from "@/platform/cache";
 import * as lock from "@/platform/lock";
 import { watchOnline } from "@/platform/network";
-import { fetchAllRanges, fetchSheetInfo, sheetWriter, SheetsError } from "@/google/sheets";
+import { fetchAllRanges, fetchSheetInfo, sheetWriter, SheetsError, tidySheetLayout } from "@/google/sheets";
 import { addPerson, createSheetFromWorkbook, listPeople, listTeamSheets, readAccountSheets, removePerson, writeAccountSheets, type Person, type Role } from "@/google/drive";
 import { forget, mergeKnown, parseKnown, remember, type KnownSheet } from "@/core/recentSheets";
 import { readPref, writePref } from "@/platform/prefs";
 import { memorySheet } from "@/core/memorySheet";
-import { base64ToBytes, setupPlan, validateNewSheet, type NewSheetOptions } from "@/core/setup";
+import { base64ToBytes, retagStarterLibrary, setupPlan, validateNewSheet, type NewSheetOptions } from "@/core/setup";
+import { saveTeamSetup, validateTeamSetup, type TeamSetup } from "@/core/teamSettings";
 import { parseTeamData, rawFromValueRanges, type RawRanges, type Rows } from "@/core/schema/parse";
 import { missingTabs, validateSheet } from "@/core/schema/validate";
 import type { TeamData, WorkoutBlock } from "@/core/schema/model";
@@ -257,7 +258,7 @@ export async function init() {
     return;
   }
   if (pending?.kind === "connect") return connectSheet(pending.id);
-  if (pending?.kind === "create") return createTeamSheet(pending.options);
+  if (pending?.kind === "create") { await createTeamSheet(pending.options); return; }
   if (pending?.kind === "account") return signInWithGoogle();
   if (pending?.kind === "approve") { update({ accountNeedsApproval: false }); accountSavedFor = null; }
   if (linked && !(state.source?.kind === "sheet" && state.source.spreadsheetId === linked)) {
@@ -329,14 +330,14 @@ export async function connectSheet(spreadsheetId: string) {
 
 /**
  * Creates a new, private team Sheet in the signed-in coach's Google Drive from the team
- * workbook, sets it up (see core/setup.ts), and connects to it.
+ * workbook, sets it up (see core/setup.ts), and connects to it. Resolves true once connected.
  */
-export async function createTeamSheet(options: NewSheetOptions) {
+export async function createTeamSheet(options: NewSheetOptions): Promise<boolean> {
   const problem = validateNewSheet(options);
-  if (problem) return update({ error: problem, setupDraft: options });
-  if (!state.online) return update({ error: "You're offline — creating a Sheet needs a connection.", setupDraft: options });
+  if (problem) { update({ error: problem, setupDraft: options }); return false; }
+  if (!state.online) { update({ error: "You're offline — creating a Sheet needs a connection.", setupDraft: options }); return false; }
   update({ error: null, setupDraft: options });
-  if (!(await ensureSignedIn({ kind: "create", options }))) return;
+  if (!(await ensureSignedIn({ kind: "create", options }))) return false;
 
   update({ loading: true, setupStep: "Creating the Sheet in your Google Drive…" });
   try {
@@ -351,14 +352,20 @@ export async function createTeamSheet(options: NewSheetOptions) {
       const sheet = sheetWriter(spreadsheetId, token);
       await sheet.clear(plan.clear);
       await sheet.write(plan.write);
+      if (options.keepLibrary) await retagStarterLibrary(sheet, options.team);
     });
+    update({ setupStep: "Setting up dropdowns and colors…" });
+    // Not needed for the app to work: if it fails, the Sheet's own dropdowns just list the example groups.
+    await withToken((token) => tidySheetLayout(spreadsheetId, token, true)).catch(() => {});
     update({ setupStep: "Loading…" });
     await withToken((token) => loadSheet(spreadsheetId, token));
     update({ setupDraft: null });
     await lockIfNeeded();
     if (state.locked) update({ locked: false }); // they just signed in — don't ask again straight away
+    return true;
   } catch (e) {
     update({ error: e instanceof Error ? e.message : String(e) });
+    return false;
   } finally {
     update({ loading: false, setupStep: null });
   }
@@ -500,6 +507,29 @@ export function setAthleteDay(date: ISODate, athlete: string, value: DayValue, b
 export function signedInCoach(): string | null {
   const email = state.source?.kind === "sheet" ? auth.signedInEmail()?.toLowerCase() : null;
   return (email && state.data?.coaches.find((c) => c.email.toLowerCase() === email)?.fullName) || null;
+}
+
+/**
+ * Saves More → Team settings: groups (renaming them everywhere they're used), practice days
+ * and times. Then, for a real Sheet, brings its own dropdowns and colors up to date — that
+ * part isn't needed by the app, so a failure there only comes back as `sheetTidied: false`.
+ */
+export async function saveTeamSettings(setup: TeamSetup): Promise<{ renamed: number; sheetTidied: boolean }> {
+  const data = state.data;
+  if (!data) throw new SaveError("Nothing is connected.");
+  const problem = validateTeamSetup(setup, data.athletes, data.settings.tierNames);
+  if (problem) throw new SaveError(problem);
+  const tabs = { assignments: (raw?.assignments.length ?? 0) > 0, attendance: (raw?.attendance.length ?? 0) > 0 };
+  let renamed = 0;
+  await runSave(async (sheet) => { renamed = await saveTeamSetup(sheet, setup, data.settings, tabs); });
+  const source = state.source;
+  if (source?.kind !== "sheet") return { renamed, sheetTidied: true };
+  try {
+    await withToken((token) => tidySheetLayout(source.spreadsheetId, token, false));
+    return { renamed, sheetTidied: true };
+  } catch {
+    return { renamed, sheetTidied: false };
+  }
 }
 
 /** Fills an empty day with the standard outline from Settings: team warm-up, then team stretch. */

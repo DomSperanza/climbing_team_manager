@@ -9,8 +9,28 @@ const SERIAL_EPOCH_MS = Date.UTC(1899, 11, 30);
 
 export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
-export type PracticeDay = "Monday" | "Tuesday" | "Thursday";
-export const PRACTICE_DAYS: PracticeDay[] = ["Monday", "Tuesday", "Thursday"];
+/** Monday first, the way a team's week reads. */
+export const WEEK: Weekday[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+export const shortDay = (d: Weekday) => d.slice(0, 3);
+
+/** The days in week order, without repeats. */
+export function sortDays(days: Iterable<Weekday>): Weekday[] {
+  const set = new Set(days);
+  return WEEK.filter((d) => set.has(d));
+}
+
+// The ways a day gets written: "Mon", "Monday", "Mondays", "Tues", "Thurs"… — whole words only,
+// so "Monthly" or "Friendly" never count.
+const DAY_WORD: Record<Weekday, string> = {
+  Monday: "mon(?:days?)?", Tuesday: "tue(?:s(?:days?)?)?", Wednesday: "wed(?:nesdays?)?",
+  Thursday: "thu(?:r(?:s(?:days?)?)?)?", Friday: "fri(?:days?)?", Saturday: "sat(?:urdays?)?", Sunday: "sun(?:days?)?",
+};
+export const dayWord = (d: Weekday) => new RegExp(`\\b${DAY_WORD[d]}\\b`, "gi");
+
+/** Every weekday named in some text: "Mon, Wed", "Tuesdays and Thursdays", "thu/sat". */
+export function daysInText(text: string): Weekday[] {
+  return WEEK.filter((d) => dayWord(d).test(String(text ?? "")));
+}
 
 function toMs(d: ISODate): number {
   const [y, m, day] = d.split("-").map(Number);
@@ -62,20 +82,21 @@ export function todayISO(now: Date = new Date()): ISODate {
   return fromMs(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 }
 
-export function isPracticeDay(d: ISODate): boolean {
-  return (PRACTICE_DAYS as string[]).includes(weekdayOf(d));
+/** `days` are the team's practice days (Settings); with none set, every day counts. */
+export function isPracticeDay(d: ISODate, days: Weekday[]): boolean {
+  return !days.length || days.includes(weekdayOf(d));
 }
 
 /** The given day if it's a practice day, otherwise the next one. */
-export function nextPracticeDay(d: ISODate): ISODate {
+export function nextPracticeDay(d: ISODate, days: Weekday[]): ISODate {
   let cur = d;
-  while (!isPracticeDay(cur)) cur = addDays(cur, 1);
+  while (!isPracticeDay(cur, days)) cur = addDays(cur, 1);
   return cur;
 }
 
-export function stepPracticeDay(d: ISODate, dir: 1 | -1): ISODate {
+export function stepPracticeDay(d: ISODate, dir: 1 | -1, days: Weekday[]): ISODate {
   let cur = addDays(d, dir);
-  while (!isPracticeDay(cur)) cur = addDays(cur, dir);
+  while (!isPracticeDay(cur, days)) cur = addDays(cur, dir);
   return cur;
 }
 

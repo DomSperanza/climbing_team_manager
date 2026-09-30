@@ -4,6 +4,9 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Linking, Platform, View } from "react-native";
 import type { Coach } from "@/core/schema/model";
+import { coachDays, otherDaysNote } from "@/core/logic/coachDays";
+import { shortDay } from "@/core/logic/dates";
+import { formatClock } from "@/core/logic/timeline";
 import { approveAccountAccess, connectSheet, disconnect, refresh, useAppState } from "@/data/store";
 import { signedInEmail } from "@/platform/auth";
 import { PRIVACY_URL } from "@/core/config";
@@ -12,7 +15,7 @@ import { confirmAction } from "@/ui/form";
 import { Banner, Button, Card, LinkButton, ListRow, Row, Screen, Section, T } from "@/ui/kit";
 
 function days(c: Coach): string {
-  return [c.coachesMonday && "Mon", c.coachesTuesday && "Tue", c.coachesThursday && "Thu"].filter(Boolean).join(" · ");
+  return coachDays(c).map(shortDay).join(" · ");
 }
 
 export default function More() {
@@ -22,8 +25,20 @@ export default function More() {
   const coaches = [...s.data.coaches].sort((a, b) => (a.status === b.status ? a.row - b.row : a.status === "Active" ? -1 : 1));
   const email = s.source?.kind === "sheet" ? signedInEmail() : null;
 
+  const { tierNames, practiceDays, practice } = s.data.settings;
+
   return (
     <Screen>
+      <Section title="Team">
+        <ListRow title="Team settings"
+          subtitle={`${tierNames.length} group${tierNames.length === 1 ? "" : "s"} · ${practiceDays.map(shortDay).join(", ")} · ${formatClock(practice.start)}–${formatClock(practice.end, true)}`}
+          onPress={() => router.push("/team")} />
+        {s.source?.kind === "sheet" && (
+          <ListRow title="Create another team's Sheet" subtitle="A separate Sheet for a team with its own groups, days and times"
+            onPress={() => router.push("/new-team")} />
+        )}
+      </Section>
+
       <Section title="Coaches">
         {coaches.map((c) => (
           <View key={c.row}>
@@ -34,7 +49,7 @@ export default function More() {
                 <View style={{ gap: 6 }}>
                   {c.email ? <LinkButton label={c.email} onPress={() => Linking.openURL(`mailto:${c.email}`)} /> : null}
                   {c.phone ? <LinkButton label={c.phone} onPress={() => Linking.openURL(`tel:${c.phone.replace(/[^\d+]/g, "")}`)} /> : null}
-                  {c.otherDays ? <T><T muted>Other days: </T>{c.otherDays}</T> : null}
+                  {otherDaysNote(c.otherDays) ? <T><T muted>Other days: </T>{c.otherDays}</T> : null}
                   {c.specialties ? <T><T muted>Specialties: </T>{c.specialties}</T> : null}
                   {c.bio ? <T>{c.bio}</T> : null}
                   <Button label="Edit coach" icon="edit" onPress={() => router.push({ pathname: "/edit/coach", params: { row: String(c.row) } })} />

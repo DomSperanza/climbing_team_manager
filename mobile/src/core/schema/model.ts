@@ -1,7 +1,7 @@
 // Typed shapes of the Sheet's rows (HANDOFF.md §2.9). Tier and block-type names are plain
 // strings read from Settings at load time — never hardcode them.
 
-import type { ISODate } from "../logic/dates";
+import type { ISODate, Weekday } from "../logic/dates";
 
 export type Status = "Active" | "Inactive";
 
@@ -97,8 +97,9 @@ export interface AttendanceEntry {
 }
 
 export interface SeasonSettings {
-  tierNames: string[]; // Settings!B5:B7, the groups athletes are split into
+  tierNames: string[]; // Settings!B5:B13, the groups athletes are split into, in order (blanks skipped)
   blockTypes: string[];
+  practiceDays: Weekday[]; // Settings!B24, in week order
   practice: PracticeTiming; // Settings!B18:B22
 }
 

@@ -58,9 +58,16 @@ export function rangeKeysFor(sheetTitles: string[]): RangeKey[] {
   return RANGE_KEYS.filter((k) => !(k in OPTIONAL_TAB) || sheetTitles.includes(TAB_NAME[k]));
 }
 
-// Settings cells (1-based rows as seen in the Sheet, 0-based columns).
+// Settings cells (1-based rows as seen in the Sheet, 0-based columns). The original workbook
+// had exactly three groups (B5:B7) and Mon/Tue/Thu practices; Team settings (and a new Sheet)
+// use up to nine group rows, B5:B13, and a Practice days cell, B24. Both fit the original
+// layout — rows 8–13 and 24 were empty, or held only a note in column A — so every Sheet is
+// read the same way. A blank Practice days cell means the original Mon/Tue/Thu.
+export const MAX_GROUPS = 9;
 export const SETTINGS = {
-  tierRows: [5, 6, 7], // B5:B7
+  groupFirstRow: 5, // B5…
+  groupLastRow: 5 + MAX_GROUPS - 1, // …B13
+  practiceDaysRow: 24, // B24 "Mon, Tue, Thu"
   practiceStartRow: 18, // B18 "5:30 PM"
   practiceEndRow: 19, // B19 "8:00 PM"
   warmupMinutesRow: 20, // B20
@@ -85,6 +92,8 @@ export const EXPECTED_HEADERS: Record<Exclude<RangeKey, "settings" | keyof typeo
 export const ALL_TEAM = "All Team";
 export const ALL_LEVELS = "All Levels";
 export const ALL_COACHES = "All Coaches";
+/** Names the Sheet already uses for "everyone", so no group can have them. */
+export const RESERVED_GROUP_NAMES = [ALL_TEAM, ALL_LEVELS, ALL_COACHES];
 
 // Rows the Sheet's own formulas, dropdowns and named ranges cover (Team_Tools_Apps_Script.gs
 // *_FIRST_ROW / *_LAST_ROW). The app reads past these but only ever writes inside them, so

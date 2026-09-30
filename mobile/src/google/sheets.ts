@@ -2,6 +2,7 @@
 
 import { RANGES, type RangeKey } from "@/core/schema/layout";
 import type { Rows } from "@/core/schema/parse";
+import { layoutRequests, type SheetInfo } from "@/core/sheetLayout";
 import type { SheetWriter, ValueRange } from "@/core/writes";
 
 const API = "https://sheets.googleapis.com/v4/spreadsheets/";
@@ -54,6 +55,17 @@ export async function fetchAllRanges(spreadsheetId: string, token: string, keys:
   keys.forEach((k) => params.append("ranges", RANGES[k]));
   const data = await call<{ valueRanges: { values?: Rows }[] }>(sheetUrl(spreadsheetId) + "/values:batchGet?" + params, token);
   return data.valueRanges;
+}
+
+/**
+ * Brings the Sheet's own dropdowns and group colors in line with its Settings (see
+ * core/sheetLayout.ts). `newSheet` also removes the old rotation tabs from a just-created Sheet.
+ */
+export async function tidySheetLayout(spreadsheetId: string, token: string, newSheet: boolean): Promise<void> {
+  const info = await call<SheetInfo>(sheetUrl(spreadsheetId) +
+    "?fields=" + encodeURIComponent("sheets(properties(sheetId,title),conditionalFormats),namedRanges(namedRangeId,name)"), token);
+  const requests = layoutRequests(info, { newSheet });
+  if (requests.length) await call(sheetUrl(spreadsheetId) + ":batchUpdate", token, { method: "POST", body: { requests } });
 }
 
 /** The reads and writes a save needs, bound to one Sheet and token. */

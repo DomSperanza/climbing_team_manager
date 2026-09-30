@@ -104,15 +104,17 @@ If Android sign-in says *"Google rejected this copy of the app"*, the package na
 
 **Create:** on the first screen, tap **Create a new team Sheet**, then choose:
 - a name;
-- the three group names;
-- whether to start with the ~20-exercise starter library;
-- whether to add yourself as the first coach.
+- the team's groups: any number from 1 to 9, top to bottom;
+- which days it practices, and the practice time, warm-up and stretch;
+- whether to start with the ~20-exercise starter library (its Advanced / Intermediate / Developing exercises go to your groups, top to bottom);
+- whether to add yourself as a coach, and on which of those days.
 
 Then sign in. What the app does next:
 
 1. It uploads the team workbook (`Climbing_Team_Tiered_Practice_System.xlsx`, built into the app) to your Google Drive. Drive converts it into a Google Sheet, the same way the original Sheet was made, so every tab, formula, dropdown, color rule and named range comes across.
-2. It fills in the group names in Settings, clears the example rows, and adds you as a coach. It uses the same "clear the editable cells, keep the formulas" rule as deleting.
-3. It connects to the new Sheet.
+2. It fills in Settings, clears the example rows, and adds you as a coach. It uses the same "clear the editable cells, keep the formulas" rule as deleting.
+3. It sets the Sheet's own dropdowns and row colors up for your groups, and removes the old Thursday rotation tabs, which the app doesn't use.
+4. It connects to the new Sheet.
 
 The new Sheet is **private**: it's in your Drive, and nobody else can open it until you share it.
 
@@ -122,6 +124,29 @@ The new Sheet is **private**: it's in your Drive, and nobody else can open it un
 - The app can only manage sharing for Sheets **it created**. That's the price of the narrow `drive.file` permission. For any other Sheet, including the one you uploaded by hand earlier, the Share screen says so and opens the Sheet in Google Sheets, where you share it as usual. Connecting and saving work for any Sheet either way.
 - A created Sheet doesn't include the Apps Script (`Team_Tools_Apps_Script.gs`), so its checkboxes do nothing until someone pastes the script in via *Extensions → Apps Script*. The app doesn't need the script.
 - After changing the workbook, run `npm run template` to rebuild the copy built into the app, then rebuild.
+
+## Team settings, and more than one team
+
+**More → Team settings** changes the connected team's setup:
+- **Groups:** add (up to 9), rename, reorder (the order sets each group's color) or remove.
+  - A **rename** is applied everywhere the old name was written: athletes, exercises, workout blocks (shared ones too), group claims and attendance.
+  - A group can't be removed while active athletes are in it.
+- **Practice days:** Today's plan steps between these, and a coach's day switches follow them.
+- **Practice time:** start, end, warm-up and stretch. The warm-up and stretch make the standard outline for an empty day; 0 leaves one out.
+
+It saves to the Settings tab:
+- groups in B5:B13;
+- practice days in B24 (e.g. "Mon, Wed, Fri");
+- times in B18:B22.
+
+Coaches can edit those cells in the Sheet too. A Sheet made before this existed reads as its three groups on Mon/Tue/Thu until someone saves Team settings. That first save rewrites the labels in the Settings tab and brings the Sheet's dropdowns and colors up to date. It doesn't move or delete anything else.
+
+**Coach days** use Coach Profiles' Mon?/Tue?/Thu? columns, and the Other Days column for any other day ("Wed, Sat"). Whatever else is written in Other Days is kept.
+
+**A second team** (e.g. a younger team with its own days and times) gets its **own Sheet**. Make it with **More → Create another team's Sheet**, and the app switches to it once it's made.
+- Its roster, plans and library are separate.
+- Coaches who help both switch under **More → Switch to another Sheet**.
+- **Sign in with Google** lists every team Sheet saved to the account.
 
 ## Sharing the app with the other coaches
 
