@@ -149,6 +149,7 @@ Doing this again after 7 days, or after code changes: `git pull`, then steps 1�
 - [ ] Turn on Airplane mode: the app opens and shows the last copy.
 - [ ] With a real Sheet connected, the app asks for Face ID (or the passcode) when it opens, and again after 5+ minutes in the background.
 - [ ] Dark mode (Control Center) looks right.
+- [ ] **More → Team settings**: rename a group, change a practice day, save. Check that athletes show the new group name, and that Today steps between the new days.
 - [ ] **More → Privacy policy** opens the policy.
 - [ ] **Sign out & clear data** returns you to the Connect screen.
 
