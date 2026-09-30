@@ -1,3 +1,5 @@
+import clients from "../../google-clients.json";
+
 // What the app asks Google for:
 // - read and write the Sheets the signed-in coach can already open (Google enforces the
 //   Sheet's own sharing list on every call), and
@@ -22,3 +24,12 @@ export function spreadsheetIdFrom(input: string): string | null {
 /** The web version's address; its privacy policy is linked from the app and both store listings. */
 export const APP_URL = (process.env.EXPO_PUBLIC_APP_URL || "https://domsperanza.github.io/climbing_team_manager/").replace(/\/?$/, "/");
 export const PRIVACY_URL = APP_URL + "privacy.html";
+
+// The team's Google sign-in clients (Google Cloud → Google Auth Platform → Clients), kept in
+// google-clients.json so every checkout builds with sign-in working, the Mac included. They
+// aren't secrets: every copy of the app and the web page contains them. EXPO_PUBLIC_GOOGLE_*
+// in mobile/.env.local override them (e.g. to try another Cloud project). Android needs no ID
+// of its own: its client is matched by package name and signing-key fingerprint.
+export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || clients.web;
+export const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || clients.ios;
+

@@ -8,8 +8,9 @@ const forPlay = process.argv.includes("--play");
 const problems = [];
 
 const env = { ...readEnv(".env"), ...readEnv(".env.local"), ...process.env };
-if (!env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) {
-  problems.push("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID isn't set in mobile/.env.local, so Google sign-in wouldn't work in this build.");
+const clients = JSON.parse(readFileSync("google-clients.json", "utf8"));
+if (!env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID && !clients.web) {
+  problems.push("No web client ID in google-clients.json (or mobile/.env.local), so Google sign-in wouldn't work in this build.");
 }
 
 const props = readEnv(join(process.env.GRADLE_USER_HOME || join(homedir(), ".gradle"), "gradle.properties"));

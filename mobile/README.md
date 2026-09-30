@@ -78,14 +78,9 @@ This builds on the Phase 2a setup in `../app/README.md`: same Cloud project, sam
 3. **Test users:** every coach who'll sign in must be on the list (Audience → Test users) while the app is in Testing mode. Sharing the Sheet doesn't add them there automatically.
 4. **Web client:** keep the one from Phase 2a. Android sign-in needs its ID too. For the web version, add `http://localhost:8081` to its Authorized JavaScript origins and `http://localhost:8081/` to its redirect URIs.
 
-Then put the IDs in `mobile/.env.local` (copy `.env.example`):
+The web and iOS client IDs are in `mobile/google-clients.json`, which is committed, so every checkout (the Mac included) builds with sign-in working. They aren't secrets: every copy of the app and the web page contains them. Android has no ID of its own; Google matches its client by package name and SHA-1.
 
-```
-EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
-EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=            # only for the iPhone build
-```
-
-**Rebuild after changing these.** They're baked into the app, and the bundler can cache the old values, so run `npx expo start --clear` once (then stop it) before `npm run build:apk`. Until they're set, the Connect screen explains that sign-in isn't set up, and demo mode still works.
+To try a different Google Cloud project, override them in `mobile/.env.local` (copy `.env.example`). They're baked into the build, and the bundler can cache old values, so after changing either file, run `npx expo start --clear` once (then stop it) before building.
 
 If Android sign-in says *"Google rejected this copy of the app"*, the package name or SHA-1 in the Android client doesn't match the build.
 
@@ -174,7 +169,7 @@ The same code runs on iPhone. Building it needs Xcode, which only runs on macOS.
 
 Either way, installing on *other people's* iPhones (TestFlight or the App Store) needs the Apple Developer Program ($99/year). In the meantime, the **web version works on iPhone**: open it in Safari, then Share → Add to Home Screen.
 
-For iPhone sign-in, create an **iOS** OAuth client in Google Cloud with bundle ID `io.github.domsperanza.rockteam`, and put its ID in `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`. The full Mac walkthrough, from the free test to TestFlight and the App Store, is in [`store/README.md`](store/README.md).
+iPhone sign-in uses the **iOS** OAuth client (bundle ID `io.github.domsperanza.rockteam`), whose ID is in `mobile/google-clients.json`. The full Mac walkthrough, from the free test to TestFlight and the App Store, is in [`store/README.md`](store/README.md).
 
 ## Web
 

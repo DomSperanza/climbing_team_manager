@@ -6,10 +6,10 @@
 // The token lives in sessionStorage only and expires after ~1 hour; after that the app keeps
 // showing saved data and asks the coach to sign in again before the next refresh or save.
 
-import { GOOGLE_SCOPES } from "@/core/config";
+import { GOOGLE_SCOPES, GOOGLE_WEB_CLIENT_ID } from "@/core/config";
 import { sheetFromAppLink } from "@/core/recentSheets";
 
-const CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
+const CLIENT_ID = GOOGLE_WEB_CLIENT_ID;
 const TOKEN_KEY = "rt.token";
 const STATE_KEY = "rt.oauthState";
 const RETURN_KEY = "rt.returnTo";

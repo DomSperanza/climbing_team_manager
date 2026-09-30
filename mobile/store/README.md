@@ -37,7 +37,7 @@ In the Cloud project you already use for the web version (**APIs & Services**):
 3. **Clients**: delete any Android or iOS client made for the old ID `com.rockteam.coach`. Then create:
    - **Android** client #1: package `io.github.domsperanza.rockteam`, SHA-1 of **your upload key** (from `npm run make-upload-key`, step 2).
    - **Android** client #2: the same package, SHA-1 of **Google Play's app-signing key**. You get this after the first upload (step 2).
-   - **iOS** client: bundle ID `io.github.domsperanza.rockteam` (step 3).
+   - **iOS** client: bundle ID `io.github.domsperanza.rockteam`. Done 2026-09-30; its ID is in `mobile/google-clients.json`.
 4. **Audience**: **In production, unverified** (done 2026-09-30).
    - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to Rock Team*).
    - There's a 100-user lifetime cap, and no 7-day re-sign-in.
@@ -78,7 +78,6 @@ In the Cloud project you already use for the web version (**APIs & Services**):
 
 ```bash
 cd mobile && nvm use 22
-npx expo start --clear     # once, then Ctrl+C, so the build picks up .env.local
 npm run build:aab          # → android/app/build/outputs/bundle/release/app-release.aab
 ```
 
@@ -111,11 +110,7 @@ A free Apple ID can install the app on **your own iPhone** for 7 days at a time.
    cd climbing_team_manager/mobile && npm ci
    ```
    Installing **CocoaPods** is also needed if prebuild says it's missing: `brew install cocoapods`.
-3. In Google Cloud, create the **iOS client** (bundle ID `io.github.domsperanza.rockteam`), then create `mobile/.env.local`:
-   ```
-   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=792823039150-2m0p04g7cu4vr6br9vaegkj5mqvvvmoc.apps.googleusercontent.com
-   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<the iOS client ID>
-   ```
+3. Google sign-in is already set up. The iOS client (`792823039150-8gmc…`, bundle ID `io.github.domsperanza.rockteam`) exists in Google Cloud, and its ID is in `mobile/google-clients.json`, so there's no file to create on the Mac.
 4. On the iPhone:
    - **Settings → Privacy & Security → Developer Mode → On** (it restarts). The option appears after the phone has been plugged into a Mac with Xcode open.
 
@@ -123,7 +118,6 @@ A free Apple ID can install the app on **your own iPhone** for 7 days at a time.
 
 ```bash
 cd mobile
-npx expo start --clear                 # once, then Ctrl+C (clears cached settings)
 npx expo prebuild -p ios --clean       # generates ios/ with the iOS client ID in it
 open ios/RockTeam.xcworkspace
 ```

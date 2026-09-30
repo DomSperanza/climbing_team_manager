@@ -1,6 +1,7 @@
-// App config for Android, iOS and web. Google client IDs come from mobile/.env.local (see
-// README). None of them are secrets: every installed app and web page exposes its client ID.
+// App config for Android, iOS and web. Google client IDs come from google-clients.json, or
+// mobile/.env.local to override (see src/core/config.ts). None of them are secrets.
 import type { ExpoConfig } from "expo/config";
+import clients from "./google-clients.json";
 
 // The app's permanent ID in both stores and in its Google sign-in clients. It's based on the
 // GitHub Pages address the web version lives at, so nobody else can own it. Don't change it
@@ -12,7 +13,7 @@ const APP_ID = "io.github.domsperanza.rockteam";
 const VERSION = "1.0.0";
 const BUILD = 1;
 
-const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? "";
+const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || clients.ios;
 // Google's iOS sign-in returns to the app on the "reversed" client ID as a URL scheme.
 // The plugin insists on one, so a placeholder stands in until an iOS client exists.
 const iosUrlScheme = iosClientId

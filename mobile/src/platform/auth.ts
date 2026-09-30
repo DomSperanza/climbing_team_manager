@@ -13,10 +13,10 @@ import {
   statusCodes,
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
-import { GOOGLE_SCOPES } from "@/core/config";
+import { GOOGLE_IOS_CLIENT_ID, GOOGLE_SCOPES, GOOGLE_WEB_CLIENT_ID } from "@/core/config";
 
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
-const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? "";
+const WEB_CLIENT_ID = GOOGLE_WEB_CLIENT_ID;
+const IOS_CLIENT_ID = GOOGLE_IOS_CLIENT_ID;
 
 export type SignInResult = { status: "ok" } | { status: "cancelled" } | { status: "error"; message: string } | { status: "redirecting" };
 
