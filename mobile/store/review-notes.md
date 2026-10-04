@@ -4,7 +4,7 @@ Paste the text between the lines into **App Store Connect → App Review Informa
 
 ---
 
-Climbing Coach Manager is a free app for the coaches of youth climbing teams. It reads and writes the team's own Google Sheet in the coach's Google account. There is no server and no account system of our own. Published by DVS Solutions LLC.
+Climbing Coach Manager is a free app for the coaches of youth climbing teams. It reads and writes the team's own Google Sheet in the coach's Google account. There is no server and no account system of our own. Made by DVS Solutions LLC.
 
 **Quickest way to review: demo mode, no sign-in.** On the first screen, tap **"Try it with demo data"**. This opens the app with sample data saved only on the device. Everything below works in demo mode:
 - **Today:** the practice timeline, claiming the lead or a group, adding, editing, timing and reordering blocks
