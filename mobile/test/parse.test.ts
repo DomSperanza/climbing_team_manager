@@ -45,13 +45,13 @@ describe("schema validation", () => {
 
   it("names the missing tab", () => {
     expect(validateSheet(demo.sheetTitles.filter((t) => t !== "Athlete Profiles"))).toEqual([
-      "This doesn't look like an SCC Coach team Sheet — missing a 'Athlete Profiles' tab.",
+      "This doesn't look like a Climbing Coach Manager team Sheet — missing a 'Athlete Profiles' tab.",
     ]);
   });
 
   it("lists several missing tabs in one message", () => {
     expect(validateSheet(["Sheet1"])).toEqual([
-      "This doesn't look like an SCC Coach team Sheet — missing these tabs: 'Settings', 'Athlete Profiles', 'Coach Profiles', 'Exercise Library', 'Log a Workout', 'Progress Log'.",
+      "This doesn't look like a Climbing Coach Manager team Sheet — missing these tabs: 'Settings', 'Athlete Profiles', 'Coach Profiles', 'Exercise Library', 'Log a Workout', 'Progress Log'.",
     ]);
   });
 

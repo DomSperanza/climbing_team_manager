@@ -14,8 +14,8 @@ export function missingTabs(sheetTitles: string[]): string[] {
 
 export function validateSheet(sheetTitles: string[], raw?: RawRanges): string[] {
   const missing = missingTabs(sheetTitles);
-  if (missing.length === 1) return [`This doesn't look like an SCC Coach team Sheet — missing a '${missing[0]}' tab.`];
-  if (missing.length) return [`This doesn't look like an SCC Coach team Sheet — missing these tabs: ${missing.map((t) => `'${t}'`).join(", ")}.`];
+  if (missing.length === 1) return [`This doesn't look like a Climbing Coach Manager team Sheet — missing a '${missing[0]}' tab.`];
+  if (missing.length) return [`This doesn't look like a Climbing Coach Manager team Sheet — missing these tabs: ${missing.map((t) => `'${t}'`).join(", ")}.`];
   if (!raw) return [];
   const problems: string[] = [];
   for (const [key, expected] of Object.entries(EXPECTED_HEADERS) as [keyof typeof EXPECTED_HEADERS, Record<number, string>][]) {

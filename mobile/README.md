@@ -1,6 +1,6 @@
-# SCC Coach app (Android, iPhone and web)
+# Climbing Coach Manager (Android, iPhone and web)
 
-Published by **DVS Solutions LLC** (https://dvssolutionsllc.com). Earlier it was called "Rock Team"; the internal app ID `io.github.domsperanza.rockteam` and some code names keep that name.
+Published by **DVS Solutions LLC** (https://dvssolutionsllc.com). The SCC-branded version ("Climbing Coach Manager") is on the `scc_brand` branch. Earlier the app was called "Rock Team"; the internal app ID `io.github.domsperanza.rockteam` and some code names keep that name.
 
 One codebase ([Expo](https://expo.dev) / React Native) that builds:
 

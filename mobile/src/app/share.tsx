@@ -62,7 +62,7 @@ export default function Share() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, width: "100%", maxWidth: MAX_WIDTH, alignSelf: "center" }} keyboardShouldPersistTaps="handled">
         {blocked ? <View style={{ marginHorizontal: -16 }}><Banner>{blocked}</Banner></View> : (
           <>
-            <T muted>Everyone you add can see the athletes' details, so only share with coaches. Google emails them a link; they open the SCC Coach app, choose "Connect an existing Sheet", and paste it.</T>
+            <T muted>Everyone you add can see the athletes' details, so only share with coaches. Google emails them a link; they open the Climbing Coach Manager app, choose "Connect an existing Sheet", and paste it.</T>
 
             {people !== null && !listError && <Section title="Invite a coach">
               <TextField label="Their Google account email" value={email} onChange={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="coach@gmail.com" />

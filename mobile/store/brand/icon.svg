@@ -1,7 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<style>@font-face { font-family: "Anton"; src: url("Anton-Regular.ttf"); } text { font-family: "Anton"; fill: #fff; }</style>
-<rect width="1024" height="1024" fill="#000000"/>
-<path d="M 649.2 384.5 L 512 150 L 120 820 L 904 820 L 817.8 672.6" fill="none" stroke="#ffffff" stroke-width="70" stroke-linejoin="miter" stroke-miterlimit="10"/>
-<text x="508" y="624" text-anchor="middle" font-size="170" textLength="262" lengthAdjust="spacingAndGlyphs">SCC</text>
-<text x="508" y="752" text-anchor="middle" font-size="108" textLength="440" lengthAdjust="spacingAndGlyphs">COACH</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><style>@font-face { font-family: "Anton"; src: url("Anton-Regular.ttf"); } text { font-family: "Anton"; fill: #fff; }</style><rect width="1024" height="1024" fill="#000000"/>
+<path d="M150 600 L380 250 L500 430 L600 300 L874 600 Z" fill="#ffffff"/>
+<text x="512" y="742" text-anchor="middle" font-size="130" textLength="560" lengthAdjust="spacingAndGlyphs">CLIMB</text>
+<text x="512" y="876" text-anchor="middle" font-size="130" textLength="560" lengthAdjust="spacingAndGlyphs">COACH</text>
 </svg>

@@ -106,14 +106,14 @@ export default function More() {
         )}
         {LOCK_SUPPORTED && s.source?.kind === "sheet" && !s.lockAvailable && (
           <View style={{ marginHorizontal: -16, marginTop: 4 }}>
-            <Banner>This phone has no screen lock, so SCC Coach can't lock itself. Set a PIN or fingerprint in the phone's settings to protect the team data.</Banner>
+            <Banner>This phone has no screen lock, so Climbing Coach Manager can't lock itself. Set a PIN or fingerprint in the phone's settings to protect the team data.</Banner>
           </View>
         )}
       </Section>
 
       <Section title="About">
         <T small muted>
-          SCC Coach{Platform.OS === "web" ? " (web)" : ""} — everything shown comes from the team's Google Sheet, and every change is saved straight to it.
+          Climbing Coach Manager{Platform.OS === "web" ? " (web)" : ""} — everything shown comes from the team's Google Sheet, and every change is saved straight to it.
           This app keeps a copy on this {Platform.OS === "web" ? "device" : "phone (encrypted)"} so it opens instantly and works without signal; saving needs a connection.
         </T>
         <T small muted style={{ marginTop: 8 }}>Athletes are minors: keep notes climbing-specific — no medical or family details, no photos.</T>

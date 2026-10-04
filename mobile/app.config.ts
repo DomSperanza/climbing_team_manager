@@ -21,7 +21,9 @@ const iosUrlScheme = iosClientId
   : "com.googleusercontent.apps.not-configured";
 
 const config: ExpoConfig = {
-  name: "SCC Coach",
+  // The home-screen label: iPhones cut names off after about 12 characters. The stores list it
+  // as "Climbing Coach Manager" (set in App Store Connect / Play Console).
+  name: "Climb Coach",
   slug: "rock-team",
   version: VERSION,
   orientation: "portrait",
@@ -72,16 +74,16 @@ const config: ExpoConfig = {
   web: {
     output: "single",
     favicon: "./assets/images/favicon.png",
-    name: "SCC Coach",
-    shortName: "SCC Coach",
+    name: "Climbing Coach Manager",
+    shortName: "Climb Coach",
     themeColor: "#2f6f5e",
     backgroundColor: "#f6f5f2",
   },
   plugins: [
     "expo-router",
     ["expo-splash-screen", { backgroundColor: "#000000", image: "./assets/images/splash-icon.png", imageWidth: 96 }],
-    ["expo-secure-store", { configureAndroidBackup: false, faceIDPermission: "SCC Coach uses Face ID to unlock the team's data." }],
-    ["expo-local-authentication", { faceIDPermission: "SCC Coach uses Face ID to unlock the team's data." }],
+    ["expo-secure-store", { configureAndroidBackup: false, faceIDPermission: "Climbing Coach Manager uses Face ID to unlock the team's data." }],
+    ["expo-local-authentication", { faceIDPermission: "Climbing Coach Manager uses Face ID to unlock the team's data." }],
     ["react-native-nitro-google-signin", { iosUrlScheme }],
     "@react-native-community/datetimepicker",
     "./plugins/with-gradle-jdk17",

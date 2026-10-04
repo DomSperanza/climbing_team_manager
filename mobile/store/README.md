@@ -1,4 +1,4 @@
-# Getting SCC Coach into Google Play and the App Store
+# Getting Climbing Coach Manager into Google Play and the App Store
 
 Everything the stores ask for is in this folder:
 
@@ -30,7 +30,7 @@ It's `mobile/public/privacy.html`, and it deploys with the web app. It's also li
 In the Cloud project you already use for the web version (**APIs & Services**):
 
 1. **Branding**:
-   - App name: *SCC Coach*
+   - App name: *Climbing Coach Manager*
    - Home page: `https://domsperanza.github.io/climbing_team_manager/`
    - Privacy policy: the URL above
 2. **Data access**: the three scopes `spreadsheets`, `drive.file` and `drive.appdata` should be there. If `drive.appdata` is missing, add it.
@@ -39,7 +39,7 @@ In the Cloud project you already use for the web version (**APIs & Services**):
    - **Android** client #2: the same package, SHA-1 of **Google Play's app-signing key**. You get this after the first upload (step 2).
    - **iOS** client: bundle ID `io.github.domsperanza.rockteam`. Done 2026-09-30; its ID is in `mobile/google-clients.json`.
 4. **Audience**: **In production, unverified** (done 2026-09-30).
-   - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to SCC Coach*).
+   - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to Climbing Coach Manager*).
    - There's a 100-user lifetime cap, and no 7-day re-sign-in.
    - Don't upload a logo on the Branding page: it would require Google's verification.
    - Full verification (free) removes the notice and the cap. It needs a YouTube demo video and proof that you own the website's domain.
@@ -50,7 +50,7 @@ In the Cloud project you already use for the web version (**APIs & Services**):
 
 1. Sign up at https://play.google.com/console ($25). Choose a **personal** account, and have ID ready for identity verification. It can take a day or two.
 2. **Create app**:
-   - Name *SCC Coach*, language English (US), **App**, **Free**.
+   - Name *Climbing Coach Manager*, language English (US), **App**, **Free**.
    - Accept the declarations.
 3. **Make your upload key** on this computer:
    ```bash
@@ -119,17 +119,17 @@ A free Apple ID can install the app on **your own iPhone** for 7 days at a time.
 ```bash
 cd mobile
 npx expo prebuild -p ios --clean       # generates ios/ with the iOS client ID in it
-open ios/SCCCoach.xcworkspace
+open ios/ClimbCoach.xcworkspace
 ```
 
 In Xcode:
 
-1. Click **SCCCoach** (top of the left panel) → target **SCCCoach** → **Signing & Capabilities**:
+1. Click **ClimbCoach** (top of the left panel) → target **ClimbCoach** → **Signing & Capabilities**:
    - Tick *Automatically manage signing*.
    - **Team: (your name) (Personal Team)**.
 2. **Product → Scheme → Edit Scheme → Run → Build Configuration: Release.** With a Release build, the app works without the Mac running anything.
 3. Plug in the iPhone, pick it in the device menu at the top, and press **▶ Run**.
-4. The first launch is blocked. On the iPhone, trust the developer: **Settings → General → VPN & Device Management → your Apple ID → Trust**. Then open SCC Coach.
+4. The first launch is blocked. On the iPhone, trust the developer: **Settings → General → VPN & Device Management → your Apple ID → Trust**. Then open Climb Coach.
 
 Doing this again after 7 days, or after code changes: `git pull`, then steps 1–3 of *Build and install* again.
 
@@ -169,21 +169,20 @@ Meanwhile, the free iPhone test (section 3) works with your personal Apple ID.
 
 ### Before you submit
 
-1. **Springs Climbing Center's OK.** The app's name uses the gym's name, and Apple rejects apps that use someone else's name or brand without permission (guidelines 4.1 and 5.2.1). Get a short signed letter or email from the gym's owner or manager. For example: "Springs Climbing Center permits DVS Solutions LLC to publish the app 'SCC Coach' using the name SCC, for our coaching staff." Attach it in App Review Information.
-2. **Google Cloud → Branding → App name**: change it to **SCC Coach**, so Google's sign-in screens match the app.
-3. **A review Google account** (strongly recommended; reviewers often reject sign-in apps without one):
-   - Make a new Gmail, e.g. `scccoach.review@gmail.com`, with **2-Step Verification off**.
-   - In SCC Coach, sign in with it, choose **Create a new team Sheet**, name it "SCC Coach Review Team", and add a few sample athletes and a practice. Signing in on your iPhone once also makes Google less likely to challenge the reviewer.
+1. **Google Cloud → Branding → App name**: set it to **Climbing Coach Manager**, so Google's sign-in screens match the app.
+2. **A review Google account** (strongly recommended; reviewers often reject sign-in apps without one):
+   - Make a new Gmail, e.g. `climbcoach.review@gmail.com`, with **2-Step Verification off**.
+   - In Climbing Coach Manager, sign in with it, choose **Create a new team Sheet**, name it "Climbing Coach Manager Review Team", and add a few sample athletes and a practice. Signing in on your iPhone once also makes Google less likely to challenge the reviewer.
    - Put the email and password in App Review Information (the sign-in fields) and in `review-notes.md`.
-4. **Screenshots**: run the app in the **iPhone 16 Pro Max** simulator in demo mode and press ⌘S on the six screens in `screenshots/android/`. That gives 1320×2868 images.
+3. **Screenshots**: run the app in the **iPhone 16 Pro Max** simulator in demo mode and press ⌘S on the six screens in `screenshots/android/`. That gives 1320×2868 images.
 
 ### Submit
 
 1. In Xcode, set **Team** to **DVS Solutions LLC** (not "Personal Team"). Xcode registers the bundle ID.
    - If it says the ID isn't available, the free test's registration is still holding it. Wait until that 7-day profile expires, or delete the app from the phone and retry.
 2. **App Store Connect** (https://appstoreconnect.apple.com) → **Apps → +**:
-   - Platform iOS, name **SCC Coach** (or **SCC Coach: Climbing Team** if it's taken).
-   - Bundle ID `io.github.domsperanza.rockteam`, SKU `scccoach`.
+   - Platform iOS, name **Climbing Coach Manager**.
+   - Bundle ID `io.github.domsperanza.rockteam`, SKU `climbcoachmanager`.
 3. **Upload a build**:
    - In Xcode, choose **Any iOS Device (arm64)** → **Product → Archive**.
    - When it finishes: **Distribute App → App Store Connect → Upload**.
@@ -196,7 +195,6 @@ Meanwhile, the free iPhone test (section 3) works with your personal Apple ID.
 6. **App Review Information**:
    - **Sign-in required: Yes**, with the review account.
    - Paste [`review-notes.md`](review-notes.md) into Notes.
-   - Attach the gym's letter.
 7. **Pricing and Availability**: Free. Then **Add for Review**.
 8. **Unlisted distribution**: right after submitting, request it at https://developer.apple.com/contact/request/unlisted-app/.
    - The app is then approved normally, but it doesn't show in search; only people with the link can install it. That's Apple's option for apps meant for one organization's people, and it avoids a "limited audience" rejection.

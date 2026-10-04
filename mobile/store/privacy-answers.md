@@ -30,7 +30,7 @@ The coach's Google account itself is handled by Google's sign-in, and the app do
 
 ## Apple — App Privacy
 
-Apple defines "collected" as data that leaves the device where **you (the developer) or your partners** can access it beyond serving the request. SCC Coach's data goes only to the user's own Google account, which the developer can't access, and the app's privacy manifest already says it collects nothing. So:
+Apple defines "collected" as data that leaves the device where **you (the developer) or your partners** can access it beyond serving the request. Climbing Coach Manager's data goes only to the user's own Google account, which the developer can't access, and the app's privacy manifest already says it collects nothing. So:
 
 - **Do you or your third-party partners collect data from this app?** **No, we do not collect data from this app.**
 - The label then reads **"Data Not Collected"**.

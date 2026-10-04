@@ -21,8 +21,8 @@ function walk(dir) {
 }
 
 writeFileSync(join(DIST, "manifest.webmanifest"), JSON.stringify({
-  name: "SCC Coach",
-  short_name: "SCC Coach",
+  name: "Climbing Coach Manager",
+  short_name: "Climb Coach",
   description: "Practice plans, roster and exercise library for the climbing team.",
   start_url: base,
   scope: base,
@@ -40,7 +40,7 @@ html = html.replace("</head>", [
   `<link rel="manifest" href="${base}manifest.webmanifest">`,
   `<link rel="apple-touch-icon" href="${base}apple-touch-icon.png">`,
   `<meta name="apple-mobile-web-app-capable" content="yes">`,
-  `<meta name="apple-mobile-web-app-title" content="SCC Coach">`,
+  `<meta name="apple-mobile-web-app-title" content="Climb Coach">`,
   "</head>",
 ].join("\n"));
 writeFileSync(join(DIST, "index.html"), html);

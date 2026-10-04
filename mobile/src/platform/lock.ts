@@ -20,6 +20,6 @@ export async function canLock(): Promise<boolean> {
 }
 
 export async function unlock(): Promise<boolean> {
-  const res = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock SCC Coach", disableDeviceFallback: false });
+  const res = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock Climb Coach", disableDeviceFallback: false });
   return res.success;
 }

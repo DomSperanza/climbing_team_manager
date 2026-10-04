@@ -2,25 +2,23 @@
 
 The same text works for both stores. Character limits are noted, and everything below fits them.
 
-The app is called **SCC Coach**, for Springs Climbing Center's team. Two cautions:
-- Get the gym's OK in writing before submitting (see `README.md`, "Before you submit").
-- Don't describe the app as SCC's official app unless the gym agrees to that.
+The app is **Climbing Coach Manager**. Its home-screen label is **Climb Coach**, because iPhones cut longer names off. (An SCC-branded version is kept on the `scc_brand` branch.)
 
 ## Name
-**SCC Coach** (Play: 30 max; Apple: 30 max). No App Store app has this name (checked 2026-10-04). If App Store Connect says it's taken, use **SCC Coach: Climbing Team**.
+**Climbing Coach Manager** (22 characters; both stores allow 30). No App Store app has this name (checked 2026-10-04).
 
 ## Apple subtitle (30 max)
-Bouldering team practice plans
+Team practice plans & workouts
 
 ## Play short description (80 max)
-Plan bouldering team practices, log workouts, track athletes in a Google Sheet.
+Plan climbing team practices, log workouts, track athletes in a Google Sheet.
 
 ## Apple promotional text (170 max)
 Plan the day, claim your group, log who came, and keep it all in your team's own Google Sheet. Built for climbing team coaches.
 
 ## Full description (Play 4000 max; Apple 4000 max)
 
-SCC Coach helps the coaches of a youth climbing team run practice from their phones. Everything lives in the team's own Google Sheet: no new accounts, no server, no subscription. Coaches can keep using the Sheet directly whenever they like.
+Climbing Coach Manager helps the coaches of a youth climbing team run practice from their phones. Everything lives in the team's own Google Sheet: no new accounts, no server, no subscription. Coaches can keep using the Sheet directly whenever they like.
 
 PLAN THE DAY
 • See today's practice at a glance: who's leading, who's coaching each group, and the full timeline.
@@ -49,7 +47,7 @@ PRIVATE BY DESIGN
 • No ads, no analytics, no tracking. Your data stays in your Google account.
 • Try it first with built-in demo data, no sign-in needed.
 
-SCC Coach is free, and is made by DVS Solutions LLC. It isn't affiliated with Google.
+Climbing Coach Manager is free, and is made by DVS Solutions LLC. It isn't affiliated with Google.
 
 ## Apple keywords (100 max, comma-separated, no spaces needed)
 climbing,bouldering,coach,team,practice,planner,workout,training,roster,attendance,youth,gym
