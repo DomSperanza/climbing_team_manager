@@ -28,7 +28,7 @@ async function call<T>(url: string, token: string, init: { method?: string; body
   if (res.status === 404) {
     throw new SheetsError("This app can only manage sharing for Sheets it created. Share this one from Google Sheets instead.", "notFound");
   }
-  if (res.status === 403 && /insufficient|scope/i.test(reason)) throw new SheetsError("Rock Team needs one more permission from Google.", "scope");
+  if (res.status === 403 && /insufficient|scope/i.test(reason)) throw new SheetsError("SCC Coach needs one more permission from Google.", "scope");
   if (res.status === 403) throw new SheetsError(reason || "Google didn't allow that. Only people who can edit the Sheet can share it.", "access");
   if (res.status === 400) throw new SheetsError(reason || "Google rejected that request.", "other");
   throw new SheetsError(`Google Drive returned an error (${res.status}). Try again in a moment.`, "other");
@@ -114,8 +114,8 @@ export async function addPerson(token: string, fileId: string, email: string, ro
   const params = new URLSearchParams({
     sendNotificationEmail: "true",
     emailMessage: app
-      ? `You've been added to the Rock Team Sheet. Open the team app here — it's ready to connect: ${app.replace(/\/?$/, "/")}?sheet=${fileId}`
-      : "You've been added to the Rock Team Sheet. Open the Rock Team app, choose \"Connect an existing Sheet\", and paste this link.",
+      ? `You've been added to the team's SCC Coach Sheet. Open the app here — it's ready to connect: ${app.replace(/\/?$/, "/")}?sheet=${fileId}`
+      : "You've been added to the team's SCC Coach Sheet. Open the SCC Coach app, choose \"Connect an existing Sheet\", and paste this link.",
   });
   await call(DRIVE + encodeURIComponent(fileId) + "/permissions?" + params, token, {
     method: "POST", contentType: "application/json", body: JSON.stringify({ type: "user", role, emailAddress: email }),

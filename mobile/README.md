@@ -1,4 +1,6 @@
-# Rock Team app — Android, iPhone and web
+# SCC Coach app (Android, iPhone and web)
+
+Published by **DVS Solutions LLC** (https://dvssolutionsllc.com). Earlier it was called "Rock Team"; the internal app ID `io.github.domsperanza.rockteam` and some code names keep that name.
 
 One codebase ([Expo](https://expo.dev) / React Native) that builds:
 

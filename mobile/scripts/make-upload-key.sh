@@ -29,7 +29,7 @@ read -r -s -p "Type it again: " PASS2; echo
 export ROCKTEAM_KEY_PASS="$PASS"
 
 "$KEYTOOL" -genkeypair -v -keystore "$KEYSTORE" -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
-  -storepass:env ROCKTEAM_KEY_PASS -keypass:env ROCKTEAM_KEY_PASS -dname "CN=Rock Team, O=Rock Team"
+  -storepass:env ROCKTEAM_KEY_PASS -keypass:env ROCKTEAM_KEY_PASS -dname "CN=SCC Coach, O=DVS Solutions LLC"
 chmod 600 "$KEYSTORE"
 
 touch "$PROPS"; chmod 600 "$PROPS"

@@ -21,7 +21,7 @@ const iosUrlScheme = iosClientId
   : "com.googleusercontent.apps.not-configured";
 
 const config: ExpoConfig = {
-  name: "Rock Team",
+  name: "SCC Coach",
   slug: "rock-team",
   version: VERSION,
   orientation: "portrait",
@@ -56,7 +56,7 @@ const config: ExpoConfig = {
     // Team data stays on the phone only — never copied into Google's device backups (HANDOFF §2.6).
     allowBackup: false,
     adaptiveIcon: {
-      backgroundColor: "#2f6f5e",
+      backgroundColor: "#000000",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
@@ -72,16 +72,16 @@ const config: ExpoConfig = {
   web: {
     output: "single",
     favicon: "./assets/images/favicon.png",
-    name: "Rock Team",
-    shortName: "Rock Team",
+    name: "SCC Coach",
+    shortName: "SCC Coach",
     themeColor: "#2f6f5e",
     backgroundColor: "#f6f5f2",
   },
   plugins: [
     "expo-router",
-    ["expo-splash-screen", { backgroundColor: "#2f6f5e", image: "./assets/images/splash-icon.png", imageWidth: 96 }],
-    ["expo-secure-store", { configureAndroidBackup: false, faceIDPermission: "Rock Team uses Face ID to unlock the team's data." }],
-    ["expo-local-authentication", { faceIDPermission: "Rock Team uses Face ID to unlock the team's data." }],
+    ["expo-splash-screen", { backgroundColor: "#000000", image: "./assets/images/splash-icon.png", imageWidth: 96 }],
+    ["expo-secure-store", { configureAndroidBackup: false, faceIDPermission: "SCC Coach uses Face ID to unlock the team's data." }],
+    ["expo-local-authentication", { faceIDPermission: "SCC Coach uses Face ID to unlock the team's data." }],
     ["react-native-nitro-google-signin", { iosUrlScheme }],
     "@react-native-community/datetimepicker",
     "./plugins/with-gradle-jdk17",

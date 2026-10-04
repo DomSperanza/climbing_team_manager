@@ -13,7 +13,7 @@ export function LockScreen() {
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: t.bg, alignItems: "center", justifyContent: "center", padding: 32, gap: 16 }]}>
       <Icon name="lock" size={56} color={t.accent} />
-      <H2>Rock Team is locked</H2>
+      <H2>SCC Coach is locked</H2>
       <T muted style={{ textAlign: "center" }}>Team data is protected with your phone's screen lock.</T>
       <Button label="Unlock" kind="primary" onPress={unlockApp} style={{ alignSelf: "stretch" }} />
     </View>

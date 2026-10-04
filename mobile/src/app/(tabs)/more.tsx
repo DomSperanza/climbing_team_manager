@@ -9,7 +9,7 @@ import { shortDay } from "@/core/logic/dates";
 import { formatClock } from "@/core/logic/timeline";
 import { approveAccountAccess, connectSheet, disconnect, refresh, useAppState } from "@/data/store";
 import { signedInEmail } from "@/platform/auth";
-import { PRIVACY_URL } from "@/core/config";
+import { COMPANY, PRIVACY_URL } from "@/core/config";
 import { LOCK_SUPPORTED } from "@/platform/lock";
 import { confirmAction } from "@/ui/form";
 import { Banner, Button, Card, LinkButton, ListRow, Row, Screen, Section, T } from "@/ui/kit";
@@ -106,18 +106,21 @@ export default function More() {
         )}
         {LOCK_SUPPORTED && s.source?.kind === "sheet" && !s.lockAvailable && (
           <View style={{ marginHorizontal: -16, marginTop: 4 }}>
-            <Banner>This phone has no screen lock, so Rock Team can't lock itself. Set a PIN or fingerprint in the phone's settings to protect the team data.</Banner>
+            <Banner>This phone has no screen lock, so SCC Coach can't lock itself. Set a PIN or fingerprint in the phone's settings to protect the team data.</Banner>
           </View>
         )}
       </Section>
 
       <Section title="About">
         <T small muted>
-          Rock Team{Platform.OS === "web" ? " (web)" : ""} — everything shown comes from the team's Google Sheet, and every change is saved straight to it.
+          SCC Coach{Platform.OS === "web" ? " (web)" : ""} — everything shown comes from the team's Google Sheet, and every change is saved straight to it.
           This app keeps a copy on this {Platform.OS === "web" ? "device" : "phone (encrypted)"} so it opens instantly and works without signal; saving needs a connection.
         </T>
         <T small muted style={{ marginTop: 8 }}>Athletes are minors: keep notes climbing-specific — no medical or family details, no photos.</T>
-        <View style={{ marginTop: 10 }}><LinkButton label="Privacy policy" onPress={() => Linking.openURL(PRIVACY_URL)} /></View>
+        <View style={{ marginTop: 10, gap: 8 }}>
+          <LinkButton label="Privacy policy" onPress={() => Linking.openURL(PRIVACY_URL)} />
+          <LinkButton label={`Made by ${COMPANY.name}`} onPress={() => Linking.openURL(COMPANY.url)} />
+        </View>
       </Section>
     </Screen>
   );

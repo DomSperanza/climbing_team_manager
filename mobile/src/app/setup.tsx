@@ -19,7 +19,7 @@ function defaults(): NewSheetOptions {
   const now = new Date();
   const y = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1; // seasons start in the fall
   return {
-    name: `Rock Team ${y}–${String((y + 1) % 100).padStart(2, "0")}`,
+    name: `SCC Climbing Team ${y}–${String((y + 1) % 100).padStart(2, "0")}`,
     team: {
       groups: ["Advanced", "Intermediate", "Developing"].map((name) => ({ name, was: null })),
       practiceDays: ["Monday", "Tuesday", "Thursday"],

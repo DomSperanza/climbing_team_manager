@@ -1,4 +1,4 @@
-# Getting Rock Team into Google Play and the App Store
+# Getting SCC Coach into Google Play and the App Store
 
 Everything the stores ask for is in this folder:
 
@@ -30,7 +30,7 @@ It's `mobile/public/privacy.html`, and it deploys with the web app. It's also li
 In the Cloud project you already use for the web version (**APIs & Services**):
 
 1. **Branding**:
-   - App name: *Rock Team*
+   - App name: *SCC Coach*
    - Home page: `https://domsperanza.github.io/climbing_team_manager/`
    - Privacy policy: the URL above
 2. **Data access**: the three scopes `spreadsheets`, `drive.file` and `drive.appdata` should be there. If `drive.appdata` is missing, add it.
@@ -39,7 +39,7 @@ In the Cloud project you already use for the web version (**APIs & Services**):
    - **Android** client #2: the same package, SHA-1 of **Google Play's app-signing key**. You get this after the first upload (step 2).
    - **iOS** client: bundle ID `io.github.domsperanza.rockteam`. Done 2026-09-30; its ID is in `mobile/google-clients.json`.
 4. **Audience**: **In production, unverified** (done 2026-09-30).
-   - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to Rock Team*).
+   - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to SCC Coach*).
    - There's a 100-user lifetime cap, and no 7-day re-sign-in.
    - Don't upload a logo on the Branding page: it would require Google's verification.
    - Full verification (free) removes the notice and the cap. It needs a YouTube demo video and proof that you own the website's domain.
@@ -50,7 +50,7 @@ In the Cloud project you already use for the web version (**APIs & Services**):
 
 1. Sign up at https://play.google.com/console ($25). Choose a **personal** account, and have ID ready for identity verification. It can take a day or two.
 2. **Create app**:
-   - Name *Rock Team*, language English (US), **App**, **Free**.
+   - Name *SCC Coach*, language English (US), **App**, **Free**.
    - Accept the declarations.
 3. **Make your upload key** on this computer:
    ```bash
@@ -119,17 +119,17 @@ A free Apple ID can install the app on **your own iPhone** for 7 days at a time.
 ```bash
 cd mobile
 npx expo prebuild -p ios --clean       # generates ios/ with the iOS client ID in it
-open ios/RockTeam.xcworkspace
+open ios/SCCCoach.xcworkspace
 ```
 
 In Xcode:
 
-1. Click **RockTeam** (top of the left panel) → target **RockTeam** → **Signing & Capabilities**:
+1. Click **SCCCoach** (top of the left panel) → target **SCCCoach** → **Signing & Capabilities**:
    - Tick *Automatically manage signing*.
    - **Team: (your name) (Personal Team)**.
 2. **Product → Scheme → Edit Scheme → Run → Build Configuration: Release.** With a Release build, the app works without the Mac running anything.
 3. Plug in the iPhone, pick it in the device menu at the top, and press **▶ Run**.
-4. The first launch is blocked. On the iPhone, trust the developer: **Settings → General → VPN & Device Management → your Apple ID → Trust**. Then open Rock Team.
+4. The first launch is blocked. On the iPhone, trust the developer: **Settings → General → VPN & Device Management → your Apple ID → Trust**. Then open SCC Coach.
 
 Doing this again after 7 days, or after code changes: `git pull`, then steps 1–3 of *Build and install* again.
 
@@ -149,29 +149,59 @@ Doing this again after 7 days, or after code changes: `git pull`, then steps 1�
 
 If all of that works, the $99 is worth it: the same build goes to the App Store.
 
-## 4. App Store (after paying $99)
+## 4. App Store, published by DVS Solutions LLC
 
-1. Join at https://developer.apple.com/programs/ with the **same Apple ID**, as an individual. Approval can take a day or two.
-2. In Xcode, switch **Team** to the paid team (not "Personal Team"). Xcode registers the bundle ID.
+### Start now: enroll the LLC (takes 1–3 weeks)
+
+Enroll as an **Organization**, not an Individual, so the store shows **DVS Solutions LLC** as the seller. Switching an individual account to an organization later is possible, but Apple says it can take up to three weeks.
+
+1. **D-U-N-S number** (free). Look up the LLC at https://developer.apple.com/enroll/duns-lookup/. If it isn't listed, request one there.
+   - Dun & Bradstreet takes up to **5 business days**, then Apple needs up to **2 more**.
+   - The legal name must match the state registration exactly. Your website says "DVS Solutions LLC"; use whatever the state filing says.
+2. **Website**: https://dvssolutionsllc.com qualifies, since it's public with real content. Apple needs the LLC's domain to match.
+3. **Work email on that domain**, e.g. `dom@dvssolutionsllc.com`. Your domain already has email set up.
+   - Fix the website's Contact link: it points to **dom@dvssolutions.com**, which is a *different* company's domain, so those messages won't reach you.
+4. **Enroll** at https://developer.apple.com/programs/enroll/ ($99/year) with an Apple Account that uses that work email.
+   - You need authority to sign for the LLC (as its owner, you have it).
+   - Apple may phone you to verify.
+
+Meanwhile, the free iPhone test (section 3) works with your personal Apple ID.
+
+### Before you submit
+
+1. **Springs Climbing Center's OK.** The app's name uses the gym's name, and Apple rejects apps that use someone else's name or brand without permission (guidelines 4.1 and 5.2.1). Get a short signed letter or email from the gym's owner or manager. For example: "Springs Climbing Center permits DVS Solutions LLC to publish the app 'SCC Coach' using the name SCC, for our coaching staff." Attach it in App Review Information.
+2. **Google Cloud → Branding → App name**: change it to **SCC Coach**, so Google's sign-in screens match the app.
+3. **A review Google account** (strongly recommended; reviewers often reject sign-in apps without one):
+   - Make a new Gmail, e.g. `scccoach.review@gmail.com`, with **2-Step Verification off**.
+   - In SCC Coach, sign in with it, choose **Create a new team Sheet**, name it "SCC Coach Review Team", and add a few sample athletes and a practice. Signing in on your iPhone once also makes Google less likely to challenge the reviewer.
+   - Put the email and password in App Review Information (the sign-in fields) and in `review-notes.md`.
+4. **Screenshots**: run the app in the **iPhone 16 Pro Max** simulator in demo mode and press ⌘S on the six screens in `screenshots/android/`. That gives 1320×2868 images.
+
+### Submit
+
+1. In Xcode, set **Team** to **DVS Solutions LLC** (not "Personal Team"). Xcode registers the bundle ID.
    - If it says the ID isn't available, the free test's registration is still holding it. Wait until that 7-day profile expires, or delete the app from the phone and retry.
-3. **App Store Connect** (https://appstoreconnect.apple.com) → **Apps → +**:
-   - Platform iOS, name *Rock Team*.
-   - Bundle ID `io.github.domsperanza.rockteam`, SKU `rockteam`.
-   - If the name *Rock Team* is taken on the App Store, use e.g. *Rock Team Coach*. The name on the home screen stays "Rock Team".
-4. **Upload a build**:
+2. **App Store Connect** (https://appstoreconnect.apple.com) → **Apps → +**:
+   - Platform iOS, name **SCC Coach** (or **SCC Coach: Climbing Team** if it's taken).
+   - Bundle ID `io.github.domsperanza.rockteam`, SKU `scccoach`.
+3. **Upload a build**:
    - In Xcode, choose **Any iOS Device (arm64)** → **Product → Archive**.
    - When it finishes: **Distribute App → App Store Connect → Upload**.
-   - Encryption questions are already answered by the app (standard HTTPS only).
-5. **TestFlight** (optional, no review wait for your own team): add up to 100 people as *internal testers*. They must be App Store Connect users you invite. For other coaches, use an *external* group, which needs a short beta review.
-6. **App Store listing and submission**:
-   - **Text**: from [`listing.md`](listing.md). Category *Sports*.
-   - **Screenshots**: 6.9" iPhone. The ones in `screenshots/iphone/` come from the web version. They'll likely pass, but screenshots taken from the real app are safer. Run the app in the **iPhone 16 Pro Max** simulator and press ⌘S, which saves 1320×2868 PNGs to the Desktop. Match the six in `screenshots/android/`.
+   - Encryption questions are already answered by the app.
+4. **TestFlight first** (recommended): add yourself and the coaches as internal testers (up to 100, no review wait), and install the build on your phone through the TestFlight app. That's the same build Apple will review.
+5. **Listing**: text from [`listing.md`](listing.md), including the copyright line "2026 DVS Solutions LLC".
    - **App Privacy**: see [`privacy-answers.md`](privacy-answers.md#apple--app-privacy).
-   - **Age rating**: answer **None / No** to everything, which gives **4+**.
-   - **Privacy policy URL**: the one above. **Support URL**: https://github.com/DomSperanza/climbing_team_manager/issues
-   - **App Review Information**: paste [`review-notes.md`](review-notes.md). Sign-in required: **No**, because demo mode needs no account.
-   - Price: **Free**. Then **Add for Review**.
-7. **Each release**: bump `BUILD` (and `VERSION`) in `app.config.ts`, re-run `npx expo prebuild -p ios --clean`, and archive again.
+   - **Age rating**: answer **None / No** to everything.
+   - **Support URL**: https://dvssolutionsllc.com/. **Privacy policy URL**: the one above.
+6. **App Review Information**:
+   - **Sign-in required: Yes**, with the review account.
+   - Paste [`review-notes.md`](review-notes.md) into Notes.
+   - Attach the gym's letter.
+7. **Pricing and Availability**: Free. Then **Add for Review**.
+8. **Unlisted distribution**: right after submitting, request it at https://developer.apple.com/contact/request/unlisted-app/.
+   - The app is then approved normally, but it doesn't show in search; only people with the link can install it. That's Apple's option for apps meant for one organization's people, and it avoids a "limited audience" rejection.
+   - You can ask Apple to make it public later.
+9. **Each release**: bump `BUILD` (and `VERSION`) in `app.config.ts`, re-run `npx expo prebuild -p ios --clean`, and archive again.
 
 ## 5. The web version
 

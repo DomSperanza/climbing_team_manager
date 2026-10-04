@@ -33,3 +33,5 @@ export const PRIVACY_URL = APP_URL + "privacy.html";
 export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || clients.web;
 export const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || clients.ios;
 
+/** Who publishes the app: the seller name in both stores, the privacy policy and More → About. */
+export const COMPANY = { name: "DVS Solutions LLC", url: "https://dvssolutionsllc.com/" };

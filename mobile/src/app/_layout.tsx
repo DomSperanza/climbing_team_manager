@@ -44,7 +44,7 @@ export default function RootLayout() {
         contentStyle: { backgroundColor: t.bg },
       }}>
         <Stack.Protected guard={hasData}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Rock Team" }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "SCC Coach" }} />
           <Stack.Screen name="athlete/[row]" options={{ title: "Athlete" }} />
           <Stack.Screen name="exercise/[row]" options={{ title: "Exercise" }} />
           <Stack.Screen name="edit/block" options={{ presentation: "modal", title: "Workout block" }} />
@@ -60,7 +60,7 @@ export default function RootLayout() {
           <Stack.Screen name="new-team" options={{ title: "New team Sheet" }} />
         </Stack.Protected>
         <Stack.Protected guard={!hasData}>
-          <Stack.Screen name="connect" options={{ headerShown: false, title: "Rock Team" }} />
+          <Stack.Screen name="connect" options={{ headerShown: false, title: "SCC Coach" }} />
           <Stack.Screen name="setup" options={{ title: "New team Sheet" }} />
         </Stack.Protected>
       </Stack>

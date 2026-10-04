@@ -38,7 +38,7 @@ export default function Connect() {
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24, width: "100%", maxWidth: 480, alignSelf: "center" }} keyboardShouldPersistTaps="handled">
         <View style={{ alignItems: "center", gap: 10, marginBottom: 24 }}>
           <Image source={require("@/assets/images/icon.png")} style={{ width: 84, height: 84, borderRadius: 20 }} accessibilityIgnoresInvertColors />
-          <H2>Rock Team</H2>
+          <H2>SCC Coach</H2>
           <T muted style={{ textAlign: "center" }}>Practice plans, roster and exercise library — kept in a Google Sheet your coaches share.</T>
         </View>
 
