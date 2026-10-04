@@ -149,23 +149,16 @@ Doing this again after 7 days, or after code changes: `git pull`, then steps 1�
 
 If all of that works, the $99 is worth it: the same build goes to the App Store.
 
-## 4. App Store, published by DVS Solutions LLC
+## 4. App Store, with your own Apple developer account
 
-### Start now: enroll the LLC (takes 1–3 weeks)
+### Enroll (a day or two)
 
-Enroll as an **Organization**, not an Individual, so the store shows **DVS Solutions LLC** as the seller. Switching an individual account to an organization later is possible, but Apple says it can take up to three weeks.
+Enroll at https://developer.apple.com/programs/enroll/ as an **Individual**, with your personal Apple Account ($99/year).
+- The paid program is needed for TestFlight and the App Store, even for a free app. A free account only covers the 7-day install on your own phone (section 3).
+- The App Store lists **your legal name** as the seller. The app and privacy policy still say it's made by DVS Solutions LLC, which is fine.
+- **Moving it to the LLC later:** enroll the LLC as an Organization (that needs a D-U-N-S number, the LLC's website and an @dvssolutionsllc.com email). Then either transfer the app to it (App Store Connect → App → App Information → Transfer App; users and reviews move with it), or ask Apple to convert this membership.
 
-1. **D-U-N-S number** (free). Look up the LLC at https://developer.apple.com/enroll/duns-lookup/. If it isn't listed, request one there.
-   - Dun & Bradstreet takes up to **5 business days**, then Apple needs up to **2 more**.
-   - The legal name must match the state registration exactly. Your website says "DVS Solutions LLC"; use whatever the state filing says.
-2. **Website**: https://dvssolutionsllc.com qualifies, since it's public with real content. Apple needs the LLC's domain to match.
-3. **Work email on that domain**, e.g. `dom@dvssolutionsllc.com`. Your domain already has email set up.
-   - Fix the website's Contact link: it points to **dom@dvssolutions.com**, which is a *different* company's domain, so those messages won't reach you.
-4. **Enroll** at https://developer.apple.com/programs/enroll/ ($99/year) with an Apple Account that uses that work email.
-   - You need authority to sign for the LLC (as its owner, you have it).
-   - Apple may phone you to verify.
-
-Meanwhile, the free iPhone test (section 3) works with your personal Apple ID.
+Separately, fix the Contact link on dvssolutionsllc.com: it points to **dom@dvssolutions.com**, which is a *different* company's domain, so those messages won't reach you. The Support URL below uses that site.
 
 ### Before you submit
 
@@ -179,7 +172,7 @@ Meanwhile, the free iPhone test (section 3) works with your personal Apple ID.
 
 ### Submit
 
-1. In Xcode, set **Team** to **DVS Solutions LLC** (not "Personal Team"). Xcode registers the bundle ID.
+1. In Xcode, set **Team** to your paid developer team (your name, *not* the one marked "Personal Team"). Xcode registers the bundle ID.
    - If it says the ID isn't available, the free test's registration is still holding it. Wait until that 7-day profile expires, or delete the app from the phone and retry.
 2. **App Store Connect** (https://appstoreconnect.apple.com) → **Apps → +**:
    - Platform iOS, name **SCC Coach** (or **SCC Coach: Climbing Team** if it's taken).
@@ -189,7 +182,7 @@ Meanwhile, the free iPhone test (section 3) works with your personal Apple ID.
    - When it finishes: **Distribute App → App Store Connect → Upload**.
    - Encryption questions are already answered by the app.
 4. **TestFlight first** (recommended): add yourself and the coaches as internal testers (up to 100, no review wait), and install the build on your phone through the TestFlight app. That's the same build Apple will review.
-5. **Listing**: text from [`listing.md`](listing.md), including the copyright line "2026 DVS Solutions LLC".
+5. **Listing**: text from [`listing.md`](listing.md), including the copyright line "2026 DVS Solutions LLC" (fine under a personal account).
    - **App Privacy**: see [`privacy-answers.md`](privacy-answers.md#apple--app-privacy).
    - **Age rating**: answer **None / No** to everything.
    - **Support URL**: https://dvssolutionsllc.com/. **Privacy policy URL**: the one above.
