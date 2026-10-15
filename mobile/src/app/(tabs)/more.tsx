@@ -1,5 +1,6 @@
 // More — coaches, the connected Sheet, and sign-out.
 
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Linking, Platform, View } from "react-native";
@@ -12,6 +13,10 @@ import { COMPANY, PRIVACY_URL } from "@/core/config";
 import { LOCK_SUPPORTED } from "@/platform/lock";
 import { confirmAction } from "@/ui/form";
 import { Banner, Button, Card, LinkButton, ListRow, Row, Screen, Section, T } from "@/ui/kit";
+
+// "1.0.1 (build 2)": which release this phone has, for troubleshooting with coaches.
+const build = Constants.expoConfig?.ios?.buildNumber ?? Constants.expoConfig?.android?.versionCode;
+const VERSION_LABEL = `Version ${Constants.expoConfig?.version ?? "?"}${build && Platform.OS !== "web" ? ` (build ${build})` : ""}`;
 
 function days(c: Coach): string {
   return coachDays(c).map(shortDay).join(" · ");
@@ -119,6 +124,7 @@ export default function More() {
         <View style={{ marginTop: 10, gap: 8 }}>
           <LinkButton label="Privacy policy" onPress={() => Linking.openURL(PRIVACY_URL)} />
           <LinkButton label={`Made by ${COMPANY.name}`} onPress={() => Linking.openURL(COMPANY.url)} />
+          <T small muted>{VERSION_LABEL}</T>
         </View>
       </Section>
     </Screen>

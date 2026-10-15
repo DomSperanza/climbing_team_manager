@@ -10,8 +10,9 @@ const APP_ID = "io.github.domsperanza.rockteam";
 
 // Bump VERSION for each release people see ("1.0.1"), and BUILD for every upload to either
 // store — both stores reject a build number they've already seen.
-const VERSION = "1.0.0";
-const BUILD = 1;
+// Add a line to CHANGELOG.md for each release too.
+const VERSION = "1.0.1";
+const BUILD = 2;
 
 const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || clients.ios;
 // Google's iOS sign-in returns to the app on the "reversed" client ID as a URL scheme.
