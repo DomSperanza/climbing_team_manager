@@ -176,14 +176,14 @@ iPhone sign-in uses the **iOS** OAuth client (bundle ID `io.github.domsperanza.r
 
 ## Web
 
-**Live site:** <https://domsperanza.github.io/climbing_team_manager/>
+**Live site:** <https://coach.dvssolutionsllc.com/>
 
 Every push to `main` that touches `mobile/` rebuilds and publishes it, via `.github/workflows/pages.yml` (the run is under the repo's **Actions** tab). To turn on Google sign-in there:
 
 1. In GitHub, go to **Settings → Secrets and variables → Actions → Variables** and add `GOOGLE_WEB_CLIENT_ID` (your web client ID). Then re-run the workflow.
 2. In Google Cloud, on the web OAuth client:
-   - add `https://domsperanza.github.io` to *Authorized JavaScript origins*;
-   - add `https://domsperanza.github.io/climbing_team_manager/` to *Authorized redirect URIs*.
+   - add `https://coach.dvssolutionsllc.com` to *Authorized JavaScript origins*;
+   - add `https://coach.dvssolutionsllc.com/` to *Authorized redirect URIs*.
 
 Until then, the site runs in demo mode.
 

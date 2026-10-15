@@ -61,7 +61,7 @@ climbing,bouldering,coach,team,practice,planner,workout,training,roster,attendan
 
 ## Support URL / marketing URL (Apple)
 - Support: https://dvssolutionsllc.com/ (it has a Contact page; see the email note in `README.md`)
-- Privacy policy: https://domsperanza.github.io/climbing_team_manager/privacy.html
+- Privacy policy: https://coach.dvssolutionsllc.com/privacy.html
 
 ## What's new (first release)
 First release: plan practices, claim groups, log workouts and attendance, and keep your team Sheet in sync.

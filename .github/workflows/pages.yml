@@ -1,5 +1,7 @@
 # Builds the web version of the app (mobile/) and publishes it to GitHub Pages on every push
-# to main: https://<owner>.github.io/<repo>/
+# to main. It's served at https://coach.dvssolutionsllc.com/ (Settings → Pages → Custom domain,
+# with a CNAME record for "coach" pointing at domsperanza.github.io); the old github.io address
+# redirects there.
 # The Google sign-in client ID comes from the repository variable GOOGLE_WEB_CLIENT_ID
 # (Settings → Secrets and variables → Actions → Variables). It isn't a secret. Until it's
 # set, the site works in demo mode only.
@@ -37,10 +39,9 @@ jobs:
       - run: npm test
       - run: npm run build:web
         env:
-          WEB_BASE_URL: /${{ github.event.repository.name }}
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
           # Put in coaches' invite emails, so the link opens the app with the Sheet ready.
-          EXPO_PUBLIC_APP_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          EXPO_PUBLIC_APP_URL: https://coach.dvssolutionsllc.com/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: mobile/dist

@@ -22,7 +22,7 @@ export function spreadsheetIdFrom(input: string): string | null {
 }
 
 /** The web version's address; its privacy policy is linked from the app and both store listings. */
-export const APP_URL = (process.env.EXPO_PUBLIC_APP_URL || "https://domsperanza.github.io/climbing_team_manager/").replace(/\/?$/, "/");
+export const APP_URL = (process.env.EXPO_PUBLIC_APP_URL || "https://coach.dvssolutionsllc.com/").replace(/\/?$/, "/");
 export const PRIVACY_URL = APP_URL + "privacy.html";
 
 // The team's Google sign-in clients (Google Cloud → Google Auth Platform → Clients), kept in

@@ -26,7 +26,7 @@ To leave demo mode, use More → Leave demo.
 
 **Distribution.** For now this app is used by one team's coaching staff, so we're requesting **unlisted distribution**.
 
-Privacy policy: https://domsperanza.github.io/climbing_team_manager/privacy.html
+Privacy policy: https://coach.dvssolutionsllc.com/privacy.html
 Contact: DVS Solutions LLC, https://dvssolutionsllc.com/
 
 ---

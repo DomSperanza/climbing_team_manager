@@ -29,7 +29,7 @@ export function isAuthConfigured(): boolean {
   return CLIENT_ID.length > 0;
 }
 
-/** The app's own address (e.g. https://you.github.io/rock-team/) — must be listed in the OAuth client. */
+/** The app's own address (e.g. https://coach.dvssolutionsllc.com/) — must be listed in the OAuth client. */
 function redirectUri(): string {
   const base = (process.env.EXPO_BASE_URL ?? "").replace(/\/?$/, "/");
   return window.location.origin + base;

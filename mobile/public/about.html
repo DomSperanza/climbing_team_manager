@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Climbing Coach Manager</title>
+<meta name="description" content="A free app for youth climbing team coaches: practice plans, roster, attendance and exercise library, kept in the team's own Google Sheet.">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { --bg: #f6f5f2; --text: #1c1d1f; --muted: #6a6b6e; --accent: #2f6f5e; --line: #e1ded7; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #16181b; --text: #eceae6; --muted: #a3a5a8; --accent: #5fb39b; --line: #33373d; } }
+  :root[data-theme="dark"] { --bg: #16181b; --text: #eceae6; --muted: #a3a5a8; --accent: #5fb39b; --line: #33373d; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  header img { width: 64px; height: 64px; border-radius: 14px; }
+  h1 { font-size: 1.8rem; margin: 0; }
+  h2 { font-size: 1.15rem; margin: 28px 0 6px; }
+  p, li { margin: 6px 0; }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  .button { display: inline-block; margin: 12px 0 4px; padding: 10px 18px; border-radius: 8px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon-192.png" alt="">
+    <div>
+      <h1>Climbing Coach Manager</h1>
+      <p class="muted">Made by <a href="https://dvssolutionsllc.com/">DVS Solutions LLC</a></p>
+    </div>
+  </header>
+
+  <p>Climbing Coach Manager is a free app for the coaches of a youth climbing team. It runs on iPhone, Android and the web, and keeps everything in the team's own Google Sheet. There is no server, no account to create, and no ads or tracking.</p>
+  <a class="button" href="./">Open the web app</a>
+
+  <h2>What coaches use it for</h2>
+  <ul>
+    <li><strong>Today:</strong> a timeline of the day's practice. Coaches claim the lead or a group, then add, time and reorder blocks.</li>
+    <li><strong>Save workout:</strong> record who was there, move an athlete to another group for the day, and add notes.</li>
+    <li><strong>Athletes:</strong> profiles, progress entries and each athlete's practice history.</li>
+    <li><strong>Library:</strong> the team's exercises, which coaches can browse, filter and add to.</li>
+    <li><strong>Team settings:</strong> groups, practice days and practice times.</li>
+  </ul>
+  <p>You can try every feature without signing in: choose <em>Try it with demo data</em> on the first screen.</p>
+
+  <h2>How it uses your Google account</h2>
+  <p>Coaches sign in with Google so the app can open the team's Sheet. The app asks Google to:</p>
+  <ul>
+    <li><strong>See and edit Google Sheets:</strong> to read and update the team's Sheet, which a coach either created in the app or was invited to by another coach.</li>
+    <li><strong>See and manage Drive files used with this app:</strong> to create a new team Sheet when asked, and to share it with the coaches you name. The app can't see your other Drive files.</li>
+    <li><strong>Keep its own settings in Drive:</strong> a private, hidden folder holding the list of team Sheets you use, so signing in on another device finds your Sheet.</li>
+  </ul>
+  <p>Information from Google is used only to show and update the team's Sheet in the app. It is never sent to DVS Solutions LLC, used for advertising, or shared with anyone. Read the full <a href="privacy.html">privacy policy</a>.</p>
+
+  <hr>
+  <p><a href="privacy.html">Privacy policy</a> · <a href="https://dvssolutionsllc.com/">DVS Solutions LLC</a></p>
+</main>
+</body>
+</html>

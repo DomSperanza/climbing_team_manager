@@ -13,7 +13,7 @@ Everything the stores ask for is in this folder:
 | `icon-512.png` | Play's 512×512 app icon |
 
 **Privacy policy URL** (both stores ask for it):
-https://domsperanza.github.io/climbing_team_manager/privacy.html
+https://coach.dvssolutionsllc.com/privacy.html
 It's `mobile/public/privacy.html`, and it deploys with the web app. It's also linked from **More → Privacy policy** in the app.
 
 **App ID** (both stores, and the Google sign-in clients): `io.github.domsperanza.rockteam`. It's permanent once uploaded.
@@ -31,18 +31,17 @@ In the Cloud project you already use for the web version (**APIs & Services**):
 
 1. **Branding**:
    - App name: *Climbing Coach Manager*
-   - Home page: `https://domsperanza.github.io/climbing_team_manager/`
+   - Home page: `https://coach.dvssolutionsllc.com/about.html` (`mobile/public/about.html`)
    - Privacy policy: the URL above
+   - Authorized domain: `dvssolutionsllc.com` (verified in Google Search Console, 2026-10-15)
 2. **Data access**: the three scopes `spreadsheets`, `drive.file` and `drive.appdata` should be there. If `drive.appdata` is missing, add it.
 3. **Clients**: delete any Android or iOS client made for the old ID `com.rockteam.coach`. Then create:
    - **Android** client #1: package `io.github.domsperanza.rockteam`, SHA-1 of **your upload key** (from `npm run make-upload-key`, step 2).
    - **Android** client #2: the same package, SHA-1 of **Google Play's app-signing key**. You get this after the first upload (step 2).
    - **iOS** client: bundle ID `io.github.domsperanza.rockteam`. Done 2026-09-30; its ID is in `mobile/google-clients.json`.
-4. **Audience**: **In production, unverified** (done 2026-09-30).
-   - Anyone can sign in, after a one-time "Google hasn't verified this app" notice (*Advanced → Go to Climbing Coach Manager*).
-   - There's a 100-user lifetime cap, and no 7-day re-sign-in.
-   - Don't upload a logo on the Branding page: it would require Google's verification.
-   - Full verification (free) removes the notice and the cap. It needs a YouTube demo video and proof that you own the website's domain.
+4. **Audience**: **In production**.
+   - Until Google verifies the app, sign-in shows "Google hasn't verified this app" (*Advanced → Go to Climbing Coach Manager*), with a 100-user lifetime cap. Apple rejected build 2 over that screen, so the app is going through Google's verification (free, because `spreadsheets` is a *sensitive* scope, not a restricted one).
+   - The submission (scope justification and demo video script) is in [`google-verification.md`](google-verification.md).
 
 ## 2. Google Play
 
@@ -197,4 +196,4 @@ Separately, fix the Contact link on dvssolutionsllc.com: it points to **dom@dvss
 
 ## 5. The web version
 
-Nothing here changes it. Pushing to `main` still rebuilds and redeploys https://domsperanza.github.io/climbing_team_manager/, and the privacy page deploys with it. Store builds and the web version share the same code and the same Google Sheet, so coaches can mix phones and browsers.
+Nothing here changes it. Pushing to `main` still rebuilds and redeploys https://coach.dvssolutionsllc.com/, and the privacy page deploys with it. Store builds and the web version share the same code and the same Google Sheet, so coaches can mix phones and browsers.
