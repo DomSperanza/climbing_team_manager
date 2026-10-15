@@ -89,6 +89,7 @@ If Android sign-in says *"Google rejected this copy of the app"*, the package na
 ## Getting back into the Sheet
 
 - **Your team Sheets:** every Sheet a phone or browser connects to is remembered, by name only, even after "Sign out & clear data". The Connect screen lists them with a one-tap **Connect**, and **More → Switch to another Sheet** moves between them. "Forget" removes one.
+- **Who's signed in:** once signed in, the Connect screen shows *Signed in to Google as …* with **Sign out**. Signing out also withdraws the app's Google access, so the next sign-in shows the account picker again. It keeps the remembered Sheets. If a coach signs in without ticking Google's "Google Sheets" box, every Sheet looks missing. The app checks for that after sign-in and offers **Allow**.
 - **Invite links:** a coach shared from the app gets an email with a link to the web app that has the Sheet ready. They tap it, sign in, and they're in, with no copying.
 - **Sign in with Google (any device):** every Sheet you connect to is also saved to your Google account, in the app's hidden settings folder. On a new phone or computer, tap **Sign in with Google**:
   - with one saved Sheet, it opens straight away;

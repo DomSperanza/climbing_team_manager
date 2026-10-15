@@ -38,7 +38,8 @@ function redirectUri(): string {
 /** Leaves the app for Google's sign-in page; the page reloads on return. */
 export async function signIn(): Promise<SignInResult> {
   if (!isAuthConfigured()) return { status: "error", message: "Google sign-in isn't set up for this copy of the app (see mobile/README.md)." };
-  redirectToGoogle();
+  // Always show Google's account chooser, so a coach with several accounts picks the right one.
+  redirectToGoogle({ prompt: "select_account" });
   return { status: "redirecting" };
 }
 
@@ -150,7 +151,7 @@ export async function forgetToken(token: string | null): Promise<void> {
 }
 
 export function signedInEmail(): string | null {
-  return null; // the implicit flow doesn't say who signed in, and the app doesn't need to know
+  return null; // the implicit flow doesn't say who signed in; the store asks Drive (signedInAddress)
 }
 
 export async function signOut(): Promise<void> {

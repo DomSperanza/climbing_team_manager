@@ -125,3 +125,27 @@ export async function addPerson(token: string, fileId: string, email: string, ro
 export async function removePerson(token: string, fileId: string, permissionId: string): Promise<void> {
   await call(DRIVE + encodeURIComponent(fileId) + "/permissions/" + encodeURIComponent(permissionId), token, { method: "DELETE" });
 }
+
+// ---- who is signed in, and what Google let the app do ---------------------------------------
+
+/** The signed-in Google account's address (works with the app's narrow Drive permissions). */
+export async function signedInAddress(token: string): Promise<string | null> {
+  const data = await call<{ user?: { emailAddress?: string } }>("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)", token);
+  return data.user?.emailAddress ?? null;
+}
+
+/**
+ * The permissions this sign-in actually granted. Google's consent screen has a checkbox per
+ * permission, so a coach can sign in without ticking "Google Sheets" — and then every Sheet
+ * looks missing. Null when Google won't say.
+ */
+export async function grantedScopes(token: string): Promise<string[] | null> {
+  try {
+    const res = await fetch("https://oauth2.googleapis.com/tokeninfo?access_token=" + encodeURIComponent(token));
+    if (!res.ok) return null;
+    const data = (await res.json()) as { scope?: string };
+    return data.scope ? data.scope.split(" ") : null;
+  } catch {
+    return null;
+  }
+}

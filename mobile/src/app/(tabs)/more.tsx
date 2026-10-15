@@ -8,7 +8,6 @@ import { coachDays, otherDaysNote } from "@/core/logic/coachDays";
 import { shortDay } from "@/core/logic/dates";
 import { formatClock } from "@/core/logic/timeline";
 import { approveAccountAccess, connectSheet, disconnect, refresh, useAppState } from "@/data/store";
-import { signedInEmail } from "@/platform/auth";
 import { COMPANY, PRIVACY_URL } from "@/core/config";
 import { LOCK_SUPPORTED } from "@/platform/lock";
 import { confirmAction } from "@/ui/form";
@@ -23,7 +22,7 @@ export default function More() {
   const [open, setOpen] = useState<number | null>(null);
   if (!s.data) return null;
   const coaches = [...s.data.coaches].sort((a, b) => (a.status === b.status ? a.row - b.row : a.status === "Active" ? -1 : 1));
-  const email = s.source?.kind === "sheet" ? signedInEmail() : null;
+  const email = s.source?.kind === "sheet" ? s.account : null;
 
   const { tierNames, practiceDays, practice } = s.data.settings;
 

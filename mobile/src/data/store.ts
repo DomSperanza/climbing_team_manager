@@ -10,7 +10,8 @@ import { cacheClearAll, cacheGet, cacheSet } from "@/platform/cache";
 import * as lock from "@/platform/lock";
 import { watchOnline } from "@/platform/network";
 import { fetchAllRanges, fetchSheetInfo, sheetWriter, SheetsError, tidySheetLayout } from "@/google/sheets";
-import { addPerson, createSheetFromWorkbook, listPeople, listTeamSheets, readAccountSheets, removePerson, writeAccountSheets, type Person, type Role } from "@/google/drive";
+import { SHEETS_SCOPE } from "@/core/config";
+import { addPerson, createSheetFromWorkbook, grantedScopes, listPeople, listTeamSheets, readAccountSheets, removePerson, signedInAddress, writeAccountSheets, type Person, type Role } from "@/google/drive";
 import { forget, mergeKnown, parseKnown, remember, type KnownSheet } from "@/core/recentSheets";
 import { readPref, writePref } from "@/platform/prefs";
 import { memorySheet } from "@/core/memorySheet";
@@ -46,6 +47,8 @@ export interface AppState {
   invited: string | null; // a Sheet from an invite link, waiting for "Connect"
   found: KnownSheet[] | null; // "Sign in with Google" results: Sheets saved to the account, plus ones created with the app
   accountNeedsApproval: boolean; // signed in before the app asked to save Sheets to the account
+  account: string | null; // the signed-in Google account's address, when known
+  sheetsNotAllowed: boolean; // signed in without ticking Google's "Google Sheets" permission
 }
 
 /** What to carry on with after leaving the page for Google sign-in (web only). */
@@ -58,7 +61,7 @@ const CACHE_KEY = "rt.cache.v1";
 let state: AppState = {
   source: null, data: null, fetchedAt: null, loading: false, error: null, needsSignIn: false,
   connectingTo: null, online: true, ready: false, locked: false, lockAvailable: false, setupStep: null, setupDraft: null,
-  knownSheets: [], invited: null, found: null, accountNeedsApproval: false,
+  knownSheets: [], invited: null, found: null, accountNeedsApproval: false, account: null, sheetsNotAllowed: false,
 };
 let raw: RawRanges | null = null; // the cells behind state.data — demo saves edit these directly
 const listeners = new Set<() => void>();
@@ -117,6 +120,65 @@ async function saveToAccount(source: Source) {
     if (e instanceof SheetsError && e.kind === "scope") update({ accountNeedsApproval: true });
     // Anything else: not critical — the device still remembers the Sheet; it's tried again next connect.
   }
+}
+
+// ---- the signed-in Google account -----------------------------------------------------------
+
+/** Looks up who is signed in (for the "Signed in as …" line). Quiet: null when signed out. */
+async function noteAccount() {
+  let account = auth.signedInEmail();
+  if (!account && (await auth.accessToken())) account = await withToken(signedInAddress).catch(() => null);
+  if (account !== state.account) update({ account });
+}
+
+/**
+ * True when this sign-in can open Google Sheets. Google's consent screen lets a coach leave the
+ * "Google Sheets" box unticked, and then every Sheet comes back as "not found".
+ */
+async function canOpenSheets(): Promise<boolean> {
+  const token = await auth.accessToken();
+  const scopes = token ? await grantedScopes(token) : null;
+  const ok = !scopes || scopes.includes(SHEETS_SCOPE); // can't tell → assume fine
+  if (state.sheetsNotAllowed !== !ok) update({ sheetsNotAllowed: !ok });
+  return ok;
+}
+
+const SHEETS_NOT_ALLOWED = "Google didn't give the app permission to open Google Sheets. Tap \"Allow\" and tick every box on Google's screen.";
+
+/** Asks Google again for the permissions left unticked, then retries what the coach was doing. */
+export async function allowSheetsAccess() {
+  const retry = state.connectingTo;
+  auth.rememberPending(JSON.stringify((retry ? { kind: "connect", id: retry } : { kind: "account" }) satisfies Pending));
+  const res = await auth.grantMoreAccess();
+  if (res.status === "error") return update({ error: res.message });
+  if (res.status !== "ok") return;
+  if (!(await canOpenSheets())) return update({ error: SHEETS_NOT_ALLOWED });
+  update({ error: null });
+  if (retry) return connectSheet(retry);
+  return signInWithGoogle();
+}
+
+/**
+ * Signs out of Google (and withdraws the app's access) without touching the Sheets this device
+ * remembers, so the coach can sign in again — with the same or a different account.
+ */
+export async function signOutOfGoogle() {
+  await auth.signOut();
+  accountSavedFor = null;
+  update({ account: null, found: null, error: null, accountNeedsApproval: false, sheetsNotAllowed: false });
+}
+
+/** Why a first connect failed, in terms of the account that's signed in. */
+async function connectProblem(e: unknown): Promise<string> {
+  if (!(e instanceof SheetsError)) return e instanceof Error ? e.message : String(e);
+  if (e.kind === "auth") return "Google sign-in didn't go through — please try again.";
+  if (e.kind !== "notFound" && e.kind !== "access") return e.message;
+  if (!(await canOpenSheets())) return SHEETS_NOT_ALLOWED;
+  await noteAccount();
+  const who = state.account ?? "the Google account you signed in with";
+  return e.kind === "notFound"
+    ? `Couldn't find that Sheet for ${who}. Check the link, and that the Sheet is shared with this exact address — or sign out and sign in with the account it was shared with.`
+    : `${who} doesn't have access to this Sheet. Ask the head coach to share it with that address, or sign out and sign in with the account it was shared with.`;
 }
 
 /**
@@ -248,6 +310,7 @@ export async function init() {
 
   let pending: Pending | null = null;
   try { pending = redirect.pending ? (JSON.parse(redirect.pending) as Pending) : null; } catch { /* ignore */ }
+  noteAccount().catch(() => {});
   update({
     ready: true, error: redirect.error ?? null,
     connectingTo: pending?.kind === "connect" ? pending.id : null,
@@ -305,7 +368,12 @@ async function ensureSignedIn(pending: Pending): Promise<boolean> {
   if (await auth.accessToken()) return true;
   auth.rememberPending(JSON.stringify(pending));
   const res = await auth.signIn();
-  if (res.status === "ok") return true;
+  if (res.status === "ok") {
+    await noteAccount();
+    if (await canOpenSheets()) return true;
+    update({ error: SHEETS_NOT_ALLOWED });
+    return false;
+  }
   if (res.status === "cancelled") update({ error: "Sign-in was cancelled." });
   if (res.status === "error") update({ error: res.message });
   return false;
@@ -321,8 +389,7 @@ export async function connectSheet(spreadsheetId: string) {
     await lockIfNeeded();
     if (state.locked) update({ locked: false }); // they just signed in — don't ask again straight away
   } catch (e) {
-    const auth401 = e instanceof SheetsError && e.kind === "auth";
-    update({ error: auth401 ? "Google sign-in didn't go through — please try again." : e instanceof Error ? e.message : String(e) });
+    update({ error: await connectProblem(e) });
   } finally {
     update({ loading: false });
   }
@@ -378,13 +445,13 @@ export async function startDemo() {
 
 export async function signInAgain() {
   const res = await auth.signIn();
-  if (res.status === "ok") return refresh();
+  if (res.status === "ok") { noteAccount(); return refresh(); }
   if (res.status === "error") update({ error: res.message });
 }
 
 /** Sign out and wipe everything this app stored on the device. */
 export async function disconnect() {
-  await auth.signOut();
+  await signOutOfGoogle();
   await cacheClearAll();
   raw = null;
   update({ source: null, data: null, fetchedAt: null, error: null, needsSignIn: false, locked: false });

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spreadsheetIdFrom } from "@/core/config";
-import { approveAccountAccess, connectSheet, forgetKnownSheet, signInWithGoogle, startDemo, useAppState } from "@/data/store";
+import { allowSheetsAccess, approveAccountAccess, connectSheet, forgetKnownSheet, signInWithGoogle, signOutOfGoogle, startDemo, useAppState } from "@/data/store";
 import { isAuthConfigured } from "@/platform/auth";
 import { Button, Card, H2, LinkButton, Row, T } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
@@ -44,6 +44,27 @@ export default function Connect() {
 
         {!configured && (
           <T small style={{ color: t.warnText, marginBottom: 12, textAlign: "center" }}>Google sign-in isn't set up in this build yet (see mobile/README.md). The demo works without it.</T>
+        )}
+
+        {(s.account || s.sheetsNotAllowed) && (
+          <Card style={{ padding: 16, gap: 10 }}>
+            <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+              <View style={{ flex: 1 }}>
+                <T small muted>Signed in to Google as</T>
+                <T bold numberOfLines={1}>{s.account ?? "your Google account"}</T>
+              </View>
+              <LinkButton label="Sign out" onPress={signOutOfGoogle} />
+            </Row>
+            {s.sheetsNotAllowed && (
+              <>
+                <T small style={{ color: t.danger }}>
+                  Google didn't give the app permission to open Google Sheets (that box was left unticked). Tap Allow, and on Google's screen tick every box.
+                </T>
+                <Button label="Allow" kind="primary" disabled={s.loading} onPress={allowSheetsAccess} />
+              </>
+            )}
+            <T small muted>Wrong account? Sign out, then sign in with the account your team Sheet was shared with.</T>
+          </Card>
         )}
 
         {s.invited && (
@@ -128,7 +149,7 @@ export default function Connect() {
           <TextInput value={link} onChangeText={setLink} editable={configured} placeholder="https://docs.google.com/spreadsheets/d/…" placeholderTextColor={t.muted}
             accessibilityLabel="Sheet link" autoCapitalize="none" autoCorrect={false} keyboardType="url" returnKeyType="go" onSubmitEditing={submit}
             style={{ color: t.text, fontSize: 16, borderWidth: 1, borderColor: t.line, borderRadius: 12, paddingHorizontal: 12, minHeight: 48, marginBottom: 12, backgroundColor: t.bg }} />
-          <Button label={s.loading && s.connectingTo ? "Connecting…" : "Sign in with Google & connect"} busy={s.loading && !!s.connectingTo}
+          <Button label={s.loading && s.connectingTo ? "Connecting…" : s.account ? "Connect" : "Sign in with Google & connect"} busy={s.loading && !!s.connectingTo}
             disabled={!configured || s.loading || !link.trim()} onPress={submit} />
           {connectError ? <T small style={{ color: t.danger, marginTop: 10 }}>{connectError}</T> : null}
         </Card>

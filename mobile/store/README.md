@@ -146,6 +146,7 @@ Doing this again after 7 days, or after code changes: `git pull`, then steps 1�
 - [ ] **More → Team settings**: rename a group, change a practice day, save. Check that athletes show the new group name, and that Today steps between the new days.
 - [ ] **More → Privacy policy** opens the policy.
 - [ ] **Sign out & clear data** returns you to the Connect screen.
+- [ ] The Connect screen shows *Signed in to Google as …*. **Sign out** there, then sign in with a different account: Google shows the account picker.
 
 If all of that works, the $99 is worth it: the same build goes to the App Store.
 

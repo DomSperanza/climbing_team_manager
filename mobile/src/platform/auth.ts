@@ -100,9 +100,16 @@ export function signedInEmail(): string | null {
   return GoogleOneTapSignIn.getCurrentUser()?.user.email ?? null;
 }
 
+/**
+ * Signs out of Google in this app and withdraws the app's access, so the next sign-in shows
+ * the account picker and Google's permission screen again (a clean start with any account).
+ * The phone's own Google accounts (Gmail, Safari) stay signed in — an app can't touch those.
+ */
 export async function signOut(): Promise<void> {
   if (!isAuthConfigured()) return;
   configure();
+  const email = signedInEmail();
+  if (email) await GoogleOneTapSignIn.revokeAccess(email).catch(() => {});
   await GoogleOneTapSignIn.signOut().catch(() => {});
 }
 
