@@ -7,6 +7,7 @@ Apple rejected build 2 because sign-in showed **"Google hasn't verified this app
 - 2026-10-15: CNAME `coach` → `domsperanza.github.io`, so the web app, homepage and privacy policy are served from the verified domain:
   - Homepage: https://coach.dvssolutionsllc.com/about.html
   - Privacy policy: https://coach.dvssolutionsllc.com/privacy.html
+- 2026-10-15: web client origins and redirect URIs added; **brand verification passed** (the app name and branding now show on Google's sign-in screens). The sensitive-scope (data access) review is still needed to remove the warning.
 
 ## Google Cloud → Google Auth Platform
 
